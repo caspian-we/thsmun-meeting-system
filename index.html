@@ -1943,7 +1943,7 @@ Object.assign(I18N, {
   '未点名':'Not called',
   '会议流程':'Meeting Flow',
   '新建会议：填写会议信息（含会期区间）、载入或手填代表名单（国家全称按联合国官方国名自动填充）。':'New Meeting: fill in meeting info (with a date range), then load the sample list or enter delegations manually (full names are filled automatically using official UN country names).',
-  '点名：每国有三个按钮，顺序为「出席并投票」（绿色，居首）→「出席」（蓝色）→「缺席」。「出席并投票」与「出席」都计入出席数并拥有程序性动议的投票权，但只有前者拥有决议草案表决权（安理会的例外见下面两条）。汇总栏并列显示两套基数：法定出席数、20% 多数、简单多数、三分之二多数按出席数计，用于程序性动议；「有表决权 2/3 多数」与「有表决权简单多数」按有表决权国家数计，用于决议草案表决。':'Roll call: each delegation has three buttons, ordered "Present and voting" (green, first), then "Present" (blue), then "Absent". Both "Present and voting" and "Present" count toward attendance and hold the vote on procedural motions, but only the former holds the vote on draft resolutions (see the Security Council exceptions below). The summary strip shows two bases side by side: quorum, the 20% threshold, simple majority and two-thirds majority are counted on attendance and serve procedural motions, while "Two-thirds of voters" and "Simple majority of voters" are counted on the members holding a vote and serve the draft-resolution vote.',
+  '点名：每国有三个按钮，顺序为「出席并投票」（绿色，居首）→「出席」（蓝色）→「缺席」。「出席并投票」与「出席」都计入出席数并拥有程序性动议的投票权，但只有前者拥有决议草案表决权（安理会的例外见下面两条）。汇总栏并列显示两套基数：法定出席数、20% 多数、简单多数、三分之二多数按出席数计，用于程序性动议；「有表决权 2/3 多数」与「有表决权简单多数」按有表决权国家数计，用于决议草案表决；这两项随点名逐次实时更新，未点名时为 0。':'Roll call: each delegation has three buttons, ordered "Present and voting" (green, first), then "Present" (blue), then "Absent". Both "Present and voting" and "Present" count toward attendance and hold the vote on procedural motions, but only the former holds the vote on draft resolutions (see the Security Council exceptions below). The summary strip shows two bases side by side: quorum, the 20% threshold, simple majority and two-thirds majority are counted on attendance and serve procedural motions, while "Two-thirds of voters" and "Simple majority of voters" are counted on the members holding a vote and serve the draft-resolution vote, updating live with every roll-call mark and reading 0 until the roll is taken.',
   '实质性表决文件：单独栏目、使用国家全称。动议通过后须重新点名，点名完成自动进入本栏目；第一轮可投赞成 / 反对 / 弃权 / 过，选「过」者进入第二轮，第二轮仅可赞成或反对。所有委员会（含安理会）均为两轮制。安理会通过门槛在新建会议时二选一：宪章第 27 条的至少 9 票赞成，或有表决权国家的三分之二多数；两种口径均须无常任理事国（★）否决，且弃权未达简单多数（按有表决权席数计）。安理会门槛选「宪章第 27 条」时所有出席理事国均默认拥有决议草案表决权，点名时无需区分「出席」与「出席并投票」；门槛选「有表决权国家的三分之二多数」时非常任理事国须点名选「出席并投票」才拥有表决权，五个常任理事国默认拥有表决权，其一票否决权在两种门槛下都保留。其他委员会一律为三分之二多数，且仅点名选「出席并投票」者拥有表决权。':'Substantive votes on documents: a dedicated panel using full country names. After the motion passes, a fresh roll call is required; once completed the panel opens automatically. Round 1 allows Yes / No / Abstain / Pass; those choosing "Pass" proceed to Round 2, where only Yes or No is allowed. All committees (including the Security Council) use two rounds. The Security Council threshold is chosen when the meeting is created: either Article 27 of the Charter with at least 9 affirmative votes, or a two-thirds majority of the members holding a vote. Under either rule no permanent member (★) may veto, and abstentions must not reach a simple majority (counted on seats holding voting rights). In the Security Council, when the threshold is "Article 27" every present member holds a vote on draft resolutions by default; when it is “two-thirds of the members present” elected (non-permanent) members must be marked “Present and voting” to vote, while the five permanent members hold a vote by default — though the permanent members’ veto still applies under either threshold. All other committees always use a two-thirds majority, where only delegations marked "Present and voting" may vote.',
   '回退：误点后按状态栏「回退」或 Ctrl+Z 可撤销上一步，该操作产生的纪要条目一并移除。':'Undo: after a mis-click, press Undo in the status bar or Ctrl+Z to revert the last step; any minutes entry it produced is removed too.',
   '暂时休会不计时，由主席决定复会；复会后须重新点名，点名完成后自动进入「主发言名单」栏目（新建会议首次点名完成后同样自动进入）。':'A recess does not run the timer; the Chair decides when to resume. Roll call repeats afterwards and the GSL panel opens automatically once it finishes (the same applies after the first roll call of a new meeting).',
@@ -2704,7 +2704,7 @@ Object.assign(I18N, {
 
 /* 词典补充（十二）：安理会表决权随门槛口径变化（patch101/102 配套） */
 Object.assign(I18N, {
-  '决议草案表决规则：以「有决议草案表决权国家」为基数，赞成须达其三分之二多数，且弃权票不得超过其简单多数，方可通过（安理会宪章 9 票制的弃权简单多数同样按实际有表决权席数计算，不按 15 国固定）；安理会采用三分之二口径时，五个常任理事国另有一票否决权。安理会采用宪章第 27 条口径时：赞成须达 9 票、无常任理事国否决，且弃权票不得达到有表决权国家席数的简单多数（满席 15 国时为 8 票，不满席时按实际有表决权席数计算）。点名栏目的汇总条同时列出两种基数：「三分之二多数」按出席数计（用于程序性动议），「有表决权 2/3 多数」与「有表决权简单多数」按有表决权国家计（用于决议草案）。':'Draft resolution voting: counted on the members holding a vote on documents. It passes only with affirmative votes reaching a two-thirds majority of them and abstentions below a simple majority of them (the Article 27 threshold of the Security Council also counts the abstention simple majority on the seats actually holding a vote, not on a fixed 15); under the Security Council\'s two-thirds threshold the five permanent members also hold a veto. Under the Security Council\'s Article 27 threshold the rule is unchanged: at least 9 affirmative votes, no permanent-member veto, and abstentions below a simple majority of the seats holding a vote (8 when all 15 Council members are present, otherwise counted on the actual number). The roll call summary strip lists both bases: "Two-thirds Majority" counts attendance (for procedural motions), while "Two-thirds of voters" and "Simple majority of voters" count the members holding a vote (for draft resolutions).',
+  '决议草案表决规则：以「有决议草案表决权国家」为基数，赞成须达其三分之二多数，且弃权票不得超过其简单多数，方可通过（安理会宪章 9 票制的弃权简单多数同样按实际有表决权席数计算，不按 15 国固定）；安理会采用三分之二口径时，五个常任理事国另有一票否决权。安理会采用宪章第 27 条口径时：赞成须达 9 票、无常任理事国否决，且弃权票不得达到有表决权国家席数的简单多数（满席 15 国时为 8 票，不满席时按实际有表决权席数计算）。点名栏目的汇总条同时列出两种基数：「三分之二多数」按出席数计（用于程序性动议），「有表决权 2/3 多数」与「有表决权简单多数」按有表决权国家计（用于决议草案），两者都随点名逐次实时更新，与表决面板显示的门槛同源。':'Draft resolution voting: counted on the members holding a vote on documents. It passes only with affirmative votes reaching a two-thirds majority of them and abstentions below a simple majority of them (the Article 27 threshold of the Security Council also counts the abstention simple majority on the seats actually holding a vote, not on a fixed 15); under the Security Council\'s two-thirds threshold the five permanent members also hold a veto. Under the Security Council\'s Article 27 threshold the rule is unchanged: at least 9 affirmative votes, no permanent-member veto, and abstentions below a simple majority of the seats holding a vote (8 when all 15 Council members are present, otherwise counted on the actual number). The roll call summary strip lists both bases: "Two-thirds Majority" counts attendance (for procedural motions), while "Two-thirds of voters" and "Simple majority of voters" count the members holding a vote (for draft resolutions); both update live with every roll-call mark and share the same basis as the threshold shown in the voting panel.',
   '安理会表决权随门槛口径变化：门槛选「宪章第 27 条」时，所有出席理事国都有实质性文件表决权，点名无需区分「出席」与「出席并投票」；门槛选「有表决权国家的三分之二多数」时，非常任理事国须点名选「出席并投票」才有文件表决权（点名须区分），而五个常任理事国默认拥有表决权；两种门槛下五个常任理事国的一票否决权都保留。':'Security Council voting rights follow the threshold: with "Article 27" every present member holds a vote on substantive documents and roll call need not distinguish "Present" from "Present and voting"; with “two-thirds of the members present” elected (non-permanent) members must be marked “Present and voting” to vote (so roll call must distinguish them), while the five permanent members hold a vote by default. Under either threshold the five permanent members keep their veto.'
 });
 
@@ -3723,8 +3723,9 @@ function renderMeetingBanner(m){
 /* patch111：点名统计的单遍汇总。一次循环同时得出四项，替代原先每次点击的 6 轮遍历。
    关键点：scPoolHasAllPresent / isSecurityCouncil 对本场会议恒定，提到循环外只算一次
    （原 hasDocVoteRight 在逐国循环里重复调用二者，属最大单点浪费）。
-   poolLen 严格保留 docVotePool 的语义：未点名（rollDone=false）时全体视为可投票；
-   voting 则不回落，如实反映有决议草案表决权者，避免未点名时数字误导主席。 */
+   poolLen 与 voting 同源，均为「实际有决议草案表决权数」，不沿用 docVotePool 的
+   未点名回落（那个回落只为避免表决面板空白，用于展示门槛会误导主席）。
+   故两个「有表决权」门槛 chip 随点名逐次实时更新（patch112）。 */
 function rollTally(m){
   var dels = (m && m.delegates) ? m.delegates : [];
   var total = dels.length;
@@ -3743,9 +3744,14 @@ function rollTally(m){
       else if (r === 'P' && (allPresentVote || (isSC && d.veto))) voting++;
     }
   }
-  /* 未点名时 docVotePool 返回全体，故门槛基数取 total；已点名则取有表决权数 */
+  /* patch112：门槛基数一律取「实际有决议草案表决权数」，随点名实时更新。
+     原先未点名时回落为 total（全体），导致两个「有表决权」chip 在整个点名过程中
+     固定不变，且与同排其余 chip（未点名时显示 0）口径不一致。
+     此处与 votingRightCount 的原则一致：不沿用 docVotePool 的未点名回落，
+     因为那个回落是为「表决面板不至于空白」服务的，不适合用于向主席展示门槛数字。
+     poolLen 仅供汇总栏两个 chip 使用，真实表决仍走 docVotePool，互不影响。 */
   return { total: total, present: present, absent: absent, voting: voting,
-           poolLen: (m && m.rollDone) ? voting : total };
+           poolLen: voting };
 }
 /* 各表决门槛（以出席代表团数为基数）。
    patch111：第二参数可传入已算好的出席数（来自 rollTally），省去重复遍历；
@@ -3803,7 +3809,8 @@ function rollSummarySpec(m){
     { k: 'simple',    cls: 'stat-chip maj', v: th.simple,           lb: t('简单多数'),      bump: false },
     { k: 'twothirds', cls: 'stat-chip maj', v: th.twoThirds,        lb: t('三分之二多数'),   bump: false },
     /* patch108：决议草案表决门槛以「有决议草案表决权国家」（投票池）为基数，
-       与上面按出席数算的「三分之二多数」基数不同，故并列显示，避免主席按错误票数判断 */
+       与上面按出席数算的「三分之二多数」基数不同，故并列显示，避免主席按错误票数判断。
+       patch112：基数取实时有表决权数，点名过程中随每一次标记即时更新（此前固定不变） */
     { k: 'poolTwoThirds', cls: 'stat-chip maj', v: twoThirdsNeed(m, ta.poolLen), lb: t('有表决权 2/3 多数'), bump: false },
     { k: 'poolSimple',    cls: 'stat-chip maj', v: poolSimpleMajority(m, ta.poolLen), lb: t('有表决权简单多数'), bump: false }
   ];
@@ -6751,13 +6758,13 @@ document.getElementById('btnGuide').onclick = function(){
   askInfo(t('使用指引'), '<b>' + t('会议流程') + '</b><ul>'
     + '<li>' + t('新建会议：填写会议信息（含会期区间）、载入或手填代表名单（国家全称按联合国官方国名自动填充）。') + '</li>'
     + '<li>' + t('否决权：仅当新建会议时勾选「联合国安全理事会」才存在否决权，且自动归属五个常任理事国（中华人民共和国、法兰西共和国、俄罗斯联邦、大不列颠及北爱尔兰联合王国、美利坚合众国），名单中以 ★ 标记；无需也无法手动勾选。') + '</li>'
-    + '<li>' + t('点名：每国有三个按钮，顺序为「出席并投票」（绿色，居首）→「出席」（蓝色）→「缺席」。「出席并投票」与「出席」都计入出席数并拥有程序性动议的投票权，但只有前者拥有决议草案表决权（安理会的例外见下面两条）。汇总栏并列显示两套基数：法定出席数、20% 多数、简单多数、三分之二多数按出席数计，用于程序性动议；「有表决权 2/3 多数」与「有表决权简单多数」按有表决权国家数计，用于决议草案表决。') + '</li>'
+    + '<li>' + t('点名：每国有三个按钮，顺序为「出席并投票」（绿色，居首）→「出席」（蓝色）→「缺席」。「出席并投票」与「出席」都计入出席数并拥有程序性动议的投票权，但只有前者拥有决议草案表决权（安理会的例外见下面两条）。汇总栏并列显示两套基数：法定出席数、20% 多数、简单多数、三分之二多数按出席数计，用于程序性动议；「有表决权 2/3 多数」与「有表决权简单多数」按有表决权国家数计，用于决议草案表决；这两项随点名逐次实时更新，未点名时为 0。') + '</li>'
     + '<li>' + t('主发言名单：通过「返回主发言名单」动议通过后自动跳转，按加入顺序依序发言，不分轮次，默认 2 分钟；已发言完毕的国家自动移出待发言队列，名单为空也可开启，关闭名单不清空尚未发言的国家。') + '</li>'
     + '<li>' + t('发言名单：供有主持核心磋商与个人演讲使用，有主持核心磋商或个人演讲通过后自动进入本栏目，按队列依序发言。') + '</li>'
     + '<li>' + t('动议与表决：每条动议须由一个国家提出；程序性动议由主席团依现场表决结果选择通过或未通过，无需逐国点击。') + '</li>'
     + '<li>' + t('点名有三种状态：「出席」计入出席数并拥有程序性动议的投票权，但不参与最后的文件表决（例外：门槛选「宪章第 27 条」的安理会所有出席理事国都有文件表决权；门槛选「有表决权国家的三分之二多数」的安理会，其常任理事国即使只标「出席」也默认有表决权）；「出席并投票」在前者基础上另有实质性表决文件的投票权；「缺席」不计入出席数。法定出席数与各类多数门槛均以出席数（含「出席并投票」）为基数。') + '</li>'
     + '<li>' + t('实质性表决文件：单独栏目、使用国家全称。动议通过后须重新点名，点名完成自动进入本栏目；第一轮可投赞成 / 反对 / 弃权 / 过，选「过」者进入第二轮，第二轮仅可赞成或反对。所有委员会（含安理会）均为两轮制。安理会通过门槛在新建会议时二选一：宪章第 27 条的至少 9 票赞成，或有表决权国家的三分之二多数；两种口径均须无常任理事国（★）否决，且弃权未达简单多数（按有表决权席数计）。安理会门槛选「宪章第 27 条」时所有出席理事国均默认拥有决议草案表决权，点名时无需区分「出席」与「出席并投票」；门槛选「有表决权国家的三分之二多数」时非常任理事国须点名选「出席并投票」才拥有表决权，五个常任理事国默认拥有表决权，其一票否决权在两种门槛下都保留。其他委员会一律为三分之二多数，且仅点名选「出席并投票」者拥有表决权。') + '</li>'
-    + '<li>' + t('决议草案表决规则：以「有决议草案表决权国家」为基数，赞成须达其三分之二多数，且弃权票不得超过其简单多数，方可通过（安理会宪章 9 票制的弃权简单多数同样按实际有表决权席数计算，不按 15 国固定）；安理会采用三分之二口径时，五个常任理事国另有一票否决权。安理会采用宪章第 27 条口径时：赞成须达 9 票、无常任理事国否决，且弃权票不得达到有表决权国家席数的简单多数（满席 15 国时为 8 票，不满席时按实际有表决权席数计算）。点名栏目的汇总条同时列出两种基数：「三分之二多数」按出席数计（用于程序性动议），「有表决权 2/3 多数」与「有表决权简单多数」按有表决权国家计（用于决议草案）。') + '</li>'
+    + '<li>' + t('决议草案表决规则：以「有决议草案表决权国家」为基数，赞成须达其三分之二多数，且弃权票不得超过其简单多数，方可通过（安理会宪章 9 票制的弃权简单多数同样按实际有表决权席数计算，不按 15 国固定）；安理会采用三分之二口径时，五个常任理事国另有一票否决权。安理会采用宪章第 27 条口径时：赞成须达 9 票、无常任理事国否决，且弃权票不得达到有表决权国家席数的简单多数（满席 15 国时为 8 票，不满席时按实际有表决权席数计算）。点名栏目的汇总条同时列出两种基数：「三分之二多数」按出席数计（用于程序性动议），「有表决权 2/3 多数」与「有表决权简单多数」按有表决权国家计（用于决议草案），两者都随点名逐次实时更新，与表决面板显示的门槛同源。') + '</li>'
     + '<li>' + t('安理会表决权随门槛口径变化：门槛选「宪章第 27 条」时，所有出席理事国都有实质性文件表决权，点名无需区分「出席」与「出席并投票」；门槛选「有表决权国家的三分之二多数」时，非常任理事国须点名选「出席并投票」才有文件表决权（点名须区分），而五个常任理事国默认拥有表决权；两种门槛下五个常任理事国的一票否决权都保留。') + '</li>'
     + '<li>' + t('回退：误点后按状态栏「回退」或 Ctrl+Z 可撤销上一步，该操作产生的纪要条目一并移除。') + '</li>'
     + '<li>' + t('暂时休会不计时，由主席决定复会；复会后须重新点名，点名完成后自动进入「主发言名单」栏目（新建会议首次点名完成后同样自动进入）。') + '</li>'
