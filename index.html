@@ -60,7 +60,6 @@ input,select,textarea{font-family:inherit; font-size:14px; color:var(--ink);}
 .view{display:none;}
 .view.active{display:block;}
 .wrap{max-width:1080px; margin:0 auto; padding:0 20px;}
-
 /* SECTION: styles-buttons */
 .btn{
   border:1px solid var(--line); background:#fff; color:var(--ink);
@@ -80,7 +79,6 @@ input,select,textarea{font-family:inherit; font-size:14px; color:var(--ink);}
 .vote-btn.yes.on{background:var(--ok); border-color:var(--ok); color:#fff;}
 .vote-btn.no.on{background:var(--no); border-color:var(--no); color:#fff;}
 .vote-btn.abst.on{background:var(--abs); border-color:var(--abs); color:#fff;}
-
 /* SECTION: styles-home */
 .hero{
   background:linear-gradient(160deg,var(--un-dark) 0%,var(--un-blue) 55%,#3d92d0 100%);
@@ -109,7 +107,6 @@ input,select,textarea{font-family:inherit; font-size:14px; color:var(--ink);}
   border-radius:12px; padding:40px 20px; font-size:14px;
 }
 .site-foot{text-align:center; color:var(--muted); font-size:12px; padding:0 0 32px; letter-spacing:1px;}
-
 /* SECTION: styles-topbar-tabs */
 .topbar{
   background:var(--un-deep); color:#fff; padding:10px 0;
@@ -134,7 +131,6 @@ input,select,textarea{font-family:inherit; font-size:14px; color:var(--ink);}
 .tabs button.on{color:var(--un-blue); border-bottom-color:var(--un-blue); font-weight:600;}
 .tabpane{display:none; padding:2px 0 6px;}
 .tabpane.on{display:block;}
-
 /* SECTION: styles-cards-forms */
 .card{background:var(--card); border:1px solid var(--line); border-radius:12px; padding:18px; margin-bottom:16px;}
 .card h3{font-size:15px; color:var(--un-deep); margin-bottom:12px;}
@@ -172,7 +168,6 @@ input,select,textarea{font-family:inherit; font-size:14px; color:var(--ink);}
 .badge.red{color:var(--no); border-color:#ecc6c0; background:#fdf1ef;}
 .badge.gray{color:var(--muted); border-color:var(--line); background:#f4f6f8;}
 .badge.gold{color:#8a6d10; border-color:#e6d491; background:#fbf6e3;}
-
 /* SECTION: styles-meeting-panels */
 .summary-strip{display:flex; gap:12px; flex-wrap:wrap; margin-bottom:14px;}
 .stat-chip{background:#fff; border:1px solid var(--line); border-radius:10px; padding:10px 16px; font-size:13px; color:var(--muted);}
@@ -255,7 +250,6 @@ table.stats{width:100%; border-collapse:collapse; font-size:13px; background:#ff
 table.stats th,table.stats td{border:1px solid var(--line); padding:8px 10px; text-align:left;}
 table.stats th{background:#eef6fc; color:var(--un-deep);}
 .award-row{display:flex; gap:10px; align-items:center; padding:8px 4px; border-bottom:1px solid #eef3f8; font-size:14px;}
-
 /* SECTION: styles-modal-toast */
 .modal-mask{position:fixed; inset:0; background:rgba(8,30,50,.45); display:flex; align-items:center; justify-content:center; z-index:60; padding:20px;
   opacity:0; visibility:hidden; transition:opacity .22s cubic-bezier(.2,.8,.2,1);}
@@ -276,12 +270,11 @@ table.stats th{background:#eef6fc; color:var(--un-deep);}
   opacity:0; pointer-events:none; transition:.25s; z-index:70; max-width:86vw; text-align:center;
 }
 #toast.on{opacity:1; transform:translateX(-50%) translateY(0);}
-
 /* SECTION: styles-motion */
 /* patch82：原 from{translateY(10px)} 同样产生垂直位移；改为纯淡入 */
-@keyframes viewIn{ from{ opacity:0; } to{ opacity:1; } }
-@keyframes rowIn{ from{opacity:0; transform:translateX(-8px);} to{opacity:1; transform:none;} }
-@keyframes modalIn{ from{opacity:0; transform:scale(.94) translateY(12px);} to{opacity:1; transform:none;} }
+
+
+
 @keyframes pulseWarn{ 0%,100%{ transform:scale(1); opacity:1; } 50%{ transform:scale(1.05); opacity:.72; } }
 @keyframes popNum{ 0%{ transform:scale(1); } 40%{ transform:scale(1.22); color:var(--un-blue); } 100%{ transform:scale(1); } }
 /* patch82：此处原有一条 .view.active 的 viewIn .3s cubic-bezier 规则，与下方
@@ -289,7 +282,6 @@ table.stats th{background:#eef6fc; color:var(--un-deep);}
 /* patch82：.tabpane.on 原有两条 animation 规则（viewIn .24s 与 paneIn .26s var(--spring)），
    后者覆盖前者，前者为死代码，已删除 */
 /* 仅存档卡保留入场动画（低频渲染）；动议卡与文件卡因高频局部重绘，加入场动画会闪烁 */
-.archive-card{ animation:rowIn .26s ease; }
 /* 按压触感调克制：原 scale(.94) + .09s ease 对小按钮过激且回弹过快，
    改为 scale(.97) + .12s ease-out，仅轻压暗示且回弹稍缓，消除「啪嗒」感 */
 .btn,.vote-btn,.btn-icon,.seg button,.dock button,.preset-row .btn{
@@ -312,7 +304,6 @@ table.stats th{background:#eef6fc; color:var(--un-deep);}
 .vote-cell:hover{ background:#f5f9fd; }
 .timer-display.warn{ animation:pulseWarn .9s ease-in-out infinite; }
 .stat-chip b.bump{ animation:popNum .38s ease; }
-.modal-mask.on .modal{ animation:modalIn .2s cubic-bezier(.2,.8,.2,1); }
 #toast{ transition:opacity .3s cubic-bezier(.2,.8,.2,1), transform .3s cubic-bezier(.2,.8,.2,1); }
 *{ scrollbar-width:thin; scrollbar-color:#c3d4e4 transparent; }
 ::-webkit-scrollbar{ width:10px; height:10px; }
@@ -322,7 +313,6 @@ table.stats th{background:#eef6fc; color:var(--un-deep);}
   *,.view.active,.tabpane.on,.archive-card,.modal-mask.on .modal,.m-banner,.timer-display.warn,.stat-chip b.bump{ animation:none !important; }
   *{ transition:none !important; }
 }
-
 /* SECTION: styles-os-shell */
 :root{
   --dock-w:188px; --bar-h:34px;
@@ -355,7 +345,6 @@ table.stats th{background:#eef6fc; color:var(--un-deep);}
 #boot .boot-bar i{ display:block; height:100%; width:0; background:#fff; border-radius:999px; animation:bootFill 1.5s cubic-bezier(.3,.7,.3,1) forwards; }
 @keyframes bootPulse{ 0%,100%{ transform:scale(1); } 50%{ transform:scale(1.045); } }
 @keyframes bootFill{ to{ width:100%; } }
-
 /* 顶部状态栏 */
 .statusbar{
   position:fixed; top:0; left:0; right:0; height:var(--bar-h); z-index:40;
@@ -372,7 +361,6 @@ table.stats th{background:#eef6fc; color:var(--un-deep);}
 .sb-clock{ font-variant-numeric:tabular-nums; opacity:.92; letter-spacing:.4px; }
 .sb-exit{ background:transparent; border:1px solid rgba(255,255,255,.4); color:#fff; border-radius:7px; padding:3px 10px; font-size:12px; }
 .sb-exit:hover{ background:rgba(255,255,255,.16); }
-
 /* 侧边 Dock */
 .dock{
   position:fixed; left:0; top:var(--bar-h); bottom:0; width:var(--dock-w); z-index:30;
@@ -400,7 +388,6 @@ table.stats th{background:#eef6fc; color:var(--un-deep);}
 .dock button.on .dk-badge{ background:rgba(255,255,255,.28); }
 .dock .dk-foot{ margin-top:auto; padding:10px 8px 2px; font-size:11px; color:var(--muted); line-height:1.5; border-top:1px solid rgba(216,227,238,.8); }
 .dock .dk-foot kbd{ background:#fff; border:1px solid var(--line); border-bottom-width:2px; border-radius:4px; padding:0 4px; font-size:10px; font-family:inherit; }
-
 /* 舞台与窗口 */
 .stage{ margin-left:var(--dock-w); padding:calc(var(--bar-h) + 18px) 22px 40px; min-height:100vh; }
 .window{
@@ -419,7 +406,7 @@ table.stats th{background:#eef6fc; color:var(--un-deep);}
 .win-path{ font-size:11.5px; color:var(--muted); flex:none; font-variant-numeric:tabular-nums; }
 .window .win-body{ padding:18px; }
 /* patch82：原 from{translateY(14px) scale(.985)} 位移幅度最大，是切栏目时「下移」感的主因；改为纯淡入 */
-@keyframes winIn{ from{ opacity:0; } to{ opacity:1; } }
+
 /* patch82：.window.swap 原有两条 animation 规则（.26s cubic-bezier 与 .3s var(--spring)），
    后者覆盖前者，前者为死代码，已删除 */
 /* 会议状态横幅（休会 / 闭幕） */
@@ -435,7 +422,6 @@ table.stats th{background:#eef6fc; color:var(--un-deep);}
 .m-banner.suspended{ background:linear-gradient(120deg,#fff7e2,#fdeecb); color:#7a5a10; border-color:#e9d49a; }
 .m-banner.adjourned{ background:linear-gradient(120deg,#eef2f7,#e2e9f1); color:#33475e; border-color:#c3cfdd; }
 @keyframes fadeUp{ from{ opacity:0; transform:translateY(-8px); } to{ opacity:1; transform:none; } }
-
 /* 桌面启动器（首页） */
 .desktop{
   min-height:100vh; padding:0 0 40px;
@@ -447,9 +433,6 @@ table.stats th{background:#eef6fc; color:var(--un-deep);}
 .desk-hero{ text-align:center; padding:74px 20px 34px; }
 .desk-hero .logo-wrap{ width:112px; height:112px; }
 .desk-hero .logo-wrap img,.desk-hero .logo-fallback{ width:112px; height:112px; }
-
-
-
 .launcher{ display:flex; gap:14px; justify-content:center; flex-wrap:wrap; padding:0 20px 8px; }
 .launch-tile{
   width:152px; border:1px solid var(--line); border-radius:14px;
@@ -467,7 +450,6 @@ table.stats th{background:#eef6fc; color:var(--un-deep);}
 .desk-section h2{ font-size:15px; color:var(--un-deep); letter-spacing:.6px; margin-bottom:12px; display:flex; align-items:center; gap:8px; }
 .desk-section h2 .cnt{ font-size:11px; color:var(--muted); background:rgba(255,255,255,.7); border:1px solid var(--line); border-radius:999px; padding:1px 8px; }
 .desk-foot{ text-align:center; color:var(--muted); font-size:11.5px; padding:30px 20px 0; letter-spacing:.6px; }
-
 /* SECTION: styles-responsive */
 @media (max-width:720px){
   .hero h1{font-size:22px;}
@@ -563,7 +545,6 @@ table.stats th{background:#eef6fc; color:var(--un-deep);}
   .modal-mask{ padding:12px; }
   .modal{ padding:18px 16px; }
 }
-
 @media (max-width:360px){
   .timer-display{ font-size:44px; }
   .pt-display{ font-size:32px; }
@@ -586,11 +567,9 @@ table.stats th{background:#eef6fc; color:var(--un-deep);}
   .timer-display{ font-size:46px; }
   .desk-hero{ padding:26px 16px 18px; }
 }
-
 /* ===== 新增模块样式：多数门槛 / 主发言名单 / 主席裁定 / 实质性表决文件 ===== */
 .stat-chip.maj b{ color:var(--un-blue); }
 .roll-row .full{ font-size:12px; color:var(--muted); margin-top:2px; }
-
 /* 主发言名单：待发言队列（原轮次样式，现用于不分轮次的顺序队列） */
 .gsl-round{ border:1px solid var(--line); border-radius:10px; padding:10px 12px; margin-bottom:10px; background:#fff; }
 .gsl-round.cur{ border-color:var(--un-blue); box-shadow:0 0 0 2px rgba(91,158,214,.14); }
@@ -602,14 +581,12 @@ table.stats th{background:#eef6fc; color:var(--un-deep);}
 .gr-item.done i{ background:var(--muted); }
 .gr-item.now{ background:var(--un-blue); border-color:var(--un-blue); color:#fff; opacity:1; }
 .gr-item.now i{ background:#fff; color:var(--un-blue); }
-
 /* 表决结果裁定区 */
 .chair-rule{ border:1px dashed var(--un-blue); border-radius:10px; padding:12px; background:#f7fbfe; margin-top:6px; }
 .cr-label{ font-size:13px; font-weight:600; display:flex; gap:8px; align-items:center; flex-wrap:wrap; margin-bottom:8px; }
 .cr-tally{ display:flex; gap:12px; flex-wrap:wrap; margin-bottom:10px; }
 .cr-tally label{ font-size:12px; color:var(--muted); display:flex; align-items:center; gap:6px; }
 .cr-tally input{ width:66px; padding:6px 8px; border:1px solid var(--line); border-radius:6px; font-size:13px; }
-
 /* 实质性表决文件 */
 .dv-doc{ display:flex; gap:10px; align-items:center; flex-wrap:wrap; margin-bottom:10px; }
 .dv-doc b{ font-size:15px; }
@@ -625,7 +602,6 @@ table.stats th{background:#eef6fc; color:var(--un-deep);}
 .dv-result.pass{ background:#eaf7ee; border:1px solid #b7e2c3; }
 .dv-result.fail{ background:#fdeeee; border:1px solid #f0c0c0; }
 .dv-result b{ font-size:17px; }
-
 /* 存档卡状态标识 */
 .archive-card{ position:relative; overflow:hidden; }
 .archive-card::before{ content:""; position:absolute; left:0; top:0; bottom:0; width:4px; background:var(--un-blue); }
@@ -633,10 +609,8 @@ table.stats th{background:#eef6fc; color:var(--un-deep);}
 .archive-card.ended{ opacity:.82; }
 .archive-card.ended::before{ background:var(--abs); }
 .archive-card.ended .name{ color:var(--muted); }
-
 /* SECTION: styles-os-polish
    后置覆盖层：只增强观感与动效，不改动结构、类名与 JS 行为 */
-
 /* 1) 全局细节：字体渲染、选中色、键盘焦点环 */
 html{ -webkit-font-smoothing:antialiased; -moz-osx-font-smoothing:grayscale; text-rendering:optimizeLegibility; }
 ::selection{ background:rgba(26,117,187,.20); color:var(--un-deep); }
@@ -645,7 +619,6 @@ html{ -webkit-font-smoothing:antialiased; -moz-osx-font-smoothing:grayscale; tex
 .btn:focus-visible,.dock button:focus-visible,.launch-tile:focus-visible,
 .vote-btn:focus-visible,.seg button:focus-visible,.sb-exit:focus-visible,
 .btn-icon:focus-visible,.tabs button:focus-visible{ outline:2px solid #4aa3e0; outline-offset:2px; }
-
 /* 2) 舞台环境光：让窗口真正「浮」在桌面上，而非贴在纯色背景上 */
 body{
   background:
@@ -653,7 +626,6 @@ body{
     radial-gradient(880px 500px at 94% 106%, rgba(201,162,39,.12), transparent 58%),
     linear-gradient(180deg,#eef3f9 0%,#e6edf6 46%,#dfe8f3 100%);
 }
-
 /* 3) 窗口：分层阴影 + 顶部高光 + 玻璃标题栏 */
 .window{
   border-color:rgba(216,227,238,.92);
@@ -669,7 +641,6 @@ body{
 .win-dots i{ box-shadow:inset 0 0 0 .5px rgba(0,0,0,.13); }
 /* 移除三点悬停的颜色渐变提亮：用户反馈渐变不舒服，圆点保持恒定颜色 */
 .win-title{ letter-spacing:.2px; }
-
 /* 4) 卡片体系：静置有厚度，悬浮轻抬升 */
 .card,.motion-card,.doc-card,.mod-info,.gsl-round,.dv-cell,.stat-chip,.dv-result,.chair-rule{ box-shadow:var(--e1); }
 .card,.motion-card,.doc-card,.mod-info{
@@ -685,7 +656,6 @@ body{
    效果，属纯 bug 无收益，故单独豁免。特异性 120 > .card:hover 的 20，无需 !important。
    刻意只限定 #setupForm，其他卡片的悬停触感一律保留。 */
 #setupForm.card:hover{ transform:none; }
-
 .stat-chip{ transition:box-shadow .22s var(--spring-soft), transform .22s var(--spring); }
 .stat-chip:hover{ box-shadow:var(--e2); transform:translateY(-1px); }
 .chair-rule{ background:linear-gradient(120deg,#f8fbfe,#f1f7fc); }
@@ -694,7 +664,6 @@ body{
 .dv-cell.locked:hover{ transform:none; box-shadow:var(--e1); }
 .dv-result.pass{ background:linear-gradient(120deg,#eefaf2,#e2f5e9); }
 .dv-result.fail{ background:linear-gradient(120deg,#fdf0f0,#fbe6e6); }
-
 /* 5) 按钮：实体光泽 + 更实的按压反馈 */
 .btn{ border-radius:9px; box-shadow:var(--e1); }
 .btn:hover{ box-shadow:var(--e2); }
@@ -713,7 +682,6 @@ body{
 .btn-danger:hover{ box-shadow:0 6px 18px rgba(192,57,43,.24); }
 .btn-icon{ transition:transform .14s var(--spring), color .18s, border-color .18s, box-shadow .18s; }
 .btn-icon:hover{ box-shadow:var(--e1); }
-
 /* 6) Dock：图标弹性微放大 + 当前项指示条 */
 .dock button{ border-radius:10px; transition:background .2s var(--spring-soft), color .2s var(--spring-soft), transform .18s var(--spring); }
 .dock button .dk-ico{ transition:transform .24s var(--pop); }
@@ -725,7 +693,6 @@ body{
   width:3px; height:17px; border-radius:0 3px 3px 0; background:#fff; opacity:.92;
 }
 .dock .dk-badge{ box-shadow:0 2px 6px rgba(192,57,43,.35); }
-
 /* 7) 状态栏：更强的玻璃质感与层次 */
 .statusbar{
   background:linear-gradient(180deg,rgba(11,62,101,.93),rgba(8,54,90,.87));
@@ -738,27 +705,20 @@ body{
 .sb-exit:active{ transform:scale(.95); }
 .sb-chip.live{ animation:livePulse 2.4s ease-in-out infinite; }
 @keyframes livePulse{ 0%,100%{ box-shadow:0 0 0 0 rgba(201,162,39,.55), inset 0 1px 0 rgba(255,255,255,.2); } 60%{ box-shadow:0 0 0 7px rgba(201,162,39,0), inset 0 1px 0 rgba(255,255,255,.2); } }
-
 /* 8) 面板转场：交叉淡入 + 轻微缩放，比单纯位移更「系统」 */
 /* patch82：原 from{translateY(6px) scale(.994)} 会让元素从下方 6px 升起，重播时表现为「整块微微下移」；改为纯淡入 */
-@keyframes paneIn{ from{ opacity:0; } to{ opacity:1; } }
-.view.active{ animation:paneIn .3s var(--spring); }
-.tabpane.on{ animation:paneIn .26s var(--spring); }
-.window.swap{ animation:winIn .3s var(--spring); }
 
 /* 9) 计时器：仪表盘质感；磋商剩余胶囊恢复背景（--un-pale 已定义） */
 .timer-display,.pt-display{ text-shadow:0 1px 0 rgba(255,255,255,.9), 0 2px 18px rgba(8,54,90,.10); }
 .timer-display.warn,.pt-display.warn{ text-shadow:0 0 22px rgba(192,57,43,.22); }
 .pt-pool span{ box-shadow:var(--e1); }
 .timer-ctrl .btn,.pt-ctrl .btn,.preset-row .btn{ transition:transform .12s var(--spring), background .18s, color .18s, border-color .18s, box-shadow .18s; }
-
 /* 10) 当前发言卡片：舞台光晕 */
 .speaker-current{
   background:linear-gradient(125deg,var(--un-dark) 0%,var(--un-blue) 46%,#3f95d3 100%);
   box-shadow:0 10px 30px rgba(13,78,126,.26), inset 0 1px 0 rgba(255,255,255,.26);
 }
 .speaker-current .sc-name{ letter-spacing:.3px; text-shadow:0 1px 2px rgba(0,0,0,.14); }
-
 /* 11) 表单控件：聚焦光环 */
 .field input,.field select,.field textarea,.del-row input{
   transition:border-color .18s var(--spring-soft), box-shadow .18s var(--spring-soft), background .18s;
@@ -769,12 +729,9 @@ body{
 .file-drop{ transition:border-color .2s var(--spring-soft), background .2s, box-shadow .2s, transform .2s var(--spring); }
 .file-drop:hover{ box-shadow:var(--e2); transform:translateY(-1px); }
 .file-drop.drag{ box-shadow:0 0 0 3px rgba(26,117,187,.16), var(--e2); }
-
 /* 12) 弹窗：背景虚化 + 弹性入场 */
 .modal-mask{ background:rgba(6,28,48,.42); backdrop-filter:blur(6px) saturate(1.1); -webkit-backdrop-filter:blur(6px) saturate(1.1); }
 .modal{ border-radius:16px; box-shadow:var(--e4), var(--hair); }
-@keyframes modalIn2{ from{ opacity:0; transform:scale(.93) translateY(14px); } to{ opacity:1; transform:none; } }
-.modal-mask.on .modal{ animation:modalIn2 .28s var(--pop); }
 
 /* 13) Toast：弹性上浮 */
 #toast{
@@ -783,13 +740,11 @@ body{
   backdrop-filter:blur(8px); -webkit-backdrop-filter:blur(8px);
 }
 #toast.on{ transform:translateX(-50%) translateY(0) scale(1); }
-
 /* 14) 滚动条：更细更贴合系统观感 */
 ::-webkit-scrollbar{ width:9px; height:9px; }
 ::-webkit-scrollbar-track{ background:transparent; }
 ::-webkit-scrollbar-thumb{ background:rgba(120,150,178,.45); border-radius:999px; border:2px solid transparent; background-clip:content-box; }
 ::-webkit-scrollbar-thumb:hover{ background:rgba(90,124,155,.68); background-clip:content-box; }
-
 /* 15) 启动器磁贴：玻璃质感 + 图标浮起 */
 .launch-tile{ border-color:rgba(255,255,255,.68); box-shadow:var(--e2), var(--hair); }
 .launch-tile:hover{ border-color:#fff; box-shadow:var(--e3), var(--hair); transform:translateY(-3px); }
@@ -797,52 +752,42 @@ body{
 .launch-tile .lt-ico{ display:inline-block; transition:transform .28s var(--pop); }
 .launch-tile:hover .lt-ico{ transform:scale(1.14) translateY(-2px); }
 .launch-tile .lt-name{ letter-spacing:.2px; }
-
 /* 16) 存档卡：渐变色条 + 悬浮抬升 */
 .archive-card{ box-shadow:var(--e1); }
 .archive-card::before{ background:linear-gradient(180deg,var(--un-blue),#3f95d3); }
 .archive-card:hover{ box-shadow:var(--e3); transform:translateY(-2px); }
-
 /* 17) 名单胶囊与行悬停 */
 .gr-item{ transition:background .18s, border-color .18s, transform .18s var(--spring), box-shadow .18s; }
 .gr-item:hover{ transform:translateY(-1px); box-shadow:var(--e1); }
 .gr-item.now{ box-shadow:0 4px 14px rgba(13,78,126,.28); }
 .roll-row,.spk-row,.min-line,.award-row,.vote-cell{ transition:background .16s var(--spring-soft), box-shadow .16s; }
-
 /* 18) 统计表：斑马纹 + 悬停高亮 */
 table.stats th{ box-shadow:inset 0 -1px 0 rgba(8,54,90,.10); }
 table.stats tr:nth-child(even) td{ background:#fafcfe; }
 table.stats tr:hover td{ background:#f2f8fd; }
 table.stats td,table.stats th{ transition:background .16s var(--spring-soft); }
-
 /* 19) 投票按钮：选中态更实 */
 .vote-btn{ transition:transform .1s var(--spring), background .18s, color .18s, border-color .18s, box-shadow .18s; }
 .vote-btn:hover{ border-color:var(--un-blue); color:var(--un-blue); box-shadow:var(--e1); }
 .vote-btn.yes.on,.vote-btn.no.on,.vote-btn.abst.on,.vote-btn.pass2.on{ box-shadow:var(--e1), inset 0 1px 0 rgba(255,255,255,.24); }
-
 /* 20) 会议状态横幅：与环境光呼应 */
 .m-banner{ box-shadow:var(--e2); }
 .m-banner.suspended{ box-shadow:0 6px 20px rgba(201,162,39,.20); }
 .m-banner.adjourned{ box-shadow:0 6px 20px rgba(51,71,94,.16); }
-
 /* 21) 徽标厚度 */
 .badge{ box-shadow:var(--e1); }
-
 /* 22) 开机画面：更细腻的光晕与文字层次 */
 #boot{ background:radial-gradient(ellipse at 50% 34%,#1a6ba8 0%,#0d4e7e 42%,var(--un-deep) 68%,#04203a 100%); }
 #boot .boot-name{ text-shadow:0 2px 18px rgba(0,0,0,.35); }
 #boot .boot-bar{ box-shadow:inset 0 1px 2px rgba(0,0,0,.28); }
 #boot .boot-bar i{ box-shadow:0 0 12px rgba(255,255,255,.75); }
-
 /* 23) 桌面态专属增强（min-width 媒体查询不参与移动端断点覆盖判定） */
 @media (min-width:721px){
   .window{ border-radius:14px; }
   .dock button:hover{ background:rgba(26,117,187,.12); }
   .card{ border-radius:13px; }
 }
-
 /* ===== 第二轮：时间可视化与细节质感 ===== */
-
 /* 25) 计时器线性进度条
       ::after 为轨道，::before 为填充；填充宽度同轨道，用 clip-path 从右侧裁掉已消耗部分，
       因此不产生缩放、圆角与高光都不变形。--tp 由 paintTimerAt 每帧写入。 */
@@ -873,7 +818,6 @@ table.stats td,table.stats th{ transition:background .16s var(--spring-soft); }
 /* 进度条占位：为伪元素留出空间，避免与下方控件重叠 */
 .timer-box{ padding-bottom:34px; }
 .pt-top{ padding-bottom:12px; }
-
 /* 26) 磋商时间池进度条：随讨论推进填充，剩余不足时转红 */
 .pool-bar{
   display:block; width:min(116px,100%); height:5px; border-radius:999px;
@@ -888,7 +832,6 @@ table.stats td,table.stats th{ transition:background .16s var(--spring-soft); }
   transition:width 1s linear, background .3s;
 }
 .pool-bar.hot i{ background:linear-gradient(90deg,#e06a5c,var(--no)); }
-
 /* 27) 按钮涟漪高光：按下时从中心扩散，比单纯缩放更有实体反馈 */
 .btn,.vote-btn,.seg button,.launch-tile{ position:relative; }
 .btn,.vote-btn,.seg button{ overflow:hidden; }
@@ -904,7 +847,6 @@ table.stats td,table.stats th{ transition:background .16s var(--spring-soft); }
   transition:transform .26s var(--spring-soft), opacity .40s ease;
 }
 .btn-primary::after{ background:rgba(255,255,255,.24); }
-
 /* 28) Dock 徽标：有待办时缓慢脉动，提示而不打扰 */
 @keyframes badgePulse{
   0%,100%{ box-shadow:0 2px 6px rgba(192,57,43,.35), 0 0 0 0 rgba(192,57,43,.30); }
@@ -913,31 +855,26 @@ table.stats td,table.stats th{ transition:background .16s var(--spring-soft); }
 .dock .dk-badge.on{ animation:badgePulse 2.6s ease-out infinite; }
 /* 当前栏目内的徽标不再脉动，避免与选中态争夺注意力 */
 .dock button.on .dk-badge.on{ animation:none; box-shadow:0 1px 4px rgba(0,0,0,.22); }
-
 /* 29) 滚动条悬浮淡化：静止更淡，容器悬停时加深 */
 ::-webkit-scrollbar-thumb{ background:rgba(120,150,178,.30); }
 ::-webkit-scrollbar:hover ::-webkit-scrollbar-thumb{ background:rgba(90,124,155,.58); }
 .dock:hover,.modal-msg:hover,.doc-content:hover,.doc-preview:hover{ scrollbar-color:#7d99b4 transparent; }
-
 /* 30) 当前发言代表团：行首指示条，视线可快速定位（.gr-item.now 为发言队列当前项） */
 .gr-item.now{ position:relative; }
 .gr-item.now::before{
   content:""; position:absolute; left:0; top:16%; bottom:16%;
   width:3px; border-radius:999px; background:#fff; opacity:.92;
 }
-
 /* 31) 文件图标光泽：斜向高光，增强实体感 */
 .df-icon{ box-shadow:var(--e1), inset 0 1px 0 rgba(255,255,255,.28); position:relative; overflow:hidden; }
 .df-icon::after{
   content:""; position:absolute; inset:0;
   background:linear-gradient(135deg,rgba(255,255,255,.32) 0%,rgba(255,255,255,0) 54%);
 }
-
 /* 32) 纪要时间戳基线对齐，形成日志感 */
 .min-line{ align-items:baseline; }
 .min-line .t{ letter-spacing:.2px; opacity:.82; transition:opacity .18s var(--spring-soft); }
 .min-line:hover .t{ opacity:1; }
-
 /* 33) 桌面分区标题装饰条与徽章计数 */
 .desk-section h2::before{
   content:""; width:3px; height:14px; border-radius:999px; flex:none;
@@ -947,13 +884,11 @@ table.stats td,table.stats th{ transition:background .16s var(--spring-soft); }
 .desk-hero .logo-wrap img,.desk-hero .logo-fallback{
   box-shadow:0 14px 40px rgba(8,54,90,.20), 0 0 0 6px rgba(255,255,255,.55), var(--hair);
 }
-
 /* 34) 表决结果卡片：左侧色条强化通过/未通过的判读 */
 .dv-result{ position:relative; overflow:hidden; padding-left:20px; }
 .dv-result::before{ content:""; position:absolute; left:0; top:0; bottom:0; width:4px; }
 .dv-result.pass::before{ background:linear-gradient(180deg,#2fa86c,var(--ok)); }
 .dv-result.fail::before{ background:linear-gradient(180deg,#d9574a,var(--no)); }
-
 /* 35) 移动端：进度条与池条收窄，避免与触控区打架 */
 @media (max-width:720px){
   .timer-display::after,.timer-display::before{ width:min(230px,84%); bottom:-10px; }
@@ -961,7 +896,6 @@ table.stats td,table.stats th{ transition:background .16s var(--spring-soft); }
   .timer-box{ padding-bottom:28px; }
   .pool-bar{ width:min(92px,100%); }
 }
-
 /* 36) 第二轮动效的减少动效降级 */
 @media (prefers-reduced-motion: reduce){
   .timer-display::before,.pt-display::before,.pool-bar i,
@@ -969,7 +903,6 @@ table.stats td,table.stats th{ transition:background .16s var(--spring-soft); }
   .dock .dk-badge.on{ animation:none !important; }
   .btn:active::after,.vote-btn:active::after,.seg button:active::after{ opacity:0 !important; transform:translate(-50%,-50%) scale(0) !important; }
 }
-
 /* 24) 减少动效偏好：新增动画与位移一并降级 */
 @media (prefers-reduced-motion: reduce){
   *,*::before,*::after{
@@ -981,10 +914,8 @@ table.stats td,table.stats th{ transition:background .16s var(--spring-soft); }
   .sb-exit:hover,.dock button:active:not(.on),.file-drop:hover{ transform:none !important; }
   .dock button:hover .dk-ico,.launch-tile:hover .lt-ico{ transform:none !important; }
 }
-
 /* SECTION: styles-os-polish-3
    第三轮：系统级手感细节（选中策略 / 滚动隔离 / 窗口圆点符号 / 遮罩淡入配套） */
-
 /* 1) 外壳禁止选中文本 —— 真实系统中标题栏、Dock、按钮、徽标均不可选中，
       只有内容区（纪要 .min-line、预览正文、表格、输入框）可选中复制。
       刻意不纳入：.min-line / .doc-preview / .stats / textarea / input */
@@ -996,32 +927,25 @@ table.stats td,table.stats th{ transition:background .16s var(--spring-soft); }
 .boot-name,.boot-sub,.boot-fallback{
   -webkit-user-select:none; -moz-user-select:none; -ms-user-select:none; user-select:none;
 }
-
 /* 2) 滚动隔离：滚动容器到底/到顶后不再穿透带动整页，手感更接近原生面板 */
 .dock,.modal-msg,.doc-preview{ overscroll-behavior:contain; -ms-scroll-chaining:none; }
-
 /* 3) 窗口圆点：刻意不显示 × − + 符号。
    这三个圆点是纯装饰的窗口 chrome，全文未为其绑定任何点击事件；
    悬停时浮现 × − + 会暗示「可关闭/最小化/最大化」，点击却无反应，属假交互提示。
    且规则依赖 .win-bar:hover，触屏点击后 :hover 不清除，符号会一直残留。
    圆点本体与第 652-653 行的内阴影、极轻微悬停提亮保留。 */
-
 /* 4) 遮罩淡入配套：弹窗本体在遮罩淡入的同时轻微上浮，形成层次 */
-.modal-mask.on .modal{ animation:modalIn3 .26s cubic-bezier(.2,.8,.2,1); }
-@keyframes modalIn3{ from{ opacity:.4; transform:scale(.96) translateY(10px); } to{ opacity:1; transform:none; } }
 
 /* 5) 移动端 Dock：横向惯性滚动，滚动条隐藏但保留可滚动手感 */
 @media (max-width:820px){
   .dock{ -webkit-overflow-scrolling:touch; scroll-snap-type:x proximity; }
   .dock button{ scroll-snap-align:center; }
 }
-
 /* 6) 减少动效偏好：本轮新增动效一并降级 */
 @media (prefers-reduced-motion: reduce){
   .modal-mask{ transition:none !important; }
   .modal-mask.on .modal{ animation:none !important; }
 }
-
 /* SECTION: styles-projector — 投屏模式（patch95）：主席台投影时放大关键显示、提高对比度 */
 body.projector{ --ink:#0a1520; --muted:#33465a; --line:#b3c7dd; --bg:#e6edf5; }
 body.projector .timer-display{ font-size:150px; }
@@ -1073,7 +997,6 @@ body.projector .min-line{ font-size:16px; }
   body.projector .dv-result{ font-size:13px; }
   body.projector .dv-result b{ font-size:15px; }
 }
-
 /* SECTION: styles-print — 打印存档报告（patch96）：屏幕上隐藏，打印时只显示报告 */
 #printReport{ display:none; }
 @media print{
@@ -1097,8 +1020,6 @@ body.projector .min-line{ font-size:16px; }
   #printReport .pr-fail{ color:#a3271c; font-weight:600; }
   #printReport .pr-note{ font-size:9pt; color:#555; margin:14px 0 0; }
 }
-
-
 /* ===== SECTION: styles-darkgen — 程序化穷举生成的深色覆盖（根治漏网）===== */
 body.dark .btn{ background:#16232f; }
 body.dark .btn-icon{ background:#16232f; }
@@ -1148,7 +1069,6 @@ body.dark .dv-result.fail{ background:#182634; }
 body.dark .field input:focus, body.dark .field select:focus, body.dark .field textarea:focus, body.dark .del-row input:focus{ background:#16232f; }
 body.dark table.stats tr:nth-child(even) td{ background:#16232f; }
 body.dark table.stats tr:hover td{ background:#16232f; }
-
 /* ===== SECTION: styles-dark — 深色主题（只覆盖颜色，布局/尺寸/圆角/间距一律不动） =====
    写法沿用既有 body.projector 的变量覆盖套路；置于样式表末尾，同特异度下后者胜出。
    刻意保持白色的元素：顶栏 logo、启动进度条、状态栏圆点、#printReport（打印必须白底黑字）。 */
@@ -1262,7 +1182,6 @@ body.dark *{ scrollbar-color:#3a5268 transparent; }
 /* toast 与遮罩 */
 body.dark #toast{ background:#0a1a28; color:#e6eef6; box-shadow:var(--e3); }
 body.dark .modal-mask{ background:rgba(0,0,0,.62); }
-
 /* ===== SECTION: styles-charts — 统计图表（结构中立，深浅两套共用） ===== */
 .c-grid{ display:grid; grid-template-columns:repeat(auto-fit,minmax(240px,1fr)); gap:14px; }
 .c-panel{ background:var(--card); border:1px solid var(--line); border-radius:12px; padding:14px 15px; box-shadow:var(--e1); }
@@ -1286,9 +1205,7 @@ body.dark .modal-mask{ background:rgba(0,0,0,.62); }
 .c-bar-v{ width:26px; flex:none; text-align:right; font-size:12px; font-weight:600; color:var(--ink); font-variant-numeric:tabular-nums; }
 .c-empty{ font-size:12.5px; color:var(--muted); text-align:center; padding:18px 0; }
 @media (max-width:720px){ .c-bar-lb{ width:62px; font-size:11.5px; } .c-grid{ grid-template-columns:1fr; } }
-
 /* ===== SECTION: styles-v2 — 视觉质感升级（浅色重做 + 深色补强） ===== */
-
 /* 全局：统一焦点环与选区色（深浅共用） */
 ::selection{ background:rgba(26,117,187,.22); color:inherit; }
 .btn:focus-visible,.dock button:focus-visible,.sb-exit:focus-visible,.seg button:focus-visible,
@@ -1297,7 +1214,6 @@ body.dark ::selection{ background:rgba(74,163,224,.34); }
 body.dark .btn:focus-visible,body.dark .dock button:focus-visible,body.dark .sb-exit:focus-visible,
 body.dark .seg button:focus-visible,body.dark .vote-btn:focus-visible,body.dark .btn-icon:focus-visible{
   box-shadow:0 0 0 3px rgba(74,163,224,.40), var(--e1); }
-
 /* ---------- 浅色质感升级（body:not(.dark) 前缀，绝不影响深色） ---------- */
 /* 页面背景：顶部淡蓝晕 + 暖调点缀，告别纯色平铺 */
 body:not(.dark){
@@ -1354,7 +1270,6 @@ body:not(.dark) .speaker-current{ background:linear-gradient(125deg,var(--un-dar
 /* 存档卡：hover 更明显 */
 body:not(.dark) .archive-card{ box-shadow:var(--e1), var(--hair); transition:box-shadow .22s, transform .22s var(--spring), border-color .22s; }
 body:not(.dark) .archive-card:hover{ box-shadow:var(--e2), var(--hair); transform:translateY(-2px); border-color:rgba(26,117,187,.36); }
-
 /* ---------- 深色补强：加大对比、提亮次级文字、修 .hero 白字糊 ---------- */
 body.dark{ --muted:#a8bacb; --un-dark:#4a9ede; --bg:#0c1520;
   background:radial-gradient(1100px 560px at 50% -8%, rgba(26,117,187,.10), transparent 62%), var(--bg); }
@@ -1381,9 +1296,7 @@ body.dark table.stats th{ background:linear-gradient(180deg,#1e3040,#1a2937); }
 body.dark .speaker-current{ background:linear-gradient(125deg,#164f7d 0%,#1f76b8 48%,#2684c9 100%); }
 body.dark .win-bar{ box-shadow:inset 0 -1px 0 rgba(255,255,255,.05); }
 body.dark .archive-card:hover{ transform:translateY(-2px); }
-
 /* ===== SECTION: styles-v3 — 深色修净 + 视觉再抬 + 流畅度 ===== */
-
 /* ---------- 1. 深色修净：逐个点名（这些是 v1/v2 漏掉或写错的真实不可读项）---------- */
 /* 使用指引 / 长文本容器：原 #f8fbfd 近白底，深色下浅字压浅底=隐形(1.13) */
 body.dark .doc-content{ background:#131f2b; color:#cfdde9; border-color:#2b3f53; }
@@ -1423,7 +1336,6 @@ body.dark .lt-hint{ color:#93a7bb; }
 body.dark .dk-foot{ color:#93a7bb; border-top-color:#2b3f53; }
 body.dark .doc-file .df-name{ color:var(--ink); }
 body.dark .tally b.y{ color:#7fdcae; } body.dark .tally b.n{ color:#f2a196; } body.dark .tally b.a{ color:#c2ccd6; }
-
 /* ---------- 2. 视觉再抬：排版节奏 + 图表精致化（深浅共用，颜色走变量）---------- */
 /* 全局排版：标题字距收紧、正文行高、数字等宽，提升"设计感" */
 h1,h2,h3,h4{ letter-spacing:-.01em; }
@@ -1450,7 +1362,6 @@ body:not(.dark) .desk-hero::before{ content:''; position:absolute; left:50%; top
 .desk-hero > *{ position:relative; z-index:1; }
 /* 状态栏品牌区：字距与分隔，更像系统栏 */
 .statusbar .sb-brand span{ letter-spacing:1.2px; font-weight:650; }
-
 /* ---------- 3. 流畅度：长列表跳过屏外渲染 + 动画走 GPU（安全，不改 JS 架构）---------- */
 /* 纪要/点名/发言队列可能上百行：屏外项跳过 paint/layout，滚动更顺。
    auto 关键字让浏览器记住已渲染项的真实高度，避免滚动条跳动。旧浏览器不支持则自动降级为无效果。 */
@@ -1460,7 +1371,6 @@ body:not(.dark) .desk-hero::before{ content:''; position:absolute; left:50%; top
 .doc-card, .motion-card, .archive-card{ content-visibility:auto; contain-intrinsic-size:auto 88px; }
 /* hover/进入动画元素提示 GPU 合成，减少重绘 */
 .lt-ico, .launch-tile, .archive-card, .c-panel, .c-bar-tr i{ will-change:transform; }
-
 /* ===== SECTION: styles-projector-big-v8 — 投屏放大（按本文件既有惯例校准至 ~1.5x）=====
    原投屏只放大了计时器与发言者名，点名国名/三态选项、表决国名/投票键仍是普通 12-14px，
    会场远处看不清；但 v5 一版放到 2-2.3x 与文件既有惯例（.tally 1.57x / .dv-name 1.6x /
@@ -1489,7 +1399,6 @@ body:not(.dark) .desk-hero::before{ content:''; position:absolute; left:50%; top
   body.projector .stat-chip{ font-size:17px; padding:12px 18px; }
   body.projector .stat-chip b{ font-size:26px; }
 }
-
 /* ===== SECTION: styles-projector-nocv — 投屏模式关闭屏外跳过渲染 =====
    投屏下点名行/纪要行字号与内边距被大幅放大，v3 的 contain-intrinsic-size 估值
    （34/44/48/88px）远小于真实高度，会让初始滚动条长度偏低、渲染后跳动。
@@ -1498,21 +1407,15 @@ body.projector .min-line, body.projector .roll-row, body.projector .spk-row,
 body.projector .doc-card, body.projector .motion-card, body.projector .archive-card{
   content-visibility:visible;
 }
-
 /* ===== SECTION: styles-motion-v10 — 动效手感升级（spring 入场 + 可打断按压反馈）===== */
 /* 入场关键帧：位移 + 透明，spring 缓动，both 填充防首帧闪白 */
 @keyframes paneInR{ from{ opacity:0; transform:translateY(7px); } to{ opacity:1; transform:none; } }
-@keyframes winInR{ from{ opacity:0; transform:scale(.988) translateY(6px); } to{ opacity:1; transform:none; } }
+
 @keyframes rowInR{ from{ opacity:0; transform:translateY(6px) scale(.992); } to{ opacity:1; transform:none; } }
-@keyframes modalInR{ from{ opacity:0; transform:scale(.94) translateY(12px); }
-  62%{ opacity:1; transform:scale(1.014) translateY(0); }
-  to{ opacity:1; transform:none; } }
+
 /* 面板 / 视图 / 窗口：由纯淡入升级为 spring 位移（覆盖原 paneIn/winIn） */
-.tabpane.on{ animation:paneInR .26s var(--spring) both; }
 .view.active{ animation:paneInR .30s var(--spring) both; }
-.window.swap{ animation:winInR .30s var(--spring) both; }
 .archive-card{ animation:rowInR .26s var(--spring) both; }
-.modal-mask.on .modal{ animation:modalInR .30s var(--pop) both; }
 /* 按压反馈：transform 换 spring 缓动，按下跟手、释放回弹；transition 天然可打断，
    快速连点时从当前进度平滑接管，不会像 animation 那样从头重播 */
 .btn,.vote-btn,.btn-icon,.seg button,.dock button,.preset-row .btn,.timer-ctrl .btn,.pt-ctrl .btn{
@@ -1528,7 +1431,6 @@ body.projector .doc-card, body.projector .motion-card, body.projector .archive-c
 /* 计时器归零警示与实时脉冲：保持既有，但确保走 GPU 合成不抖动 */
 .timer-display.warn{ will-change:opacity; }
 .sb-chip.live{ will-change:opacity; }
-
 /* ===== SECTION: styles-motion-progress-v11 — 进程动画丝滑化（解锁每秒进度硬跳）===== */
 /* 计时器倒计时进度条：clip-path 由 --tp 每秒驱动，加 1s linear 让其连续扫过而非逐格跳。
    等特异度且更靠后，!important 覆盖前面的锁死规则。 */
@@ -1546,11 +1448,9 @@ body.projector .doc-card, body.projector .motion-card, body.projector .archive-c
 .stat-chip b.bump,.tally b{ will-change:transform; }
 /* 队列胶囊 now/done 状态切换（发言推进）：颜色与位移过渡更跟手 */
 .gr-item{ transition:background .2s var(--spring-soft), border-color .2s var(--spring-soft), transform .18s var(--spring), box-shadow .18s, opacity .2s; }
-
 /* ===== SECTION: styles-spring-v12 — 弹簧接管时关闭对应 CSS 入场动画（避免二者打架）=====
    仅当 body.spring（JS 在支持且非 reduced-motion 时添加）生效；否则完全走原 CSS 动画。 */
 /* v19：入场回归纯 CSS，仅 bump 仍由 JS 弹簧驱动 */ body.spring .stat-chip b.bump{ animation:none !important; }
-
 /* ===== SECTION: styles-stage-v14 — 舞台光晕与缓慢浮动（对齐其 stage 氛围）===== */
 .stage{ position:relative; }
 .stage::before{ content:''; position:absolute; left:50%; top:96px; transform:translateX(-50%);
@@ -1562,15 +1462,9 @@ body.dark .stage::before{ background:radial-gradient(ellipse, rgba(74,163,224,.1
 @keyframes stageFloat{ 0%,100%{ transform:translateY(0) scale(1); } 50%{ transform:translateY(-2px) scale(1.002); } }
 .desk-hero{ animation:stageFloat 4.8s ease-in-out infinite; }
 body.dark .desk-hero::before{ background:radial-gradient(ellipse, rgba(74,163,224,.16), transparent 70%); }
-
 /* ===== SECTION: styles-stage-type-v17 — 首页舞台感构图（对齐真实对比结论）===== */
-
-
 body.dark 
 body:not(.dark) 
-
-
-
 /* ② 深色下磁贴=幽灵卡：透明底、极淡描边，内容悬浮于舞台 */
 body.dark .launch-tile{ background:transparent; border-color:rgba(255,255,255,.07); box-shadow:none; }
 body.dark .launch-tile:hover{ background:rgba(255,255,255,.045); border-color:rgba(255,255,255,.16);
@@ -1590,7 +1484,6 @@ body.dark .archive-card:hover{ background:rgba(255,255,255,.05); border-color:rg
 body.dark #syncCard{ background:rgba(255,255,255,.025); border-color:rgba(255,255,255,.07); }
 /* 页脚小型大写 */
 .desk-foot{ letter-spacing:.22em; text-transform:uppercase; font-size:11px; }
-
 /* ===== SECTION: styles-css-entrance-v19 — 纯 CSS 入场（GPU 合成，零 JS 开销）===== */
 @keyframes cssPaneIn{ from{ opacity:0; transform:translateY(14px) scale(.985); }
   to{ opacity:1; transform:none; } } /* v24：去 blur，blur 仅保留在页面级 cssViewIn（同 samunos 结构） */
@@ -1611,7 +1504,6 @@ body.dark #syncCard{ background:rgba(255,255,255,.025); border-color:rgba(255,25
 #view-home.active, #view-setup.active{ animation:cssViewIn .92s cubic-bezier(.22,1,.36,1) backwards; }
 .window.swap{ animation:cssWinIn .62s cubic-bezier(.22,1,.36,1) backwards; }
 .modal-mask.on .modal{ animation:cssModalIn .62s cubic-bezier(.22,1,.36,1) backwards; }
-
 /* ===== SECTION: motion-parity-v20 — 交互内核对标（参数来自 samunos 实测计算值）===== */
 /* 统一缓动令牌：其全站按钮 0.15s cubic-bezier(0.4,0,0.2,1)；外壳 0.9s cubic-bezier(0,0,0.2,1) */
 :root{ --ease-ui:cubic-bezier(0.4,0,0.2,1); --ease-shell:cubic-bezier(0,0,0.2,1); }
@@ -1642,7 +1534,6 @@ body.dark #syncCard{ background:rgba(255,255,255,.025); border-color:rgba(255,25
   #dockCollapse:hover{ background:rgba(26,117,187,.10); color:var(--un-blue); }
 }
 @media (max-width:820px){ #dockExpand, #dockCollapse{ display:none !important; } }
-
 /* ===== SECTION: motion-float-kept-v24 — 主工作区呼吸浮动（表决结果大字呈现已按用户要求删除）===== */
 /* SECTION: motion-fix-v22 —— 会议视图的 .stage 绝不挂 transform 动画：
    dock(position:fixed) 在 .stage 内部，祖先带 transform 会让 fixed 改以 .stage 为包含块，
@@ -1650,7 +1541,6 @@ body.dark #syncCard{ background:rgba(255,255,255,.025); border-color:rgba(255,25
    浮动只保留在 #view-setup .stage（内部无 fixed 元素）与首页 .desk-hero（v14，无 fixed 后代）。 */
 #view-setup .stage{ animation:stageFloat 4.8s ease-in-out 1.2s infinite; }
 body.projector #view-setup .stage{ animation:none; } /* 投屏求稳：关闭持续浮动 */
-
 /* ===== SECTION: fix-view-anim-v25 — 会议视图彻底不参与任何入场动画 =====
    dock(statusbar/dock 均为 fixed)位于 #view-meeting 内；v10 的 paneInR 与 v19 的 cssPaneIn
    只要命中 .view.active 就会让祖先带 transform，劫持 fixed 定位（快捷键延后显示的根因）。
@@ -1667,7 +1557,6 @@ body.projector #view-setup .stage{ animation:none; } /* 投屏求稳：关闭持
 </style>
 </head>
 <body>
-
 <!-- SECTION: os-boot -->
 <div id="boot">
   <img class="boot-logo js-logo" alt="天中模联徽章" onerror="this.style.display='none';this.nextElementSibling.style.display='flex';">
@@ -1676,7 +1565,6 @@ body.projector #view-setup .stage{ animation:none; } /* 投屏求稳：关闭持
   <div class="boot-sub">浙江省天台中学模拟联合国社团</div>
   <div class="boot-bar"><i></i></div>
 </div>
-
 <!-- SECTION: os-statusbar -->
 <div class="statusbar" id="statusbar">
   <div class="sb-brand">
@@ -1696,7 +1584,6 @@ body.projector #view-setup .stage{ animation:none; } /* 投屏求稳：关闭持
     <button class="sb-exit" id="sbExit" style="display:none;" data-nav="home" data-i18n="退出会议">退出会议</button>
   </div>
 </div>
-
 <!-- SECTION: view-home -->
 <div id="view-home" class="view desktop">
   <div class="desk-hero">
@@ -1751,7 +1638,6 @@ body.projector #view-setup .stage{ animation:none; } /* 投屏求稳：关闭持
   </section>
   <footer class="desk-foot" data-i18n="天中模联 THSMUN · 会议数据保存在当前浏览器本地">天中模联 THSMUN · 会议数据保存在当前浏览器本地</footer>
 </div>
-
 <!-- SECTION: view-setup -->
 <div id="view-setup" class="view">
   <div class="stage">
@@ -1817,7 +1703,6 @@ body.projector #view-setup .stage{ animation:none; } /* 投屏求稳：关闭持
     </div>
   </div>
 </div>
-
 <!-- SECTION: view-meeting -->
 <div id="view-meeting" class="view">
   <div class="stage">
@@ -2039,7 +1924,6 @@ body.projector #view-setup .stage{ animation:none; } /* 投屏求稳：关闭持
   </div>
   </div>
 </div>
-
 <!-- SECTION: modal-toast -->
 <div class="modal-mask" id="modalMask">
   <div class="modal">
@@ -2050,7 +1934,6 @@ body.projector #view-setup .stage{ animation:none; } /* 投屏求稳：关闭持
 </div>
 <div id="toast"></div>
 <button type="button" id="dockExpand" data-i18n-title="展开侧边栏" title="展开侧边栏">»</button>
-
 <script>
 /* SECTION: js-core */
 'use strict';
@@ -2081,7 +1964,6 @@ function pruneTombstones(){
 }
 var timer = { total: 90, remaining: 90, running: false, intervalId: null };
 var modalCb = null;
-
 function uid(){ return 'id' + Date.now().toString(36) + Math.random().toString(36).slice(2, 7); }
 function loadMeetings(){
   try { state.meetings = JSON.parse(localStorage.getItem(LS_KEY) || '[]'); }
@@ -2093,12 +1975,10 @@ function loadMeetings(){
 }
 /* 存档迁移（一次性、幂等）：本版本为点名新增「出席并投票」(PV) 状态，
    文件表决池 docVotePool 由「出席(P)」改为「出席并投票(PV)」。
-
    风险：升级前若某会议的文件表决正在进行中（docVote.status==='voting'）且点名全为 P、
    无 PV，说明这些 P 在旧语义下正被当作有表决权使用；若不迁移，池会变空 ——
    已录入的票被 countDocVotes 全部忽略（清零）、面板渲染 0 个投票按钮、
    finishDocVote 因「尚无任何代表团投票」早退，表决永久卡在 voting（实证见 probe_pv2 场景 D）。
-
    迁移条件（三者同时满足才触发）：
      1) 存在进行中的文件表决（docVote.status==='voting'）；
      2) 有代表团 roll==='P'；
@@ -2108,7 +1988,6 @@ function loadMeetings(){
    「全 P + 无 PV + voting」在新版本不可能自然产生，迁移不会误伤新会议。
    其他旧存档（无进行中表决）不迁移：其下次发起文件表决会强制重新点名，
    由主席按新语义重新选择「出席 / 出席并投票」。
-
    幂等：迁移后不再有 P，条件 2 失效，重复加载不会二次迁移。 */
 function migratePVMeetings(){
   if (!state || !Array.isArray(state.meetings)) return;
@@ -2118,9 +1997,11 @@ function migratePVMeetings(){
     if (!m || !Array.isArray(m.delegates)) continue;
     if (!m.docVote || m.docVote.status !== 'voting') continue;
     /* 安理会：只要按当前口径投票池非空就跳过迁移。
-       · nine 口径池含全体出席者；twothirds 口径池含出席的常任理事国（patch103 起五常默认入池）。
-         故安理会只要有出席成员，池即非空、无卡死风险；此时迁移只会无谓改写数据，
-         甚至把 P 全转 PV 扩大池、篡改进行中表决的门槛。
+       · nine 口径池含全体出席者，故有任何出席成员池即非空；
+       · twothirds 口径池 = 所有 PV + 标「出席」的常任理事国（patch103 起五常默认入池），
+         故须有常任理事国出席、或有任何 PV，池才非空（非常任理事国只标 P 不入池）。
+       池非空即无卡死风险；此时迁移只会无谓改写数据，甚至把 P 全转 PV 扩大池、
+       篡改进行中表决的门槛。
        · 仅当安理会池确实为空（twothirds 且无常任理事国出席、也无任何 PV）才走下方迁移兜底。 */
     if (isSecurityCouncil(m) && docVotePool(m).length > 0) continue;
     var hasP = false, hasPV = false;
@@ -2142,7 +2023,6 @@ var saveTimer = null;
 /* 上次保存失败的原因（'' 表示上次成功），用于只在状态变化时提示一次，
    避免配额满 / 存储不可用时每次 saveMeetings 都弹 toast 刷屏 */
 var lastSaveErr = '';
-
 /* ===== 存档持久化：剔除撤销快照 + 毫秒级修订号（patch89）=====
    撤销快照仅服务运行期内存回退，实测占整档存档 93.1%（见文件头依据），
    故写盘时剔除；回退功能在会话内完全不变。 */
@@ -2179,7 +2059,6 @@ function stampRevisions(){
     }
   }
 }
-
 function flushSave(){
   if (saveTimer) { clearTimeout(saveTimer); saveTimer = null; }
   try {
@@ -2213,7 +2092,6 @@ function saveMeetings(){
   saveTimer = setTimeout(flushSave, 260);
 }
 window.addEventListener('beforeunload', flushSave);
-
 /* SECTION: js-idb — 上传文件的本地存储（IndexedDB，仅存于本机浏览器） */
 var IDB_NAME = 'thsmun_files', IDB_STORE = 'files', idbStatus = null;
 function idbOpen(){
@@ -2296,7 +2174,6 @@ function storeDel(key){
 }
 function fmtSize(b){ if (b < 1024) return b + ' B'; if (b < 1048576) return (b / 1024).toFixed(1) + ' KB'; return (b / 1048576).toFixed(1) + ' MB'; }
 function extOf(name){ var i = (name || '').lastIndexOf('.'); return i >= 0 ? name.slice(i + 1).toLowerCase() : ''; }
-
 function cur(){ for (var i = 0; i < state.meetings.length; i++) if (state.meetings[i].id === state.currentId) return state.meetings[i]; return null; }
 function esc(s){ return String(s == null ? '' : s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
 function fmtSec(s){ s = Math.max(0, Math.round(s)); var m = Math.floor(s / 60), r = s % 60; return (m < 10 ? '0' : '') + m + ':' + (r < 10 ? '0' : '') + r; }
@@ -2313,7 +2190,6 @@ function toast(msg){
 }
 /* 纪要为历史记录：写入时即按当时的界面语言定稿，不随语言切换重译 */
 function log(m, text){ m.minutes.push({ t: nowStr(), text: normalizePunct(text) }); }
-
 /* SECTION: js-i18n */
 /* 轻量双语：以中文原文为键，未收录的字符串自动回退中文，不会出现空键 */
 var LANG = 'zh';
@@ -2926,7 +2802,6 @@ function setLang(l){
   syncStatusBar();
   toast(LANG === 'en' ? 'Language: English' : '语言：中文');
 }
-
 /* SECTION: js-projector — 投屏模式开关（patch95） */
 var PROJECTOR_KEY = LS_KEY + '.projector';
 function applyProjector(on){
@@ -2946,7 +2821,6 @@ function toggleProjector(){
   var saved = null; try { saved = localStorage.getItem(PROJECTOR_KEY); } catch (e) {}
   applyProjector(saved === '1');
 })();
-
 /* SECTION: js-undo */
 /* 快照式撤销栈：回退后该操作产生的纪要一并消失 */
 /* 撤销快照标签的英文映射：独立于 I18N，因为同一中文串在纪要里需要动词短语
@@ -3068,7 +2942,6 @@ function undoStep(){
   }
   toast(t('已回退：') + undoLabel(step.label || ''));
 }
-
 function show(view){ var vs = document.querySelectorAll('.view'); for (var i = 0; i < vs.length; i++) vs[i].classList.remove('active'); document.getElementById('view-' + view).classList.add('active'); window.scrollTo(0, 0); syncStatusBar(); syncUndoBtn(); }
 var TAB_NAMES = { roll:'点名', gsl:'主发言名单', speakers:'发言名单', motions:'动议与表决', docvote:'实质性表决文件', timer:'计时器', docs:'文件', minutes:'会议纪要', stats:'统计与评奖' };
 function tabName(k){ return t(TAB_NAMES[k] || k || ''); }
@@ -3217,7 +3090,6 @@ document.addEventListener('keydown', function(e){
   if (e.key === 'Escape' && document.getElementById('modalMask').classList.contains('on')) closeModal();
 });
 document.addEventListener('click', function(e){ var nav = e.target.closest ? e.target.closest('[data-nav]') : null; if (nav) { persistTimer(); stopTimer(); renderHome(); show(nav.getAttribute('data-nav')); } });
-
 /* SECTION: js-audio */
 var audioCtx = null;
 function beep(){
@@ -3261,7 +3133,6 @@ Object.assign(I18N, {
   '导入失败：存档版本较新，请先升级本系统':'Import failed: the archive is from a newer version — please update this system first',
   '会议已导入，但部分附件写入失败':'Meetings imported, but some attachments failed to save'
 });
-
 /* 词典补充（十一）：投屏模式、打印存档报告、指引新增条目（patch97） */
 Object.assign(I18N, {
   /* —— 投屏模式（patch95）—— */
@@ -3298,20 +3169,17 @@ Object.assign(I18N, {
   '所有会议与上传文件默认仅保存在当前浏览器本地，不会自动上传到任何外部服务；只有当你主动点击「导出全部存档」时，才会生成一个文件由你自行保管或传输。撤销记录不写入存档，以节省本地空间。':'All meetings and uploaded files are stored in this browser only by default and are never uploaded automatically. A file is produced only when you click "Export All Archives", for you to keep or transfer yourself. Undo history is not written into archives, saving local space.',
   '本系统（THSMUN OS）为社团会议量身打造，覆盖点名、主发言名单、动议裁定、实质性表决文件两轮投票（安理会门槛在新建会议时选定：宪章 9 票制或出席国家三分之二多数，并含否决权）、计时、文件流转、纪要导出、打印存档、统计评奖、投屏模式、多设备存档同步与中英双语的完整流程，参照安理会等委员会的真实议事规则设计，供主席团与代表在会议中直接使用。':'Built for THSMUN, this system (THSMUN OS) covers the complete workflow: roll call, the general speaker list, motion rulings, two-round substantive votes on documents (the Security Council threshold — either the Charter 9-vote rule or a two-thirds majority of the members holding a vote — is chosen when the meeting is created, and the veto applies), timing, document handling, minutes export, printable archives, statistics and awards, projection mode, multi-device archive sync, and full Chinese/English bilingual support. It follows the real rules of procedure of committees such as the Security Council, for direct use by chairs and delegates.'
 });
-
 /* 词典补充（十二）：安理会表决权随门槛口径变化（patch101/102 配套） */
 Object.assign(I18N, {
   '决议草案表决规则：以「有决议草案表决权国家」为基数，赞成须达其三分之二多数，且弃权票不得超过其简单多数，方可通过（安理会宪章 9 票制的弃权简单多数同样按实际有表决权席数计算，不按 15 国固定）；安理会采用三分之二口径时，五个常任理事国另有一票否决权。安理会采用宪章第 27 条口径时：赞成须达 9 票、无常任理事国否决，且弃权票不得达到有表决权国家席数的简单多数（满席 15 国时为 8 票，不满席时按实际有表决权席数计算）。点名栏目的汇总条同时列出两种基数：「三分之二多数」按出席数计（用于程序性动议），「有表决权 2/3 多数」与「有表决权简单多数」按有表决权国家计（用于决议草案），两者都随点名逐次实时更新，与表决面板显示的门槛同源。':'Draft resolution voting: counted on the members holding a vote on documents. It passes only with affirmative votes reaching a two-thirds majority of them and abstentions below a simple majority of them (the Article 27 threshold of the Security Council also counts the abstention simple majority on the seats actually holding a vote, not on a fixed 15); under the Security Council\'s two-thirds threshold the five permanent members also hold a veto. Under the Security Council\'s Article 27 threshold the rule is unchanged: at least 9 affirmative votes, no permanent-member veto, and abstentions below a simple majority of the seats holding a vote (8 when all 15 Council members are present, otherwise counted on the actual number). The roll call summary strip lists both bases: "Two-thirds Majority" counts attendance (for procedural motions), while "Two-thirds of voters" and "Simple majority of voters" count the members holding a vote (for draft resolutions); both update live with every roll-call mark and share the same basis as the threshold shown in the voting panel.',
   '安理会表决权随门槛口径变化：门槛选「宪章第 27 条」时，所有出席理事国都有实质性文件表决权，点名无需区分「出席」与「出席并投票」；门槛选「有表决权国家的三分之二多数」时，非常任理事国须点名选「出席并投票」才有文件表决权（点名须区分），而五个常任理事国默认拥有表决权；两种门槛下五个常任理事国的一票否决权都保留。':'Security Council voting rights follow the threshold: with "Article 27" every present member holds a vote on substantive documents and roll call need not distinguish "Present" from "Present and voting"; with “two-thirds of the members present” elected (non-permanent) members must be marked “Present and voting” to vote (so roll call must distinguish them), while the five permanent members hold a vote by default. Under either threshold the five permanent members keep their veto.'
 });
-
 /* 词典补充（十三）：门槛名称与计算基数对齐（patch105）。
    注：门槛名「有表决权国家的三分之二多数」的英文由 patch105 全量改名时同步落在原词典条目上，
    此处不再重复定义，避免同键两处定义 */
 Object.assign(I18N, {
   '宪章第 27 条：需至少 9 票赞成（固定票数，所有出席理事国都有表决权）':'Article 27: at least 9 affirmative votes (a fixed number; every present member holds a vote)'
 });
-
 /* 词典补充（十四）：汇总栏有表决权门槛 chip 与弃权基数表述（patch108） */
 Object.assign(I18N, {
   '有表决权 2/3 多数':'Two-thirds of voters',
@@ -3322,7 +3190,6 @@ Object.assign(I18N, {
   '且弃权未达有表决权国家':'and abstentions below a simple majority of the',
   '席的简单多数':'members holding a vote'
 });
-
 /* SECTION: js-home */
 function renderHome(){
   var box = document.getElementById('archiveList');
@@ -3366,7 +3233,6 @@ document.getElementById('archiveList').addEventListener('click', function(e){
   }
 });
 document.getElementById('btnNewMeeting').onclick = function(){ renderSetup(); show('setup'); };
-
 /* SECTION: js-setup */
 /* 内置国家全称对照（简称 → 全称）；未命中则沿用简称 */
 var FULL_NAMES = {
@@ -3458,7 +3324,6 @@ function fullOf(shortName){
   for (var k in FULL_NAMES) if (FULL_NAMES[k] === s) return s;
   return s;
 }
-
 /* ===== 英文国名表（联合国官方英文名）：仅用于英文模式展示，存储层始终为中文 ===== */
 /* 中文简称 → 英文简称；键须与 FULL_NAMES 的键一一对应（含别名） */
 var EN_SHORT = {
@@ -3602,7 +3467,6 @@ var EN_ALIAS = {
   "Czechia": '捷克', "Slovakia": '斯洛伐克', "Bosnia": '波黑',
   "Gambia": '冈比亚', "The Gambia": '冈比亚'
 };
-
 /* 反查表：英文国名 → 中文存储键。
    别名（波黑 / 波斯尼亚和黑塞哥维那、刚果（布）/ 刚果布 等）共用同一英文名，
    反查时任取其一即可 —— 它们在 FULL_NAMES 中的中文全称一致。
@@ -3629,7 +3493,6 @@ function fullOfLang(x){
   if (LANG !== 'en') return zh;
   return EN_FULL[zh] || EN_SHORT[cn] || zh;
 }
-
 /* 五个常任理事国：按简称或联合国口径全称识别（存储层始终为中文键） */
 var PERMANENT_FIVE = {
   '中国':1, '中华人民共和国':1,
@@ -4041,7 +3904,8 @@ document.getElementById('setupForm').addEventListener('submit', function(e){
   if (ds && de && de < ds) { toast(t('结束日期不能早于开始日期')); return; }
   var rows = document.querySelectorAll('#delRows .del-row'), dels = [], seen = {};
   var isSC = document.getElementById('fSC').checked;
-  /* 安理会门槛口径：'nine' = 宪章第 27 条至少 9 票；'twothirds' = 出席国家三分之二多数 */
+  /* 安理会门槛口径：'nine' = 宪章第 27 条至少 9 票；'twothirds' = 有表决权国家的三分之二多数
+     （基数是投票池 docVotePool 的规模，不是出席数，见 twoThirdsNeed / docVoteNeed） */
   var scRuleEl = document.querySelector('input[name="fSCRule"]:checked');
   var scRule = (scRuleEl && scRuleEl.value === 'twothirds') ? 'twothirds' : 'nine';
   for (var i = 0; i < rows.length; i++) {
@@ -4091,7 +3955,6 @@ document.getElementById('setupForm').addEventListener('submit', function(e){
   state.meetings.push(m); saveMeetings();
   openMeeting(m.id); toast(t('会议已创建'));
 });
-
 /* SECTION: js-meeting-open */
 function meetingDateTxt(m){
   var ds = m.dateStart || m.date || '', de = m.dateEnd || '';
@@ -4264,7 +4127,6 @@ function bumpStat(m, delId, key){
   if (!m.stats[delId]) m.stats[delId] = { speeches: 0, votes: 0 };
   m.stats[delId][key] = (m.stats[delId][key] || 0) + 1;
 }
-
 /* 是否已发生过至少一次表决（任一已裁定的动议，或已完成过实质性表决文件） */
 function hasAnyVote(m){
   if (!m) return false;
@@ -4275,7 +4137,6 @@ function hasAnyVote(m){
   }
   return false;
 }
-
 /* SECTION: js-banner */
 function renderMeetingBanner(m){
   var box = document.getElementById('meetingBanner');
@@ -4324,7 +4185,6 @@ function renderMeetingBanner(m){
     };
   }
 }
-
 /* SECTION: js-roll */
 /* patch111：点名统计的单遍汇总。一次循环同时得出四项，替代原先每次点击的 6 轮遍历。
    关键点：scPoolHasAllPresent / isSecurityCouncil 对本场会议恒定，提到循环外只算一次
@@ -4627,7 +4487,6 @@ document.getElementById('btnRollDone').onclick = function(){
   }
   syncUndoBtn();
 };
-
 /* SECTION: js-gsl */
 /* 主发言名单：按加入顺序依序发言，不分轮次；已发言完毕的国家自动移出待发言队列 */
 /* 旧存档兼容：把轮次制的进度迁移到扁平队列的 done 标记上 */
@@ -4672,20 +4531,17 @@ function renderGsl(m){
   fillDelSelectGuarded(document.getElementById('gslSelect'), 'gslSelect', m);
   var secIn = document.getElementById('gslSeconds');
   if (secIn && secIn.getAttribute('data-init') !== '1') { secIn.value = m.gslSec || 120; secIn.setAttribute('data-init', '1'); }
-
   /* 开启 / 关闭名单：两个独立按钮，互斥禁用，语义清晰 */
   var tg = document.getElementById('btnGslToggle');
   if (tg) { tg.disabled = !!m.gslOpen; tg.textContent = t('开启名单'); }
   var cl = document.getElementById('btnGslClose');
   if (cl) { cl.disabled = !m.gslOpen; cl.textContent = t('关闭名单'); }
-
   /* 栏目内计时：显示当前发言者与剩余时间 */
   var gWho = document.getElementById('gslTimerWho');
   var csGsl = m.currentSpeaker && (m.currentSpeaker.src || 'gsl') === 'gsl' ? m.currentSpeaker : null;
   if (gWho) gWho.textContent = csGsl ? delName(m, csGsl.delId)
     : (m.gslOpen ? t('待开始') : t('名单未开启'));
   paintTimerAt(timers.gsl);
-
   var box = document.getElementById('gslCurrent');
   if (box) {
     if (csGsl) {
@@ -4707,7 +4563,6 @@ function renderGsl(m){
       }
     }
   }
-
   /* 待发言队列：仅显示尚未发言完毕的国家，已发言结束的自动移出。
      走 paintQueue 定点渲染：鼠标悬停在胶囊上时不再因整块重建而丢失抬起态 */
   var rb = document.getElementById('gslRounds');
@@ -4850,7 +4705,6 @@ function endSpeech(m, byTimer){
   }
   m.updatedAt = nowStr(); saveMeetings(); renderGsl(m); renderSpeakers(m); renderMinutes(m); renderStats(m);
 }
-
 /* SECTION: js-caucus */
 /* 有主持核心磋商：议题 + 总时长池 + 每位代表发言时长。
    所有代表共用同一时间池，每人发言按 perSec 计时并实时扣减 remainingSec；
@@ -4935,12 +4789,10 @@ function paintQueueItem(el, it, idx){
 }
 /* 发言队列（GSL 待发言队列 / 磋商发言队列）的增量渲染。
    items: [{delId, name, seconds, cls}]，cls 为 '' | 'done' | 'now' | 'done now'。
-
    为何要增量：.gr-item 带 transition:transform .18s 与 :hover{transform:translateY(-1px)}，
    整块重建会让鼠标下的胶囊瞬间失去抬起态、过渡被打断，滚动位置也丢失。
    而「加入国家」是这两个列表最高频的操作（条目数 1→2→3…），
    patch77 要求条目数相等才定点更新，恰好把这条主路径排除在外。
-
    策略：只要公共前缀的 data-del 吻合，就认为是在原列表上增删尾部 ——
      · 前缀条目原地定点更新（节点身份保持）
      · 新增条目 appendChild
@@ -5045,7 +4897,6 @@ function caucusAppendable(m){
   if (!c || !c.active || c.perSec <= 0) return 0;
   return Math.max(0, Math.floor((c.remainingSec | 0) / c.perSec));
 }
-
 /* SECTION: js-speakers */
 /* 发言名单：有主持核心磋商与个人演讲的发言队列，按加入顺序依序发言 */
 function nextPendingInSpkList(m){
@@ -5094,7 +4945,6 @@ function renderSpeakers(m){
       info.innerHTML = '';
     }
   }
-
   /* 栏目内计时：显示当前发言者与磋商剩余池 */
   var sWho = document.getElementById('spkTimerWho');
   var cs = m.currentSpeaker && (m.currentSpeaker.src || 'gsl') === 'mod' ? m.currentSpeaker : null;
@@ -5108,14 +4958,12 @@ function renderSpeakers(m){
       : '';
   }
   paintTimerAt(timers.spk);
-
   /* 「结束名单」：有正在发言者、队列中仍有国家、或磋商仍在进行时可用 */
   var endListBtn = document.getElementById('btnSpkEndList');
   if (endListBtn) {
     var canEnd = !!(cs || spkPendingCount(m) > 0 || (c && c.active));
     endListBtn.disabled = !canEnd;
   }
-
   var box = document.getElementById('spkCurrent');
   if (box) {
     if (cs) {
@@ -5147,7 +4995,6 @@ function renderSpeakers(m){
       }
     }
   }
-
   /* 磋商发言队列：走 paintQueue 定点渲染。
      与 GSL 队列不同，本队列保留已发言项（done 类）与当前发言项（now 类），
      故 cls 需按原逻辑同时给出这两种状态，定点更新时才能正确保留视觉状态 */
@@ -5265,7 +5112,6 @@ function appendSpkList(m){
   m.updatedAt = nowStr(); saveMeetings(); renderSpeakers(m); renderMinutes(m);
   toast(t('已追加') + ' ' + added.length + ' ' + t('个国家'));
 }
-
 /* SECTION: js-docvote */
 /* 实质性表决文件：所有委员会（含安理会）均为两轮制，第一轮可投赞成 / 反对 / 弃权 / 过，
    仅投「过」者进入第二轮。安理会通过门槛在建会时二选一：宪章第 27 条的至少 9 票赞成，
@@ -5473,7 +5319,6 @@ function renderDocVote(m){
         + ' · <span class="hint">' + docVoteRuleText(m) + '</span></div>'
       : '')
     + '</div>';
-
   if (dv.status === 'voting') {
     /* 第二轮：仅第一轮投「过」的代表团重新投票；投赞成 / 反对 / 弃权者不再进入第二轮，其票直接计入计票 */
     var r2pool = (dv.round === 2 && Array.isArray(dv.round2Pool)) ? dv.round2Pool : null;
@@ -5508,7 +5353,10 @@ function renderDocVote(m){
       + '<br>' + t('通过门槛') + '：' + docVoteRuleText(m)
       + '</p></div>';
   } else {
-    var fv = dv.final || {}, fNeed = (typeof fv.need === 'number') ? fv.need : Math.ceil((fv.y + fv.n) * 2 / 3);
+    /* 门槛数字一律由 docVoteRuleText(m, fv) 按历史快照复述，此处不自行推算。
+       旧 fNeed 兜底以「赞成+反对」为基数，与实现（以投票池为基数、弃权计入分母）矛盾，
+       且从未被读取，已移除 */
+    var fv = dv.final || {};
     var fReason = (dv.vetoedBy && dv.vetoedBy.length) ? t('否决权行使') + '：' + esc(dv.vetoedBy.join('、')) + ' ★'
       : (fv.abBlocked ? t('弃权已达简单多数') + '（' + fv.ab + '/' + fv.simple + '）' : '');
     html += '<div class="card"><div class="dv-result ' + (dv.result === 'passed' ? 'pass' : 'fail') + '">'
@@ -5523,7 +5371,6 @@ function renderDocVote(m){
       + '</div></div>';
   }
   box.innerHTML = html;
-
   var r2 = document.getElementById('btnDvRound2');
   if (r2) r2.onclick = function(){ toDocVoteRound2(m); };
   var fin = document.getElementById('btnDvFinish');
@@ -5641,7 +5488,6 @@ function finishDocVote(m){
   m.updatedAt = nowStr(); saveMeetings(); renderDocVote(m); renderDocs(m); renderMinutes(m); renderStats(m);
   toast(passed ? t('文件通过') : (vetoedBy.length ? t('否决权已行使，文件被否决') : (abBlocked ? t('弃权已达简单多数，文件未通过') : t('文件未通过'))));
 }
-
 /* SECTION: js-motions */
 var MOTION_NAMES = {
   /* agenda（设定议程）已从动议类型下拉移除：它在生效后无任何实际处理，属空操作。
@@ -5756,7 +5602,6 @@ function docVoteRuleText(m, fv){
     + ' ' + simple + ' ' + t('票');
   return txt;
 }
-
 /* ===== 决议草案编号 / 延置 / 投票顺序 工具 ===== */
 /* 文件显示标签：类型 + 标题（标题通常以编号开头，如 DR1.1） */
 function docLabel(d){ return d ? (d.type + ' ' + d.title) : ''; }
@@ -5813,7 +5658,6 @@ function migrateDocs(m){
 }
 /* 「更改投票顺序」动议正在排定的临时顺序（docId 数组） */
 var pendingReorder = [];
-
 function fillDelegateSelect(sel, m, keep, placeholder){
   if (!sel) return;
   var ph = placeholder === false ? '' : '<option value="">' + esc(placeholder || t('请选择')) + '</option>';
@@ -6063,7 +5907,6 @@ function renderMotions(m){
   if (!box) return;
   var list = (m && m.motions) || [];
   var emptyHtml = '<div class="card"><div class="empty">' + esc(t('暂无动议记录')) + '</div></div>';
-
   /* 快速路径：数量一致且 data-mid 顺序吻合 → 逐卡比对签名 */
   if (list.length > 0 && box.children.length === list.length) {
     var same = true, v;
@@ -6084,7 +5927,6 @@ function renderMotions(m){
       return;
     }
   }
-
   /* 整体重建兜底 */
   if (!list.length) { box.innerHTML = emptyHtml; return; }
   var html = '';
@@ -6384,7 +6226,6 @@ function syncAmForField(){
   if (keep && sel.querySelector('option[value="' + keep + '"]:not([disabled])')) sel.value = keep;
 }
 document.getElementById('docType').addEventListener('change', syncAmForField);
-
 document.getElementById('motionList').addEventListener('click', function(e){
   var m = cur(); if (!m) return;
   if (guardSuspended(m)) return;
@@ -6393,7 +6234,6 @@ document.getElementById('motionList').addEventListener('click', function(e){
   var p = rb.getAttribute('data-rule').split(':');
   ruleMotion(m, p[0], p[1] === 'pass');
 });
-
 /* SECTION: js-timer */
 /* 会议是否处于非进行状态（休会 / 闭幕） */
 function isPausedMeeting(){
@@ -6475,7 +6315,6 @@ function paintTimer(){ paintTimerAt(timers.global); }
 function setTimer(sec, remaining){ setTimerAt(timers.global, sec, remaining); }
 function stopTimer(writeLog){ stopTimerAt(timers.global, writeLog); }
 function runTimer(){ runTimerAt(timers.global); }
-
 function setTimerAt(T, sec, remaining){
   stopTimerAt(T, false);
   T.total = Math.max(1, sec | 0);
@@ -6575,7 +6414,6 @@ document.getElementById('btnTimerCustom').onclick = function(){
   if (!v || v < 5) { toast(t('请输入至少 5 秒')); return; }
   setTimer(v);
 };
-
 /* SECTION: js-docs */
 var pickedFile = null;
 var ALLOWED_EXT = ['pdf', 'doc', 'docx'];
@@ -6957,7 +6795,6 @@ document.getElementById('docList').addEventListener('click', function(e){
     }, t('确认删除'));
   }
 });
-
 /* SECTION: js-minutes */
 /* 单条纪要的 DOM 节点。用 createElement + textContent 组装：
    免 innerHTML 解析，且纪要正文含 < > & 等字符时无需担心转义遗漏 */
@@ -6992,7 +6829,6 @@ function renderMinutes(m){
   if (prevOwner !== owner || prevLang !== LANG) prevCount = -1;   /* 换会议或换语言 → 强制重建 */
   box.setAttribute('data-mowner', owner);
   box.setAttribute('data-mlang', LANG);
-
   /* 空态 */
   if (!list.length) {
     var alreadyEmpty = prevCount === 0 && box.children.length === 1
@@ -7007,7 +6843,6 @@ function renderMinutes(m){
     box.setAttribute('data-mcount', '0');
     return;
   }
-
   /* 增量路径：现有 DOM 条数与上次渲染一致、新条数更多，且最旧一条内容吻合 */
   if (prevCount >= 0 && list.length > prevCount && box.children.length === prevCount
       && box.lastChild && box.lastChild.className === 'min-line') {
@@ -7022,7 +6857,6 @@ function renderMinutes(m){
       return;
     }
   }
-
   /* 整体重建兜底（首次渲染 / 撤销截断 / 切换会议 / 形态不符） */
   var frag2 = document.createDocumentFragment();
   for (var j = list.length - 1; j >= 0; j--) frag2.appendChild(minLineEl(list[j]));
@@ -7349,7 +7183,6 @@ function renderCharts(m){
   html += panelHtml('赞助文件数', t('前 {n} 位').replace('{n}', 8), barsHtml(topByValue(dc, 8), 'var(--gold)'));
   box.innerHTML = html;
 }
-
 /* SECTION: js-theme — 深浅主题切换（写法沿用既有 applyProjector/toggleProjector） */
 var THEME_KEY = LS_KEY + '.theme';
 function applyTheme(dark){
@@ -7377,8 +7210,6 @@ function toggleTheme(){
   else if (saved === null && window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) applyTheme(true);
   else applyTheme(false);
 })();
-
-
 document.getElementById('btnMinutesExport').onclick = function(){
   var m = cur(); if (!m) return;
   var lines = ['天中模联 · ' + m.name, t('委员会') + '：' + (m.committee || '-'), t('议题') + '：' + (m.topic || '-'),
@@ -7393,8 +7224,6 @@ document.getElementById('btnMinutesExport').onclick = function(){
   setTimeout(function(){ URL.revokeObjectURL(a.href); a.remove(); }, 500);
   toast(t('纪要已导出'));
 };
-
-
 /* SECTION: js-dock-collapse-v20 — dock 收起/展开（对齐 samunos 0.9s 侧边栏外壳动画） */
 var DOCKHIDE_KEY = LS_KEY + '.dockhide';
 function applyDockHidden(on){
@@ -7412,8 +7241,6 @@ function toggleDock(forceHide){
   var saved = null; try { saved = localStorage.getItem(DOCKHIDE_KEY); } catch (e) {}
   if (saved === '1') applyDockHidden(true);
 })();
-
-
 /* SECTION: js-print — 打印 / 存档 PDF 报告（patch96） */
 function prRuleName(m){
   if (m.isSC) return t('联合国安全理事会') + ' · ' + (scRuleOf(m) === 'nine' ? t('宪章第 27 条：需至少 9 票赞成') : t('有表决权国家的三分之二多数'));
@@ -7597,7 +7424,6 @@ document.getElementById('awardList').addEventListener('click', function(e){
   m.awards.splice(+b.getAttribute('data-award-rm'), 1);
   m.updatedAt = nowStr(); saveMeetings(); renderStats(m); syncUndoBtn();
 });
-
 /* SECTION: js-init */
 /* 恢复上次使用的语言 */
 try { var savedLang = localStorage.getItem(LS_KEY + '.lang'); if (savedLang === 'en' || savedLang === 'zh') LANG = savedLang; } catch (e) {}
@@ -7613,7 +7439,6 @@ idbOpen().then(function(db){
   if (db) db.close();
   if (idbStatus === false && !pickedFile) paintFileHint();
 });
-
 /* SECTION: js-os-runtime */
 /* 开机画面：进度条走完后淡出 */
 setTimeout(function(){ var b = document.getElementById('boot'); if (b) { b.classList.add('done');
@@ -7698,7 +7523,6 @@ document.addEventListener('keydown', function(e){
   var idx = parseInt(e.key, 10);
   if (idx >= 1 && idx <= order.length) { setTab(order[idx - 1]); renderTab(state.tab); }
 });
-
 /* SECTION: js-spring — 可打断弹簧引擎（Framer Motion 同款：从当前 x/v 继续求解） */
 var SPR = { items: {}, raf: 0, _id: 0 };
 function sprReduce(){ try { return !!(window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches); } catch (e) { return false; } }
@@ -7768,7 +7592,6 @@ function sprClamp01(x){ return x < 0 ? 0 : (x > 1 ? 1 : x); }
 /* 入场模糊量：投屏模式下为 0——亮底叠加 6px 模糊会糊成白雾，投影幕上文字必须锐利。
    SECTION: js-spring-noblur-v15 */
 function sprBlurAmt(c, max){ return document.body.classList.contains('projector') ? 0 : (1 - c) * max; }
-
 function sprApplyPane(el, x, done){
   if (done) { el.style.opacity = ''; el.style.transform = ''; el.style.filter = ''; return; }
   var c = sprClamp01(x);
