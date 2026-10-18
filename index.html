@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="zh-CN">
 <head>
 <meta charset="UTF-8">
@@ -447,9 +447,9 @@ table.stats th{background:#eef6fc; color:var(--un-deep);}
 .desk-hero{ text-align:center; padding:74px 20px 34px; }
 .desk-hero .logo-wrap{ width:112px; height:112px; }
 .desk-hero .logo-wrap img,.desk-hero .logo-fallback{ width:112px; height:112px; }
-.desk-hero h1{ font-size:27px; color:var(--un-deep); letter-spacing:1.5px; }
-.desk-hero .sub{ font-size:13px; color:var(--muted); letter-spacing:2.6px; margin-top:5px; }
-.desk-hero .slogan{ font-size:13px; color:var(--un-blue); letter-spacing:5px; margin:12px 0 22px; opacity:.85; }
+
+
+
 .launcher{ display:flex; gap:14px; justify-content:center; flex-wrap:wrap; padding:0 20px 8px; }
 .launch-tile{
   width:152px; border:1px solid var(--line); border-radius:14px;
@@ -511,7 +511,7 @@ table.stats th{background:#eef6fc; color:var(--un-deep);}
   .speaker-current{ padding:14px 15px; gap:10px; }
   .launch-tile{ width:132px; }
   .desk-hero{ padding:52px 16px 26px; }
-  .desk-hero h1{ font-size:21px; }
+  
 }
 @media (max-width:420px){
   .statusbar .sb-chip.hide-xs{ display:none; }
@@ -525,8 +525,8 @@ table.stats th{background:#eef6fc; color:var(--un-deep);}
   .speaker-current .sc-name{ font-size:17px; }
   .dv-name{ font-size:12.5px; }
   .desk-hero{ padding:44px 14px 22px; }
-  .desk-hero h1{ font-size:19px; letter-spacing:1px; }
-  .desk-hero .slogan{ letter-spacing:3px; font-size:12px; }
+  
+  
   .launch-tile{ width:calc(50% - 7px); padding:15px 8px; }
   .desk-section{ padding:22px 14px 0; }
   .stage{ padding:calc(var(--bar-h) + 12px) 9px 74px; }
@@ -567,7 +567,7 @@ table.stats th{background:#eef6fc; color:var(--un-deep);}
 @media (max-width:360px){
   .timer-display{ font-size:44px; }
   .pt-display{ font-size:32px; }
-  .hero h1,.desk-hero h1{ font-size:18px; }
+  .hero h1,
   .stat-chip{ flex:1 1 100%; padding:9px 12px; }
   .summary-strip{ gap:8px; }
   .tally{ font-size:13px; }
@@ -1097,6 +1097,573 @@ body.projector .min-line{ font-size:16px; }
   #printReport .pr-fail{ color:#a3271c; font-weight:600; }
   #printReport .pr-note{ font-size:9pt; color:#555; margin:14px 0 0; }
 }
+
+
+/* ===== SECTION: styles-darkgen — 程序化穷举生成的深色覆盖（根治漏网）===== */
+body.dark .btn{ background:#16232f; }
+body.dark .btn-icon{ background:#16232f; }
+body.dark .vote-btn{ background:#16232f; }
+body.dark .empty{ background:#16232f; }
+body.dark .topbar .mini-fallback{ background:#16232f; }
+body.dark .tabs{ background:#16232f; }
+body.dark .field input, body.dark .field select, body.dark .field textarea{ background:#16232f; }
+body.dark .file-drop{ background:#16232f; }
+body.dark .file-drop:hover, body.dark .file-drop.drag{ background:#182634; }
+body.dark .doc-file{ background:#16232f; }
+body.dark .badge.blue{ background:#182634; }
+body.dark .badge.green{ background:#182634; }
+body.dark .badge.red{ background:#182634; }
+body.dark .badge.gray{ background:#182634; }
+body.dark .badge.gold{ background:#182634; color:#e6eef6; }
+body.dark .stat-chip{ background:#16232f; }
+body.dark .seg button{ background:#16232f; }
+body.dark .spk-row .idx{ background:#182634; }
+body.dark .motion-card{ background:#16232f; }
+body.dark .mod-info{ background:#16232f; }
+body.dark .doc-card{ background:#16232f; }
+body.dark .doc-content{ background:#16232f; }
+body.dark table.stats{ background:#16232f; }
+body.dark table.stats th{ background:#182634; }
+body.dark .modal{ background:#16232f; }
+body.dark .doc-preview{ background:#16232f; color:#e6eef6; }
+body.dark .roll-row:hover, body.dark .spk-row:hover, body.dark .min-line:hover, body.dark .award-row:hover{ background:#16232f; }
+body.dark .vote-cell:hover{ background:#16232f; }
+body.dark ::-webkit-scrollbar-thumb{ background:#263d52; }
+body.dark #boot .boot-fallback{ background:#16232f; }
+body.dark .dock .dk-foot kbd{ background:#16232f; }
+body.dark .window{ background:#16232f; }
+body.dark .window .win-bar{ background:#16232f; }
+body.dark .m-banner.suspended{ background:#16232f; color:#e6eef6; }
+body.dark .m-banner.adjourned{ background:#182634; color:#e6eef6; }
+body.dark .launch-tile{ background:#1a2937; }
+body.dark .desk-section h2 .cnt{ background:#1a2937; }
+body.dark .gsl-round{ background:#16232f; }
+body.dark .gr-item{ background:#16232f; }
+body.dark .chair-rule{ background:#16232f; }
+body.dark .dv-cell{ background:#16232f; }
+body.dark .dv-cell.locked{ background:#16232f; }
+body.dark .dv-locked{ background:#182634; }
+body.dark .dv-result.pass{ background:#182634; }
+body.dark .dv-result.fail{ background:#182634; }
+body.dark .field input:focus, body.dark .field select:focus, body.dark .field textarea:focus, body.dark .del-row input:focus{ background:#16232f; }
+body.dark table.stats tr:nth-child(even) td{ background:#16232f; }
+body.dark table.stats tr:hover td{ background:#16232f; }
+
+/* ===== SECTION: styles-dark — 深色主题（只覆盖颜色，布局/尺寸/圆角/间距一律不动） =====
+   写法沿用既有 body.projector 的变量覆盖套路；置于样式表末尾，同特异度下后者胜出。
+   刻意保持白色的元素：顶栏 logo、启动进度条、状态栏圆点、#printReport（打印必须白底黑字）。 */
+body.dark{
+  --bg:#0f1a26; --card:#182634; --ink:#e6eef6; --muted:#93a7bb; --line:#2b3f53;
+  --glass:rgba(20,33,47,.80); --shell-bg:#0b141e; --un-pale:#1c2f41;
+  --hair:inset 0 1px 0 rgba(255,255,255,.07);
+  --e1:0 1px 2px rgba(0,0,0,.34), 0 1px 3px rgba(0,0,0,.30);
+  --e2:0 2px 4px rgba(0,0,0,.30), 0 6px 16px rgba(0,0,0,.38);
+  --e3:0 4px 8px rgba(0,0,0,.34), 0 14px 34px rgba(0,0,0,.46);
+  --e4:0 8px 16px rgba(0,0,0,.38), 0 26px 60px rgba(0,0,0,.56);
+  /* ⚠ --un-deep 语义分裂：18 处当文字色（含 .timer-display/.pt-display/.card h3/
+     .win-title/.modal h4/.desk-hero h1），仅 4 处当背景（.topbar/#toast/#boot）。
+     故深色下必须把它「变亮」，那 4 处背景在下方单独压深。
+     若在此设成近黑，计时器主数字等会在深底上隐形。 */
+  --un-deep:#dceaf6; --un-dark:#3d92d0; --un-blue:#4aa3e0;
+  --ok:#43c98a; --no:#ef7a6c; --abs:#9aa4ae; --gold:#e3c463;
+  /* 注意：--tp 是计时器进度用的数字变量（calc((1 - var(--tp,1)) * 100%)），
+     绝不能在此覆盖为颜色值，否则进度条算式失效。 */
+}
+/* --un-deep 的 4 处背景用途：深色下单独压回深色，白字才够对比 */
+body.dark .topbar{ background:#0a1a28; }
+body.dark #boot{ background:#0a1a28; }
+body.dark #toast{ background:#0a1a28; color:#e6eef6; box-shadow:var(--e3); }
+/* 彩底白字的块：深色下把彩底压深一档，保证白字对比度 */
+body.dark .btn-primary{ background:#1f76b8; border-color:#1f76b8; color:#fff; }
+body.dark .btn-primary:hover{ background:#2684c9; border-color:#2684c9; color:#fff; }
+body.dark .btn-primary:active{ background:#1a6ba9; color:#fff; }
+body.dark .dock button.on{ background:linear-gradient(120deg,#1f76b8,#2684c9); color:#fff; }
+body.dark .gr-item.now{ background:#1f76b8; border-color:#1f76b8; color:#fff; }
+body.dark .speaker-current{ background:linear-gradient(125deg,#164f7d 0%,#1f76b8 48%,#2684c9 100%); }
+/* 危险按钮：浅粉边框在深底上突兀 */
+body.dark .btn-danger{ color:var(--no); border-color:#5b3a38; }
+/* 计时器文字阴影原为白色（0 1px 0 rgba(255,255,255,.9)），深色下发虚 */
+body.dark .timer-display, body.dark .pt-display{ text-shadow:0 1px 0 rgba(0,0,0,.4), 0 2px 18px rgba(0,0,0,.34); }
+/* 计时进度条轨道原为深蓝半透明，深底上不可见 */
+body.dark .timer-display::after, body.dark .pt-display::after{ background:rgba(255,255,255,.14); }
+/* .btn-primary 某状态用 #1669a9 作文字色，深色下对比不足 */
+body.dark .btn-primary:focus{ color:#fff; }
+/* 投影模式下深色仍需生效（投影主要放大字号，配色跟随主题） */
+body.dark.projector{ --ink:#eaf2f9; --muted:#a8bbcd; --line:#33485e; --bg:#0b1621; }
+/* 主结构面 */
+body.dark .window{ background:var(--card); border-color:var(--line);
+  box-shadow:0 10px 34px rgba(0,0,0,.44), 0 2px 6px rgba(0,0,0,.30); }
+body.dark .win-bar{ background:linear-gradient(#1e2f40,#182634); border-bottom-color:var(--line); }
+body.dark .dock{ border-right-color:rgba(255,255,255,.09); }
+body.dark .dock .dk-foot kbd{ background:#243749; color:var(--ink); border-color:var(--line); }
+body.dark .launch-tile{ background:linear-gradient(180deg,rgba(30,47,64,.94),rgba(22,35,49,.90));
+  border-color:var(--line); box-shadow:0 6px 20px rgba(0,0,0,.40); }
+body.dark .launch-tile:hover{ border-color:rgba(255,255,255,.22); box-shadow:var(--e3), var(--hair); }
+body.dark .archive-card:hover, body.dark .motion-card:hover, body.dark .doc-card:hover{
+  background:#1f3143; border-color:#3a5268; }
+/* 卡片类白底（原 #fff） */
+body.dark .btn-icon, body.dark .vote-btn, body.dark .stat-chip, body.dark .seg button,
+body.dark .motion-card, body.dark .mod-info, body.dark .doc-card, body.dark table.stats,
+body.dark .modal, body.dark .gsl-round, body.dark .dv-cell, body.dark .empty{
+  background:var(--card); color:var(--ink); }
+body.dark .empty{ background:#16232f; }
+body.dark .modal{ box-shadow:var(--e4); }
+/* 行分隔线与次级底色（原 #eef3f8 / #f4f9fd / #eef2f7 / #f7fafc / #f7fbfe） */
+body.dark .roll-row, body.dark .spk-row, body.dark .min-line{ border-bottom-color:#22354a; }
+body.dark .vote-cell{ border-color:#22354a; }
+body.dark .gr-item{ background:#1c2f41; }
+body.dark .dv-locked{ background:#1c2f41; color:var(--muted); }
+body.dark .doc-preview{ background:#131f2b; color:#cfdde9; border-color:var(--line); }
+body.dark .chair-rule{ background:#16283a; }
+body.dark .pool-bar{ background:rgba(255,255,255,.12); }
+/* hover 态 */
+body.dark .roll-row:hover, body.dark .spk-row:hover, body.dark .min-line:hover,
+body.dark .award-row:hover, body.dark .vote-cell:hover, body.dark .dv-cell:hover{ background:#1f3143; }
+/* 会议横幅（原浅黄/浅灰渐变） */
+body.dark .m-banner{ border-color:rgba(255,255,255,.10); }
+body.dark .m-banner.suspended{ background:linear-gradient(120deg,#3a2f14,#2c2410); color:#f2e3bd; }
+body.dark .m-banner.adjourned{ background:linear-gradient(120deg,#2a2f36,#20252b); color:#c9d4de; }
+/* 徽标：浅底深字 → 深底浅字 */
+body.dark .badge.blue{ background:rgba(74,163,224,.18); color:#8ec9ef; border-color:rgba(74,163,224,.42); }
+body.dark .badge.green{ background:rgba(67,201,138,.16); color:#7fdcae; border-color:rgba(67,201,138,.40); }
+body.dark .badge.red{ background:rgba(239,122,108,.16); color:#f2a196; border-color:rgba(239,122,108,.40); }
+body.dark .badge.gray{ background:rgba(255,255,255,.10); color:#b6c4d1; border-color:rgba(255,255,255,.22); }
+body.dark .badge.gold{ background:rgba(227,196,99,.16); color:#ecd493; border-color:rgba(227,196,99,.42); }
+/* 表决/点名选中态：保留彩底白字，仅提亮底色以在深背景上可见 */
+body.dark .seg button.on-p{ background:var(--un-blue); color:#fff; border-color:var(--un-blue); }
+body.dark .seg button.on-pv{ background:#1e8e5a; color:#fff; border-color:#1e8e5a; }
+body.dark .seg button.on-a{ background:#6b7480; color:#fff; border-color:#6b7480; }
+body.dark .vote-btn.yes.on{ background:#1e8e5a; color:#fff; border-color:#1e8e5a; }
+body.dark .vote-btn.no.on{ background:#c0392b; color:#fff; border-color:#c0392b; }
+body.dark .vote-btn.abst.on{ background:#7a838d; color:#fff; border-color:#7a838d; }
+body.dark .vote-btn.pass2.on{ background:var(--gold); color:#231a02; border-color:var(--gold); }
+body.dark .gr-item.now i{ background:#fff; }
+body.dark .dv-result.pass{ background:rgba(67,201,138,.16); color:#7fdcae; border-color:rgba(67,201,138,.38); }
+body.dark .dv-result.fail{ background:rgba(239,122,108,.16); color:#f2a196; border-color:rgba(239,122,108,.38); }
+body.dark .dv-cell.locked{ background:#16232f; }
+/* 文件与拖放区 */
+body.dark .doc-file{ background:#16232f; border-color:var(--line); }
+body.dark .doc-file .df-icon{ background:#1f3143; }
+body.dark .file-drop{ background:#16232f; border-color:#33485e; }
+body.dark .file-drop:hover, body.dark .file-drop.drag{ background:#1c2f41; border-color:var(--un-blue); }
+/* 表格斑马纹与表头 */
+body.dark table.stats th{ background:#1f3143; color:var(--ink); border-color:var(--line); }
+body.dark table.stats td{ border-color:#22354a; }
+body.dark table.stats tr:nth-child(even) td{ background:#1a2937; }
+body.dark table.stats tr:hover td{ background:#22384c; }
+/* 表单控件 */
+body.dark input, body.dark select, body.dark textarea{ background:#131f2b; color:var(--ink); border-color:var(--line); }
+body.dark input:focus, body.dark select:focus, body.dark textarea:focus{ border-color:var(--un-blue); }
+body.dark input::placeholder, body.dark textarea::placeholder{ color:#7b8fa3; }
+body.dark option{ background:#182634; color:var(--ink); }
+/* 滚动条 */
+body.dark ::-webkit-scrollbar-thumb{ background:#3a5268; }
+body.dark *{ scrollbar-color:#3a5268 transparent; }
+/* toast 与遮罩 */
+body.dark #toast{ background:#0a1a28; color:#e6eef6; box-shadow:var(--e3); }
+body.dark .modal-mask{ background:rgba(0,0,0,.62); }
+
+/* ===== SECTION: styles-charts — 统计图表（结构中立，深浅两套共用） ===== */
+.c-grid{ display:grid; grid-template-columns:repeat(auto-fit,minmax(240px,1fr)); gap:14px; }
+.c-panel{ background:var(--card); border:1px solid var(--line); border-radius:12px; padding:14px 15px; box-shadow:var(--e1); }
+.c-panel h4{ font-size:13.5px; font-weight:600; margin:0 0 10px; color:var(--ink); display:flex; align-items:center; gap:6px; }
+.c-panel h4 small{ font-weight:400; font-size:11.5px; color:var(--muted); margin-left:auto; }
+.c-donut-wrap{ display:flex; align-items:center; gap:14px; flex-wrap:wrap; }
+.c-donut{ flex:none; display:block; }
+.c-donut circle{ transition:stroke .25s var(--spring-soft); }
+.c-center{ font-size:12px; fill:var(--muted); }
+.c-center b{ font-size:19px; fill:var(--ink); font-weight:700; }
+.c-legend{ display:flex; flex-direction:column; gap:5px; flex:1; min-width:132px; }
+.c-lg{ display:flex; align-items:center; gap:7px; font-size:12.5px; color:var(--ink); }
+.c-lg i{ width:9px; height:9px; border-radius:3px; flex:none; }
+.c-lg b{ margin-left:auto; font-variant-numeric:tabular-nums; }
+.c-lg em{ font-style:normal; color:var(--muted); font-size:11.5px; min-width:32px; text-align:right; font-variant-numeric:tabular-nums; }
+.c-bars{ display:flex; flex-direction:column; gap:6px; }
+.c-bar-row{ display:flex; align-items:center; gap:8px; }
+.c-bar-lb{ width:74px; flex:none; font-size:12px; color:var(--ink); overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+.c-bar-tr{ flex:1; height:9px; border-radius:999px; background:rgba(127,150,175,.18); overflow:hidden; }
+.c-bar-tr i{ display:block; height:100%; border-radius:999px; transition:width .34s var(--spring), background .25s var(--spring-soft); }
+.c-bar-v{ width:26px; flex:none; text-align:right; font-size:12px; font-weight:600; color:var(--ink); font-variant-numeric:tabular-nums; }
+.c-empty{ font-size:12.5px; color:var(--muted); text-align:center; padding:18px 0; }
+@media (max-width:720px){ .c-bar-lb{ width:62px; font-size:11.5px; } .c-grid{ grid-template-columns:1fr; } }
+
+/* ===== SECTION: styles-v2 — 视觉质感升级（浅色重做 + 深色补强） ===== */
+
+/* 全局：统一焦点环与选区色（深浅共用） */
+::selection{ background:rgba(26,117,187,.22); color:inherit; }
+.btn:focus-visible,.dock button:focus-visible,.sb-exit:focus-visible,.seg button:focus-visible,
+.vote-btn:focus-visible,.btn-icon:focus-visible{ outline:none; box-shadow:0 0 0 3px rgba(26,117,187,.30), var(--e1); }
+body.dark ::selection{ background:rgba(74,163,224,.34); }
+body.dark .btn:focus-visible,body.dark .dock button:focus-visible,body.dark .sb-exit:focus-visible,
+body.dark .seg button:focus-visible,body.dark .vote-btn:focus-visible,body.dark .btn-icon:focus-visible{
+  box-shadow:0 0 0 3px rgba(74,163,224,.40), var(--e1); }
+
+/* ---------- 浅色质感升级（body:not(.dark) 前缀，绝不影响深色） ---------- */
+/* 页面背景：顶部淡蓝晕 + 暖调点缀，告别纯色平铺 */
+body:not(.dark){
+  background:
+    radial-gradient(1100px 560px at 50% -8%, rgba(26,117,187,.11), transparent 62%),
+    radial-gradient(760px 420px at 96% 2%, rgba(201,162,39,.06), transparent 58%),
+    var(--bg);
+}
+/* 状态栏：竖向渐变 + 底部高光，金属质感 */
+body:not(.dark) .statusbar{
+  background:linear-gradient(180deg,rgba(16,86,138,.95),rgba(8,54,90,.90));
+  box-shadow:inset 0 -1px 0 rgba(255,255,255,.14), 0 2px 14px rgba(8,54,90,.20);
+}
+/* 窗口：更强立体阴影 + 顶部内高光 */
+body:not(.dark) .window{ border-color:rgba(214,228,240,.95); box-shadow:var(--e3), inset 0 1px 0 rgba(255,255,255,.85); }
+body:not(.dark) .win-bar{ background:linear-gradient(180deg,#ffffff,#eef4fa); box-shadow:inset 0 -1px 0 rgba(8,54,90,.05); }
+/* 卡片：极淡渐变 + hover 上浮 + 标题左强调条 */
+body:not(.dark) .card{ background:linear-gradient(180deg,#ffffff,#fcfdff); box-shadow:var(--e1), var(--hair);
+  transition:box-shadow .24s var(--spring-soft), transform .24s var(--spring); }
+body:not(.dark) .card:hover{ box-shadow:var(--e2), var(--hair); }
+body:not(.dark) .card > h3{ position:relative; padding-left:12px; }
+body:not(.dark) .card > h3::before{ content:''; position:absolute; left:0; top:1px; bottom:1px; width:3.5px;
+  border-radius:3px; background:linear-gradient(180deg,var(--un-blue),var(--un-dark)); }
+/* 启动磁贴：图标进圆角渐变容器，hover 缩放发光 */
+body:not(.dark) .launch-tile{ background:linear-gradient(180deg,#ffffff,#f4f9fd); box-shadow:var(--e2), var(--hair); }
+body:not(.dark) .launch-tile:hover{ transform:translateY(-4px); box-shadow:var(--e3), var(--hair); border-color:rgba(26,117,187,.4); }
+body:not(.dark) .lt-ico{ width:58px; height:58px; margin:0 auto 2px; display:flex; align-items:center; justify-content:center;
+  border-radius:17px; font-size:28px; background:linear-gradient(145deg,var(--un-pale),#ffffff);
+  box-shadow:inset 0 0 0 1px rgba(26,117,187,.14), var(--e1);
+  transition:transform .26s var(--pop), box-shadow .26s var(--spring-soft); }
+body:not(.dark) .launch-tile:hover .lt-ico{ transform:scale(1.09) translateY(-2px); box-shadow:inset 0 0 0 1px rgba(26,117,187,.28), var(--e2); }
+/* 首页大标题：渐变文字 */
+body:not(.dark) 
+/* 主按钮：渐变 + 内高光 + 更强 hover */
+body:not(.dark) .btn-primary{ background:linear-gradient(180deg,#2b87ca,var(--un-blue)); border-color:#1a75bb;
+  box-shadow:var(--e1), inset 0 1px 0 rgba(255,255,255,.26); }
+body:not(.dark) .btn-primary:hover{ background:linear-gradient(180deg,#1f76b8,var(--un-dark)); border-color:var(--un-dark);
+  box-shadow:var(--e2), inset 0 1px 0 rgba(255,255,255,.20); }
+body:not(.dark) .btn{ box-shadow:var(--e1), var(--hair); }
+body:not(.dark) .btn:hover{ box-shadow:var(--e2), var(--hair); }
+/* dock 选中项：渐变 + 光晕 */
+body:not(.dark) .dock button.on{ background:linear-gradient(135deg,#2b87ca,var(--un-blue) 52%,#1669a9);
+  box-shadow:0 4px 16px rgba(13,78,126,.34), inset 0 1px 0 rgba(255,255,255,.30); }
+/* 统计 chip：数字渐变 */
+body:not(.dark) .stat-chip{ background:linear-gradient(180deg,#ffffff,#f7fbfe); box-shadow:var(--e1), var(--hair); }
+body:not(.dark) .stat-chip b{ background:linear-gradient(120deg,var(--un-deep),var(--un-dark));
+  -webkit-background-clip:text; background-clip:text; -webkit-text-fill-color:transparent; color:var(--un-deep); }
+/* 表格：表头渐变 + 斑马纹 */
+body:not(.dark) table.stats th{ background:linear-gradient(180deg,#f2f8fd,#e9f1f9); }
+body:not(.dark) table.stats tr:nth-child(even) td{ background:#fafcfe; }
+/* 发言者当前块：更饱满渐变 */
+body:not(.dark) .speaker-current{ background:linear-gradient(125deg,var(--un-dark) 0%,var(--un-blue) 48%,#3f95d3 100%);
+  box-shadow:0 10px 30px rgba(13,78,126,.28), inset 0 1px 0 rgba(255,255,255,.28); }
+/* 存档卡：hover 更明显 */
+body:not(.dark) .archive-card{ box-shadow:var(--e1), var(--hair); transition:box-shadow .22s, transform .22s var(--spring), border-color .22s; }
+body:not(.dark) .archive-card:hover{ box-shadow:var(--e2), var(--hair); transform:translateY(-2px); border-color:rgba(26,117,187,.36); }
+
+/* ---------- 深色补强：加大对比、提亮次级文字、修 .hero 白字糊 ---------- */
+body.dark{ --muted:#a8bacb; --un-dark:#4a9ede; --bg:#0c1520;
+  background:radial-gradient(1100px 560px at 50% -8%, rgba(26,117,187,.10), transparent 62%), var(--bg); }
+body.dark .statusbar{ background:linear-gradient(180deg,#102536,#0a1a28);
+  box-shadow:inset 0 -1px 0 rgba(255,255,255,.07), 0 2px 14px rgba(0,0,0,.55); }
+body.dark .card{ background:linear-gradient(180deg,#182634,#15212d); box-shadow:var(--e1), var(--hair); }
+body.dark .card:hover{ box-shadow:var(--e2), var(--hair); }
+body.dark .card > h3{ color:#eef5fc; }
+body.dark .desk-hero h1, body.dark .desk-section h2, body.dark .lt-name,
+body.dark .win-title, body.dark .stat-chip b, body.dark .modal h4,
+body.dark .archives h2, body.dark .pt-who, body.dark .mod-info .mi-item b,
+body.dark .archive-card .name, body.dark .doc-card .d-title, body.dark .m-title{ color:#eef5fc; }
+body.dark .hint, body.dark .archive-card .meta, body.dark .win-path, body.dark .dk-label,
+body.dark .field label, body.dark .doc-file .df-size{ color:#a8bacb; }
+/* .hero 深色下必须是深底，白字才够对比（原亮蓝渐变会让白字糊到 2.96） */
+body.dark .hero{ background:linear-gradient(160deg,#123a5c 0%,#1a5c8c 55%,#2270a8 100%); }
+body.dark .lt-ico{ background:linear-gradient(145deg,#1e3346,#16232f); box-shadow:inset 0 0 0 1px rgba(255,255,255,.08), var(--e1); }
+body.dark .launch-tile:hover{ border-color:rgba(74,163,224,.42); }
+body.dark .btn-primary{ background:linear-gradient(180deg,#2278b8,#1c6ba8); border-color:#1c6ba8; }
+body.dark .btn-primary:hover{ background:linear-gradient(180deg,#2884c6,#2076b4); border-color:#2076b4; }
+body.dark .btn{ box-shadow:var(--e1), var(--hair); }
+body.dark .stat-chip{ background:linear-gradient(180deg,#182634,#15212d); box-shadow:var(--e1), var(--hair); }
+body.dark table.stats th{ background:linear-gradient(180deg,#1e3040,#1a2937); }
+body.dark .speaker-current{ background:linear-gradient(125deg,#164f7d 0%,#1f76b8 48%,#2684c9 100%); }
+body.dark .win-bar{ box-shadow:inset 0 -1px 0 rgba(255,255,255,.05); }
+body.dark .archive-card:hover{ transform:translateY(-2px); }
+
+/* ===== SECTION: styles-v3 — 深色修净 + 视觉再抬 + 流畅度 ===== */
+
+/* ---------- 1. 深色修净：逐个点名（这些是 v1/v2 漏掉或写错的真实不可读项）---------- */
+/* 使用指引 / 长文本容器：原 #f8fbfd 近白底，深色下浅字压浅底=隐形(1.13) */
+body.dark .doc-content{ background:#131f2b; color:#cfdde9; border-color:#2b3f53; }
+/* 首页桌面容器：原 #eaf1f8 浅底，深色下整页发白 */
+body.dark .desktop{ background:transparent; }
+/* 发言序号圆点：原浅蓝底+亮蓝字(2.53) */
+body.dark .spk-row .idx{ background:#1c2f41; color:#8ecbf2; }
+/* 当前发言者内的白点：原白底亮蓝字(2.76) → 白点配深蓝字 */
+body.dark .gr-item.now i{ background:#fff; color:#12456e; }
+/* 点名单选选中态：白字压亮蓝(2.76) → 压深蓝底，白字达 7+ */
+body.dark .seg button.on-p{ background:#1a5c8c; border-color:#1a5c8c; color:#fff; }
+body.dark .seg button.on-pv{ background:#1a7a4d; border-color:#1a7a4d; color:#fff; }
+body.dark .seg button.on-a{ background:#5f6873; border-color:#5f6873; color:#fff; }
+/* 表决选中态：白字压彩底，统一压深到 ≥4.5 */
+body.dark .vote-btn.yes.on{ background:#1a7a4d; border-color:#1a7a4d; color:#fff; }
+body.dark .vote-btn.no.on{ background:#a83226; border-color:#a83226; color:#fff; }
+body.dark .vote-btn.abst.on{ background:#5f6873; border-color:#5f6873; color:#fff; }
+body.dark .vote-btn.pass2.on{ background:#b8952a; border-color:#b8952a; color:#1a1400; }
+/* 主按钮 hover 渐变：白字(4.03) → 压深达标 */
+body.dark .btn-primary:hover{ background:linear-gradient(180deg,#1f6ea8,#185a8c); border-color:#185a8c; color:#fff; }
+/* 移动端标签栏：原白底未覆盖 */
+body.dark .tabs{ background:var(--card); border-bottom-color:var(--line); }
+body.dark .tabs button{ color:var(--muted); }
+body.dark .tabs button.on{ color:#8ecbf2; border-bottom-color:#4aa3e0; }
+/* logo 加载失败兜底文字：白底蓝字(2.76) → 深底亮字 */
+body.dark .logo-fallback, body.dark .topbar .mini-fallback, body.dark #boot .boot-fallback{ background:#1c2f41; color:#8ecbf2; }
+/* 徽标文字确保够亮（v1 用 rgba 底，此处补文字色兜底）*/
+body.dark .badge.green{ color:#7fdcae; } body.dark .badge.red{ color:#f2a196; }
+body.dark .badge.gray{ color:#c2ccd6; } body.dark .badge.blue{ color:#8ecbf2; }
+/* 说明 / 注释类文字：统一提亮，确保 .hint/.chair-rule/.modal-msg 在深底达标 */
+body.dark .hint{ color:#a8bacb; }
+body.dark .hint.warn{ color:#f2a196; }
+body.dark .chair-rule{ color:#dce7f2; }
+body.dark .modal-msg{ color:#c3d2e0; }
+body.dark .modal-msg b{ color:#eef5fc; }
+body.dark .lt-hint{ color:#93a7bb; }
+body.dark .dk-foot{ color:#93a7bb; border-top-color:#2b3f53; }
+body.dark .doc-file .df-name{ color:var(--ink); }
+body.dark .tally b.y{ color:#7fdcae; } body.dark .tally b.n{ color:#f2a196; } body.dark .tally b.a{ color:#c2ccd6; }
+
+/* ---------- 2. 视觉再抬：排版节奏 + 图表精致化（深浅共用，颜色走变量）---------- */
+/* 全局排版：标题字距收紧、正文行高、数字等宽，提升"设计感" */
+h1,h2,h3,h4{ letter-spacing:-.01em; }
+.card > h3{ font-weight:650; }
+/* 图表卡片：hover 微抬 + 更柔阴影 */
+.c-panel{ transition:box-shadow .24s var(--spring-soft), transform .24s var(--spring); }
+.c-panel:hover{ box-shadow:var(--e2); transform:translateY(-2px); }
+.c-donut circle[stroke]:not([stroke^="var(--line"]) { filter:drop-shadow(0 1px 3px rgba(8,54,90,.18)); }
+body.dark .c-donut circle[stroke]:not([stroke^="var(--line"]) { filter:drop-shadow(0 1px 4px rgba(0,0,0,.5)); }
+.c-center b{ font-weight:750; letter-spacing:-.02em; }
+/* 图例行：hover 高亮，增强可读与交互感 */
+.c-lg{ padding:3px 6px; margin:-1px -6px; border-radius:7px; transition:background .18s var(--spring-soft); }
+.c-lg:hover{ background:rgba(127,150,175,.12); }
+/* 条形：进入动画（transform 走 GPU，不触发 layout）+ 圆角端 */
+.c-bar-tr i{ transform-origin:left center; animation:barIn .5s var(--spring) both; }
+@keyframes barIn{ from{ transform:scaleX(0); } to{ transform:scaleX(1); } }
+.c-bar-row:hover .c-bar-lb{ color:var(--un-blue); }
+body.dark .c-bar-row:hover .c-bar-lb{ color:#8ecbf2; }
+/* 首页 OS 感：hero 区柔光晕，磁贴节奏 */
+.desk-hero{ position:relative; }
+body:not(.dark) .desk-hero::before{ content:''; position:absolute; left:50%; top:26px; transform:translateX(-50%);
+  width:min(560px,86vw); height:200px; border-radius:50%;
+  background:radial-gradient(ellipse,rgba(26,117,187,.13),transparent 70%); filter:blur(6px); z-index:0; pointer-events:none; }
+.desk-hero > *{ position:relative; z-index:1; }
+/* 状态栏品牌区：字距与分隔，更像系统栏 */
+.statusbar .sb-brand span{ letter-spacing:1.2px; font-weight:650; }
+
+/* ---------- 3. 流畅度：长列表跳过屏外渲染 + 动画走 GPU（安全，不改 JS 架构）---------- */
+/* 纪要/点名/发言队列可能上百行：屏外项跳过 paint/layout，滚动更顺。
+   auto 关键字让浏览器记住已渲染项的真实高度，避免滚动条跳动。旧浏览器不支持则自动降级为无效果。 */
+.min-line{ content-visibility:auto; contain-intrinsic-size:auto 34px; }
+.roll-row{ content-visibility:auto; contain-intrinsic-size:auto 48px; }
+.spk-row{ content-visibility:auto; contain-intrinsic-size:auto 44px; }
+.doc-card, .motion-card, .archive-card{ content-visibility:auto; contain-intrinsic-size:auto 88px; }
+/* hover/进入动画元素提示 GPU 合成，减少重绘 */
+.lt-ico, .launch-tile, .archive-card, .c-panel, .c-bar-tr i{ will-change:transform; }
+
+/* ===== SECTION: styles-projector-big-v8 — 投屏放大（按本文件既有惯例校准至 ~1.5x）=====
+   原投屏只放大了计时器与发言者名，点名国名/三态选项、表决国名/投票键仍是普通 12-14px，
+   会场远处看不清；但 v5 一版放到 2-2.3x 与文件既有惯例（.tally 1.57x / .dv-name 1.6x /
+   .min-line 1.23x）脱节，观感夸张。此处统一收敛到约 1.5x：够看清，又不失衡。
+   仅 min-width:821px 生效（投屏必为宽屏投影），移动端布局一个像素不动。 */
+@media (min-width:821px){
+  /* 点名：国名 14→22、全称 12→17、三态选项 12→18；内边距按 1.4x 收敛 */
+  body.projector .roll-row{ padding:14px 6px; gap:14px; }
+  body.projector .roll-row .country{ font-size:22px; }
+  body.projector .roll-row .full{ font-size:17px; margin-top:2px; }
+  body.projector .veto-star{ font-size:18px; }
+  body.projector .seg{ gap:8px; }
+  body.projector .seg button{ font-size:18px; min-height:46px; padding:9px 14px; border-radius:8px; }
+  /* 逐国表决：单元格 13→18、国名 →21、投票键 13→18 */
+  body.projector .vote-grid{ grid-template-columns:repeat(auto-fill,minmax(260px,1fr)); gap:12px; }
+  body.projector .vote-cell{ font-size:18px; padding:10px 12px; gap:10px; }
+  body.projector .vc-name{ font-size:21px; }
+  body.projector .vote-btn{ font-size:18px; min-height:46px; min-width:54px; padding:9px 6px; border-radius:8px; }
+  /* 实质性表决文件卡：文件名 →22、卡内边距按 1.4x */
+  body.projector .dv-grid{ grid-template-columns:repeat(auto-fill,minmax(320px,1fr)); gap:14px; }
+  body.projector .dv-cell{ padding:14px; }
+  body.projector .dv-name{ font-size:22px; }
+  body.projector .dv-btns .vote-btn{ font-size:18px; min-height:46px; }
+  /* 汇总 chip：13→17、数字 20→26，与原 .stat-chip 1.23x 同量级再略提 */
+  body.projector .summary-strip{ gap:14px; }
+  body.projector .stat-chip{ font-size:17px; padding:12px 18px; }
+  body.projector .stat-chip b{ font-size:26px; }
+}
+
+/* ===== SECTION: styles-projector-nocv — 投屏模式关闭屏外跳过渲染 =====
+   投屏下点名行/纪要行字号与内边距被大幅放大，v3 的 contain-intrinsic-size 估值
+   （34/44/48/88px）远小于真实高度，会让初始滚动条长度偏低、渲染后跳动。
+   恢复 content-visibility:visible 即解除尺寸包含，估值不再生效，滚动条恒准。 */
+body.projector .min-line, body.projector .roll-row, body.projector .spk-row,
+body.projector .doc-card, body.projector .motion-card, body.projector .archive-card{
+  content-visibility:visible;
+}
+
+/* ===== SECTION: styles-motion-v10 — 动效手感升级（spring 入场 + 可打断按压反馈）===== */
+/* 入场关键帧：位移 + 透明，spring 缓动，both 填充防首帧闪白 */
+@keyframes paneInR{ from{ opacity:0; transform:translateY(7px); } to{ opacity:1; transform:none; } }
+@keyframes winInR{ from{ opacity:0; transform:scale(.988) translateY(6px); } to{ opacity:1; transform:none; } }
+@keyframes rowInR{ from{ opacity:0; transform:translateY(6px) scale(.992); } to{ opacity:1; transform:none; } }
+@keyframes modalInR{ from{ opacity:0; transform:scale(.94) translateY(12px); }
+  62%{ opacity:1; transform:scale(1.014) translateY(0); }
+  to{ opacity:1; transform:none; } }
+/* 面板 / 视图 / 窗口：由纯淡入升级为 spring 位移（覆盖原 paneIn/winIn） */
+.tabpane.on{ animation:paneInR .26s var(--spring) both; }
+.view.active{ animation:paneInR .30s var(--spring) both; }
+.window.swap{ animation:winInR .30s var(--spring) both; }
+.archive-card{ animation:rowInR .26s var(--spring) both; }
+.modal-mask.on .modal{ animation:modalInR .30s var(--pop) both; }
+/* 按压反馈：transform 换 spring 缓动，按下跟手、释放回弹；transition 天然可打断，
+   快速连点时从当前进度平滑接管，不会像 animation 那样从头重播 */
+.btn,.vote-btn,.btn-icon,.seg button,.dock button,.preset-row .btn,.timer-ctrl .btn,.pt-ctrl .btn{
+  transition:transform .14s var(--spring), background .18s var(--spring-soft),
+    color .18s var(--spring-soft), border-color .18s var(--spring-soft), box-shadow .18s var(--spring-soft);
+}
+/* 磁贴按下：spring 回弹，与 hover 上浮衔接顺滑 */
+.launch-tile{ transition:transform .16s var(--spring), box-shadow .18s var(--spring-soft), border-color .18s var(--spring-soft); }
+.launch-tile .lt-ico{ transition:transform .26s var(--pop); }
+.dock button .dk-ico{ transition:transform .22s var(--pop); }
+/* 状态栏按钮按压回弹 */
+.sb-exit{ transition:transform .14s var(--spring), background .18s var(--spring-soft), border-color .18s var(--spring-soft), color .18s; }
+/* 计时器归零警示与实时脉冲：保持既有，但确保走 GPU 合成不抖动 */
+.timer-display.warn{ will-change:opacity; }
+.sb-chip.live{ will-change:opacity; }
+
+/* ===== SECTION: styles-motion-progress-v11 — 进程动画丝滑化（解锁每秒进度硬跳）===== */
+/* 计时器倒计时进度条：clip-path 由 --tp 每秒驱动，加 1s linear 让其连续扫过而非逐格跳。
+   等特异度且更靠后，!important 覆盖前面的锁死规则。 */
+.timer-display::before{ transition:clip-path 1s linear !important; }
+.pt-display::before{ transition:clip-path 1s linear !important; }
+/* 磋商时间池填充：恢复被锁死的 width 过渡，1s linear 与每秒 tick 对齐，连续消耗 */
+.pool-bar i{ transition:width 1s linear, background .3s var(--spring-soft) !important; }
+/* 归零/暂停/重置时进度瞬间跳变（非每秒递进），此时不应有 1s 拖尾——
+   .idle 为「满格未运行」态，暂停由 JS 停 tick 后 --tp 不再变，均无副作用。 */
+.timer-display.idle::before,.pt-display.idle::before{ transition:none !important; }
+/* 当前发言者切换：整块 innerHTML 替换，加入场位移让「换人」有衔接感 */
+@keyframes scIn{ from{ opacity:0; transform:translateY(6px) scale(.994); } to{ opacity:1; transform:none; } }
+.speaker-current{ animation:scIn .28s var(--spring) both; }
+/* 计票/统计数字变动时的轻微强调走已有 popNum（.bump 类由 JS 控制），此处仅确保走 GPU 不抖 */
+.stat-chip b.bump,.tally b{ will-change:transform; }
+/* 队列胶囊 now/done 状态切换（发言推进）：颜色与位移过渡更跟手 */
+.gr-item{ transition:background .2s var(--spring-soft), border-color .2s var(--spring-soft), transform .18s var(--spring), box-shadow .18s, opacity .2s; }
+
+/* ===== SECTION: styles-spring-v12 — 弹簧接管时关闭对应 CSS 入场动画（避免二者打架）=====
+   仅当 body.spring（JS 在支持且非 reduced-motion 时添加）生效；否则完全走原 CSS 动画。 */
+/* v19：入场回归纯 CSS，仅 bump 仍由 JS 弹簧驱动 */ body.spring .stat-chip b.bump{ animation:none !important; }
+
+/* ===== SECTION: styles-stage-v14 — 舞台光晕与缓慢浮动（对齐其 stage 氛围）===== */
+.stage{ position:relative; }
+.stage::before{ content:''; position:absolute; left:50%; top:96px; transform:translateX(-50%);
+  width:min(920px,92vw); height:460px; border-radius:50%; pointer-events:none;
+  background:radial-gradient(ellipse, rgba(26,117,187,.15), transparent 70%); filter:blur(12px); }
+body.dark .stage::before{ background:radial-gradient(ellipse, rgba(74,163,224,.13), transparent 70%); }
+.stage .window{ position:relative; z-index:1; }
+/* 首页 hero 缓慢浮动（4.8s 量级，对齐其 stage-float；window 不加，避免与弹簧 inline transform 冲突） */
+@keyframes stageFloat{ 0%,100%{ transform:translateY(0) scale(1); } 50%{ transform:translateY(-2px) scale(1.002); } }
+.desk-hero{ animation:stageFloat 4.8s ease-in-out infinite; }
+body.dark .desk-hero::before{ background:radial-gradient(ellipse, rgba(74,163,224,.16), transparent 70%); }
+
+/* ===== SECTION: styles-stage-type-v17 — 首页舞台感构图（对齐真实对比结论）===== */
+
+
+body.dark 
+body:not(.dark) 
+
+
+
+/* ② 深色下磁贴=幽灵卡：透明底、极淡描边，内容悬浮于舞台 */
+body.dark .launch-tile{ background:transparent; border-color:rgba(255,255,255,.07); box-shadow:none; }
+body.dark .launch-tile:hover{ background:rgba(255,255,255,.045); border-color:rgba(255,255,255,.16);
+  box-shadow:0 8px 30px rgba(0,0,0,.42); transform:translateY(-3px); }
+body.dark .launch-tile .lt-ico{ background:transparent; box-shadow:none; }
+body.dark .launch-tile:hover .lt-ico{ box-shadow:none; }
+/* ③ 深色舞台光晕加大加浓（中心品牌蓝 + 右上暖调，对齐其双色氛围） */
+body.dark{ background:
+  radial-gradient(1000px 520px at 50% -6%, rgba(74,163,224,.14), transparent 64%),
+  radial-gradient(760px 420px at 88% 8%, rgba(201,120,90,.055), transparent 60%),
+  var(--bg); }
+body.dark .stage::before{ width:min(1040px,96vw); height:520px;
+  background:radial-gradient(ellipse, rgba(74,163,224,.10), transparent 72%); }
+/* ④ 存档区在深色下也走幽灵风格，减少"网页块"感 */
+body.dark .archive-card{ background:rgba(255,255,255,.025); border-color:rgba(255,255,255,.07); }
+body.dark .archive-card:hover{ background:rgba(255,255,255,.05); border-color:rgba(255,255,255,.14); }
+body.dark #syncCard{ background:rgba(255,255,255,.025); border-color:rgba(255,255,255,.07); }
+/* 页脚小型大写 */
+.desk-foot{ letter-spacing:.22em; text-transform:uppercase; font-size:11px; }
+
+/* ===== SECTION: styles-css-entrance-v19 — 纯 CSS 入场（GPU 合成，零 JS 开销）===== */
+@keyframes cssPaneIn{ from{ opacity:0; transform:translateY(14px) scale(.985); }
+  to{ opacity:1; transform:none; } } /* v24：去 blur，blur 仅保留在页面级 cssViewIn（同 samunos 结构） */
+@keyframes cssWinIn{ from{ opacity:0; transform:translateY(14px) scale(.985); }
+  to{ opacity:1; transform:none; } } /* v24：去 blur，理由同 cssPaneIn */
+@keyframes cssModalIn{ from{ opacity:0; filter:blur(4px); transform:scale(.94) translateY(12px); }
+  62%{ opacity:1; filter:blur(0); transform:scale(1.014) translateY(0); }
+  to{ opacity:1; filter:blur(0); transform:none; } }
+/* v22：fill 用 backwards 而非 both —— both 会让 to 帧的 filter:blur(0) 永久残留，
+   blur(0) 仍是非 none 滤镜，会使 .view 成为 fixed 后代（dock/statusbar 内的元素）的包含块。
+   backwards 在动画结束后回落基础样式（与 to 帧逐值一致），无跳变、无残留。 */
+.tabpane.on{ animation:cssPaneIn .62s cubic-bezier(.22,1,.36,1) backwards; }
+@keyframes cssViewIn{ from{ opacity:0; filter:blur(4px); transform:translateY(10px) scale(.995); }
+  to{ opacity:1; filter:blur(0); transform:none; } }
+/* SECTION: fix-dock-v24：视图级入场仅限 home/setup（其内无 fixed 元素）；
+   会议视图不参与——dock(position:fixed) 在 #view-meeting 内，祖先带 transform/filter
+   会劫持 fixed 定位，导致快捷键与 dock 在入场期间错位、延后显示（v22 漏改的祖先层）。 */
+#view-home.active, #view-setup.active{ animation:cssViewIn .92s cubic-bezier(.22,1,.36,1) backwards; }
+.window.swap{ animation:cssWinIn .62s cubic-bezier(.22,1,.36,1) backwards; }
+.modal-mask.on .modal{ animation:cssModalIn .62s cubic-bezier(.22,1,.36,1) backwards; }
+
+/* ===== SECTION: motion-parity-v20 — 交互内核对标（参数来自 samunos 实测计算值）===== */
+/* 统一缓动令牌：其全站按钮 0.15s cubic-bezier(0.4,0,0.2,1)；外壳 0.9s cubic-bezier(0,0,0.2,1) */
+:root{ --ease-ui:cubic-bezier(0.4,0,0.2,1); --ease-shell:cubic-bezier(0,0,0.2,1); }
+/* ② 视图级入场已并入 cssViewIn 定义（v23），此处不再需要覆盖时长 */
+/* ③ 按钮颜色/边框过渡对齐 0.15s 标准缓动（transform 保留 spring 回弹，手感更活） */
+.btn,.vote-btn,.btn-icon,.seg button,.preset-row .btn,.timer-ctrl .btn,.pt-ctrl .btn{
+  transition:transform .14s var(--spring), background .15s var(--ease-ui),
+    color .15s var(--ease-ui), border-color .15s var(--ease-ui), box-shadow .15s var(--ease-ui); }
+/* ④ dock 图标对齐其 svg 0.15s 标准缓动 */
+.dock button .dk-ico{ transition:transform .15s var(--ease-ui); }
+/* ① dock 收起/展开：0.9s width+opacity，stage 联动（其侧边栏同款参数） */
+@media (min-width:821px){
+  .dock{ transition:width .9s var(--ease-shell), opacity .9s var(--ease-shell), padding .9s var(--ease-shell); }
+  .stage{ transition:margin-left .9s var(--ease-shell); }
+  body.dock-hidden .dock{ width:0; opacity:0; padding:0; border-right:none; overflow:hidden; pointer-events:none; }
+  body.dock-hidden .stage{ margin-left:0; }
+  /* 收起后悬浮的展开按钮 */
+  #dockExpand{ position:fixed; left:12px; top:calc(var(--bar-h) + 12px); z-index:35; display:none;
+    width:38px; height:38px; border-radius:11px; border:1px solid var(--line); background:var(--card);
+    color:var(--ink); font-size:16px; align-items:center; justify-content:center; cursor:pointer;
+    box-shadow:var(--e2); transition:transform .15s var(--ease-ui), box-shadow .15s var(--ease-ui); }
+  #dockExpand:hover{ transform:translateY(-1px); box-shadow:var(--e3); }
+  body.dock-hidden #dockExpand{ display:flex; }
+  /* dock 内的收起按钮 */
+  #dockCollapse{ margin-top:6px; width:100%; min-height:30px; border-radius:8px; border:1px solid transparent;
+    background:transparent; color:var(--muted); font-size:11.5px; cursor:pointer;
+    transition:background .15s var(--ease-ui), color .15s var(--ease-ui); }
+  #dockCollapse:hover{ background:rgba(26,117,187,.10); color:var(--un-blue); }
+}
+@media (max-width:820px){ #dockExpand, #dockCollapse{ display:none !important; } }
+
+/* ===== SECTION: motion-float-kept-v24 — 主工作区呼吸浮动（表决结果大字呈现已按用户要求删除）===== */
+/* SECTION: motion-fix-v22 —— 会议视图的 .stage 绝不挂 transform 动画：
+   dock(position:fixed) 在 .stage 内部，祖先带 transform 会让 fixed 改以 .stage 为包含块，
+   dock 被 margin-left 推出 188px 盖住会议窗口（v21 实测 bug）。
+   浮动只保留在 #view-setup .stage（内部无 fixed 元素）与首页 .desk-hero（v14，无 fixed 后代）。 */
+#view-setup .stage{ animation:stageFloat 4.8s ease-in-out 1.2s infinite; }
+body.projector #view-setup .stage{ animation:none; } /* 投屏求稳：关闭持续浮动 */
+
+/* ===== SECTION: fix-view-anim-v25 — 会议视图彻底不参与任何入场动画 =====
+   dock(statusbar/dock 均为 fixed)位于 #view-meeting 内；v10 的 paneInR 与 v19 的 cssPaneIn
+   只要命中 .view.active 就会让祖先带 transform，劫持 fixed 定位（快捷键延后显示的根因）。
+   会议视图的入场感由 .window 自带的 cssWinIn 承担，视图级动画此处归零。
+   home/setup 两个视图仍保留 cssViewIn（其内无 fixed 元素）。 */
+#view-meeting.active{ animation:none; }
+/* ===== SECTION: styles-touch-v24 — 触控目标下限（移动端可用性）===== */
+@media (pointer:coarse){
+  .sb-exit{ min-height:32px; }
+  .btn-sm{ min-height:32px; }
+  #dockCollapse{ min-height:36px; }
+  .btn-icon{ min-height:34px; min-width:34px; }
+}
 </style>
 </head>
 <body>
@@ -1123,7 +1690,8 @@ body.projector .min-line{ font-size:16px; }
     <span class="sb-chip hide-xs" id="sbQuorum" style="display:none;"><span data-i18n="法定">法定</span> <b id="sbQuorumVal">-</b></span>
     <span class="sb-clock" id="sbClock">----</span>
     <button class="sb-exit" id="sbUndo" style="display:none;" data-i18n-title="回退上一步（Ctrl+Z）" title="回退上一步（Ctrl+Z）">↩ 回退</button>
-    <button class="sb-exit" id="sbProject" data-i18n-title="投屏模式（放大计时与表决显示）" title="投屏模式（放大计时与表决显示）" data-i18n="🖥 投屏">🖥 投屏</button>
+    <button class="sb-exit" id="sbProject" data-i18n-title="投屏模式（放大计时、点名与表决显示）" title="投屏模式（放大计时、点名与表决显示）" data-i18n="🖥 投屏">🖥 投屏</button>
+    <button class="sb-exit" id="sbTheme" data-i18n-title="切换深色/浅色主题" title="切换深色/浅色主题">🌙 深色</button>
     <button class="sb-exit" id="sbLang" title="切换语言 / Switch language">EN</button>
     <button class="sb-exit" id="sbExit" style="display:none;" data-nav="home" data-i18n="退出会议">退出会议</button>
   </div>
@@ -1265,6 +1833,7 @@ body.projector .min-line{ font-size:16px; }
     <button data-tab="minutes"><span class="dk-ico">🗒️</span><span class="dk-txt">会议纪要</span></button>
     <button data-tab="stats"><span class="dk-ico">🏆</span><span class="dk-txt">统计与评奖</span></button>
     <div class="dk-foot"><span data-i18n="快捷键">快捷键</span> <kbd>1</kbd>–<kbd>9</kbd> <span data-i18n="切换面板">切换面板</span><br><kbd>Space</kbd> <span data-i18n="计时开始/暂停">计时开始/暂停</span><br><kbd>Ctrl</kbd>+<kbd>Z</kbd> <span data-i18n="回退上一步">回退上一步</span></div>
+    <button type="button" id="dockCollapse" data-i18n-title="收起侧边栏" title="收起侧边栏">« <span data-i18n="收起">收起</span></button>
   </nav>
   <div class="window" id="meetingWindow">
     <div class="win-bar">
@@ -1463,6 +2032,8 @@ body.projector .min-line{ font-size:16px; }
         </div>
         <div id="awardList" style="margin-top:10px;"></div>
       </div>
+      <div class="card"><h3 data-i18n="数据可视化">数据可视化</h3><p class="hint" style="margin:-2px 0 10px;" data-i18n="以下图表按当前会议存档实时计算，数据为空时不显示图形。">以下图表按当前会议存档实时计算，数据为空时不显示图形。</p><div id="statsCharts" class="c-grid"></div>
+      </div>
     </section>
     </div>
   </div>
@@ -1478,6 +2049,7 @@ body.projector .min-line{ font-size:16px; }
   </div>
 </div>
 <div id="toast"></div>
+<button type="button" id="dockExpand" data-i18n-title="展开侧边栏" title="展开侧边栏">»</button>
 
 <script>
 /* SECTION: js-core */
@@ -1746,6 +2318,13 @@ function log(m, text){ m.minutes.push({ t: nowStr(), text: normalizePunct(text) 
 /* 轻量双语：以中文原文为键，未收录的字符串自动回退中文，不会出现空键 */
 var LANG = 'zh';
 var I18N = {
+  '侧边栏收起：宽屏下点击左侧面板底部「收起」可隐藏面板获得更大工作区，点击左上角悬浮按钮「»」展开；该偏好会记住。':'Sidebar: on wide screens, tap “Collapse” at the bottom of the left panel to hide it for a larger workspace, and tap the floating “»” button at the top-left to bring it back. The preference persists.',
+  '收起侧边栏':'Collapse sidebar',
+  '展开侧边栏':'Expand sidebar',
+  '收起':'Collapse',
+  '投屏模式：点击状态栏「🖥 投屏」放大计时器、发言人、点名国名与三态选项、逐国表决国名与投票键，并提高对比度，供主席台投影使用；放大仅在宽屏生效，手机与平板显示不受影响；投屏下入场动画不做模糊处理，保证投出的文字始终锐利。再次点击即恢复，该偏好会记住，刷新后保持。':'Projector mode: tap “🖥 Projector” in the status bar to enlarge the timer, current speaker, roll-call country names and their three status buttons, and the country names and vote keys of the substantive vote, with higher contrast for the podium projector. Enlargement applies only on wide screens; phones and tablets are unaffected. While projecting, entrance animations skip the blur pass so projected text stays crisp. Tap again to restore; the preference persists across reloads.',
+  '深色模式：点击状态栏「🌙 深色」在深色与浅色主题间切换，偏好会记住，刷新后保持；从未手动切换过时默认深色舞台外观。深浅两套均已按 WCAG AA 校核文字对比度。':'Dark mode: tap “🌙 Dark” in the status bar to switch between dark and light themes. The preference persists across reloads; the dark stage look is the default until you choose otherwise. Text contrast in both themes is checked against WCAG AA.',
+  '数据可视化：「统计与评奖」栏目底部按当前会议存档实时生成两张环形图（出席构成、动议裁定结果）与三张排行条形图（发言次数、参与表决次数、赞助文件数），全部数值实时计算，无数据时显示空态而非补零。':'Data visualization: the bottom of the “Stats & Awards” panel draws two donut charts (roll-call breakdown, motion outcomes) and three ranking bar charts (speeches, votes cast, sponsored documents) live from the current meeting archive. Every figure is computed on the fly; with no data an empty state is shown instead of zeros.',
   '天中模联会议系统':'THSMUN Meeting System', '会议控制台':'Meeting Console',
   '点名':'Roll Call', '主发言名单':'GSL', '动议与表决':'Motions & Voting',
   '实质性表决文件':'Substantive Vote', '计时器':'Timer', '文件':'Documents',
@@ -1756,6 +2335,23 @@ var I18N = {
   '会议数据保存在当前浏览器本地':'All data stays in this browser',
   '退出会议':'Exit Meeting', '返回首页':'Back to Home', '回退':'Undo',
   '表决进行中':'Vote in progress', '法定':'Quorum',
+  '切换深色/浅色主题':'Toggle dark / light theme',
+  '深色':'Dark',
+  '浅色':'Light',
+  '已切换深色模式':'Dark mode on',
+  '已切换浅色模式':'Light mode on',
+  '数据可视化':'Data Visualization',
+  '以下图表按当前会议存档实时计算，数据为空时不显示图形。':'Charts are computed live from this meeting archive; nothing is drawn when there is no data.',
+  '出席构成':'Roll Call Breakdown',
+  '动议裁定结果':'Motion Outcomes',
+  '发言次数排行':'Speeches Ranking',
+  '参与表决次数':'Votes Cast',
+  '赞助文件数':'Sponsored Documents',
+  '合计':'Total',
+  '暂无数据':'No data yet',
+  '共 {n} 席':'{n} seats',
+  '共 {n} 项':'{n} items',
+  '前 {n} 位':'Top {n}',
   '会议信息':'Meeting Info', '会议名称 *':'Meeting Name *', '委员会':'Committee',
   '议题':'Topic', '主席团':'Chairs', '会议开始日期':'Start Date', '会议结束日期':'End Date',
   '默认发言时长（秒）':'Default Speech (sec)', '主发言时长（秒）':'GSL Speech (sec)',
@@ -1826,7 +2422,7 @@ var I18N = {
   '进行中的会议':'Active', '已休会':'Suspended',
   '会议已暂时休会':'Meeting Suspended', '本次会议已闭幕':'Meeting Adjourned',
   '宣布复会':'Resume Meeting', '重新开启会议':'Reopen Meeting',
-  '会议已休会，请先宣布复会':'The meeting is in recess — resume it first', '本次会议已闭幕':'Meeting Adjourned',
+  '会议已休会，请先宣布复会':'The meeting is in recess — resume it first',
   '没有可回退的操作':'Nothing to undo', '已回退：':'Undone: ',
   '回退上一步（Ctrl+Z）':'Undo last step (Ctrl+Z)',
   '时间到':'Time is up', '纪要已导出':'Minutes exported', '会议已创建':'Meeting created',
@@ -1955,8 +2551,8 @@ Object.assign(I18N, {
   '会议已休会':'Meeting in recess','本次会议已结束':'This meeting has ended',
   '会议结束':'Meeting Ended','查看会议':'View Meeting','继续会议':'Continue Meeting',
   '休会中':'In Recess','重新开启会议':'Reopen Meeting','宣布复会':'Resume Meeting',
-  '会议已暂时休会':'Meeting Suspended','本次会议已闭幕':'Meeting Adjourned',
-  '会议已休会，请先宣布复会':'The meeting is in recess — resume it first','本次会议已闭幕':'Meeting Adjourned',
+  
+  
   '没有可回退的操作':'Nothing to undo','已回退：':'Undone: ',
   '第':'Round','轮':'','过':'Pass','赞成':'Yes','反对':'No','弃权':'Abstain',
   '法定':'Quorum','表决进行中':'Vote in progress','法定人数（需 ':'Quorum (need ','）':')',
@@ -2322,6 +2918,7 @@ function setLang(l){
   LANG = l === 'en' ? 'en' : 'zh';
   try { localStorage.setItem(LS_KEY + '.lang', LANG); } catch (e) {}
   applyI18n(); paintDockLabels(); tickClock(); paintFileHint(); renderHome();
+  applyTheme(document.body.classList.contains('dark'));
   /* 新建会议表单：applyI18n 已刷新名单行文案，此处同步 ★ 显示状态（依赖安理会勾选与国名） */
   if (typeof syncP5Marks === 'function' && document.getElementById('delRows')) syncP5Marks();
   var m = cur();
@@ -2669,7 +3266,7 @@ Object.assign(I18N, {
 Object.assign(I18N, {
   /* —— 投屏模式（patch95）—— */
   '🖥 投屏':'🖥 Project',
-  '投屏模式（放大计时与表决显示）':'Projection mode (enlarge timers and vote displays)',
+  '投屏模式（放大计时、点名与表决显示）':'Projection mode (enlarges timer, roll call and voting)',
   '已开启投屏模式':'Projection mode on',
   '已关闭投屏模式':'Projection mode off',
   /* —— 打印存档报告（patch96）—— */
@@ -3503,6 +4100,8 @@ function meetingDateTxt(m){
 }
 function openMeeting(id){
   state.currentId = id;
+  /* 换会议：清空渲染守卫，避免上一场的签名被误判为命中 */
+  _rgM = {}; _rgSig = {};
   var m = cur(); if (!m) { renderHome(); show('home'); return; }
   document.getElementById('mName').textContent = m.name;
   document.getElementById('mMeta').textContent = [m.committee, m.topic, meetingDateTxt(m)]
@@ -3565,7 +4164,11 @@ function openMeeting(id){
   renderAll();
   show('meeting');
 }
+var TAB_KEYS = ['roll','gsl','speakers','motions','docvote','timer','docs','minutes','stats'];
 function setTab(t){
+  /* SECTION: fix-dock-v24：无效值（null/未登记键）回落到当前有效面板，
+     绝不允许把 state.tab 置空并清空所有 .on（曾导致收起时窗口内容消失） */
+  if (TAB_KEYS.indexOf(t) < 0) t = (TAB_KEYS.indexOf(state.tab) >= 0 ? state.tab : TAB_KEYS[0]);
   state.tab = t;
   var bs = document.querySelectorAll('#tabs button');
   for (var i = 0; i < bs.length; i++) bs[i].classList.toggle('on', bs[i].getAttribute('data-tab') === t);
@@ -3578,6 +4181,9 @@ function setTab(t){
 }
 document.getElementById('tabs').addEventListener('click', function(e){
   var b = e.target.closest('button'); if (!b) return;
+  /* SECTION: fix-dock-v24：无 data-tab 的按钮（如侧边栏「收起」）不得触发切面板，
+     否则 setTab(null) 会清空所有面板的 .on 使窗口内容消失 */
+  if (!b.getAttribute('data-tab')) return;
   setTab(b.getAttribute('data-tab')); renderTab(state.tab);
 });
 /* 只渲染指定面板（切入时调用），其余面板在各自数据变更时更新 */
@@ -3599,10 +4205,10 @@ function renderTab(t){
 }
 function renderAll(){
   var m = cur(); if (!m) return;
-  renderMeetingBanner(m);
-  renderRoll(m); renderGsl(m); renderSpeakers(m); renderMotions(m); renderDocVote(m); renderDocs(m); renderMinutes(m); renderStats(m);
-  updateDockBadges(); syncLiveChips();
-  normalizeDomPunct(document.getElementById('meetingWindow'));
+  /* 流畅度：只渲染当前可见面板。其余 7 个 display:none 的面板在切过去时由 renderTab 渲染，
+     避免每次操作都重建全部 8 个面板——隐藏面板的整块 innerHTML 重灌是纯浪费。
+     renderTab 内部已含 banner/badges/chips/normalize，故此处收敛等价。 */
+  renderTab(state.tab);
 }
 function delName(m, delId){
   for (var i = 0; i < m.delegates.length; i++) if (m.delegates[i].id === delId) return cnShort(m.delegates[i].country) + (m.delegates[i].veto ? ' ★' : '');
@@ -3861,6 +4467,7 @@ function updateRollSummary(m){
         b.classList.remove('bump');
         void b.offsetWidth;
         b.classList.add('bump');
+        sprBump(b);
         bumped = true;
       }
     }
@@ -3879,6 +4486,55 @@ function updateRollSummary(m){
       for (var k = 0; k < bs.length; k++) bs[k].classList.remove('bump');
     }, 420);
   }
+}
+/* SECTION: js-renderguard — 渲染守卫（数据签名 + 会议对象身份双比对）
+   数据未变且会议对象未换时跳过整块重灌，保持节点身份：不打断 hover/动画/滚动，
+   也不重建下拉选项（用户正展开的 select 不会被强行收起）。
+   身份比对不可省：undoStep / importArchive 会用新对象替换 state.meetings 中的会议，
+   仅比数据签名会让 DOM 上按钮闭包捕获的旧 m 与已失效会议脱钩。 */
+var _rgM = {}, _rgSig = {};
+function renderGuardSame(key, m, sig){ return _rgM[key] === m && _rgSig[key] === sig; }
+function renderGuardPut(key, m, sig){ _rgM[key] = m; _rgSig[key] = sig; }
+function renderGuardDrop(key){ _rgM[key] = null; _rgSig[key] = null; }
+/* 代表团下拉选项签名：仅取决于语言与代表团名单 */
+function delListSig(m){
+  var a = [LANG];
+  for (var i = 0; i < (m.delegates || []).length; i++) a.push(m.delegates[i].id + '|' + cnShort(m.delegates[i].country));
+  return a.join(';');
+}
+/* 点名列表签名：语言 + 每席的国名/全称/否决权/点名状态 */
+function rollListSig(m){
+  var a = [LANG];
+  for (var i = 0; i < (m.delegates || []).length; i++) {
+    var d = m.delegates[i];
+    a.push(d.id + '|' + cnShort(d.country) + '|' + (d.fullName || '') + '|' + (d.veto ? 1 : 0) + '|' + (d.roll || ''));
+  }
+  return a.join(';');
+}
+/* 统计页签名：覆盖表格全部列与图表全部数据源（含动议裁定状态） */
+function statsSig(m){
+  var a = [LANG], i, d;
+  for (i = 0; i < (m.delegates || []).length; i++) {
+    d = m.delegates[i];
+    var st = m.stats[d.id] || { speeches: 0, votes: 0 };
+    a.push(d.id + '|' + cnShort(d.country) + '|' + (d.roll || '') + '|' + (st.speeches || 0) + '|' + (st.votes || 0));
+  }
+  for (i = 0; i < (m.docs || []).length; i++) {
+    var dj = m.docs[i];
+    a.push('D:' + (dj.drafters || '') + ',' + (dj.signatories || '') + ',' + (dj.sponsors || ''));
+  }
+  for (i = 0; i < (m.awards || []).length; i++) a.push('A:' + m.awards[i].title + ',' + m.awards[i].delId);
+  for (i = 0; i < (m.motions || []).length; i++) a.push('M:' + (m.motions[i].status || ''));
+  return a.join(';');
+}
+function fillDelSelectGuarded(sel, key, m){
+  if (!sel) return;
+  var sig = delListSig(m);
+  if (renderGuardSame(key, m, sig)) return;      /* 名单未变：不重建选项，保住用户当前选择与展开态 */
+  var keep = sel.value;
+  sel.innerHTML = m.delegates.map(function(d){ return '<option value="' + d.id + '">' + esc(cnShort(d.country)) + '</option>'; }).join('');
+  if (keep && sel.querySelector('option[value="' + keep + '"]')) sel.value = keep;
+  renderGuardPut(key, m, sig);
 }
 function renderRoll(m){
   updateRollSummary(m);
@@ -3899,7 +4555,16 @@ function renderRoll(m){
       + '</div></div>';
   }
   if (!m.delegates.length) html = '<div class="empty">' + t('暂无代表团') + '</div>';
-  document.getElementById('rollList').innerHTML = html;
+  /* 百余席代表团时整列重建开销明显；数据未变则完全不动 DOM。
+     逐国点击走 patch111 就地更新（改数据同时改该行 class），故点名状态一变签名必变，不会漏更新。 */
+  var rlBox = document.getElementById('rollList');
+  if (rlBox) {
+    var rlSig = rollListSig(m);
+    if (!renderGuardSame('rollList', m, rlSig)) {
+      rlBox.innerHTML = html;
+      renderGuardPut('rollList', m, rlSig);
+    }
+  }
 }
 document.getElementById('rollList').addEventListener('click', function(e){
   var b = e.target.closest('[data-roll]'); if (!b) return;
@@ -4004,12 +4669,7 @@ function openGsl(m){
 }
 function renderGsl(m){
   migrateGsl(m);
-  var sel = document.getElementById('gslSelect');
-  if (sel) {
-    var keep = sel.value;
-    sel.innerHTML = m.delegates.map(function(d){ return '<option value="' + d.id + '">' + esc(cnShort(d.country)) + '</option>'; }).join('');
-    if (keep && sel.querySelector('option[value="' + keep + '"]')) sel.value = keep;
-  }
+  fillDelSelectGuarded(document.getElementById('gslSelect'), 'gslSelect', m);
   var secIn = document.getElementById('gslSeconds');
   if (secIn && secIn.getAttribute('data-init') !== '1') { secIn.value = m.gslSec || 120; secIn.setAttribute('data-init', '1'); }
 
@@ -4399,12 +5059,7 @@ function spkPendingCount(m){
   return n;
 }
 function renderSpeakers(m){
-  var sel = document.getElementById('spkSelect');
-  if (sel) {
-    var keep = sel.value;
-    sel.innerHTML = m.delegates.map(function(d){ return '<option value="' + d.id + '">' + esc(cnShort(d.country)) + '</option>'; }).join('');
-    if (keep && sel.querySelector('option[value="' + keep + '"]')) sel.value = keep;
-  }
+  fillDelSelectGuarded(document.getElementById('spkSelect'), 'spkSelect', m);
   var c = m.modCaucus, active = !!(c && c.active);
   var secIn = document.getElementById('spkSeconds');
   if (secIn && secIn.getAttribute('data-init') !== '1') { secIn.value = m.speechSec || 90; secIn.setAttribute('data-init', '1'); }
@@ -4758,7 +5413,7 @@ function paintDocVote(m, delId){
     var el = document.getElementById(id);
     if (!el) return;
     var str = String(val);
-    if (el.textContent !== str) el.textContent = str;
+    if (el.textContent !== str) { el.textContent = str; sprBump(el); }   /* SECTION: js-spring-tally-v13：计票数字走可打断弹簧，连续投票持续弹跳而非跳闪 */
   }
   var c = countDocVotes(m);
   setTxt('dvTallyY', c.y);
@@ -6009,49 +6664,94 @@ function fileIconHtml(d){
     + '<span class="df-name">' + esc(d.fileName) + '</span>'
     + '<span class="df-size">' + fmtSize(d.fileSize || 0) + '</span></div>';
 }
+function docCardSig(m, d){
+  return [LANG, d.id, d.type, d.title, d.status, d.drafters || '', d.signatories || '', d.sponsors || '',
+    isPostponed(d) ? '1' : '0', d.amFor || '', d.fileName || '', d.content || ''].join('|');
+}
+function docSeqSig(m){
+  var drAll = drListOf(m), a = [], b = [];
+  for (var q = 0; q < drAll.length; q++) {
+    if (isPostponed(drAll[q])) b.push(docNoOf(drAll[q]) || drAll[q].title);
+    else a.push(docNoOf(drAll[q]) || drAll[q].title);
+  }
+  return [LANG, 'seq', a.join(','), b.join(',')].join('|');
+}
+/* 单张文件卡片 HTML。结构与 class 与改造前逐字一致，仅外层多 data-docid 供定点比对；
+   data-docsig 不写入 HTML（签名可能含引号），改由 setAttribute 安全写入。 */
+function docCardHtml(m, d){
+  var badge = d.status === '已通过' ? 'green' : (d.status === '已否决' ? 'red' : (d.status === '表决中' ? 'gold' : 'gray'));
+  var s = '<div class="doc-card" data-docid="' + esc(d.id) + '"><div class="d-head"><span class="d-title">' + esc(d.type + ' ' + d.title) + '</span><span class="badge ' + badge + '">' + esc(t(d.status)) + '</span>'
+    + (d.drafters ? '<span class="hint">' + t('起草国：') + esc(d.drafters) + '</span>' : '')
+    + (d.signatories ? '<span class="hint">' + t('附议国：') + esc(d.signatories) + '</span>' : '')
+    + (d.sponsors ? '<span class="hint">' + t('主签/附议：') + esc(d.sponsors) + '</span>' : '')
+    + (isPostponed(d) ? '<span class="badge red">' + t('已延置') + '</span>' : '')
+    + (d.amFor ? '<span class="hint">' + t('针对：') + esc(docLabel(findDoc(m, d.amFor) || { type: '', title: d.amFor })) + '</span>' : '')
+    + '</div>';
+  if (d.fileName) s += fileIconHtml(d);
+  else if (d.content) s += '<div class="doc-content">' + esc(d.content) + '</div>';
+  s += '<div class="row">';
+  if (d.fileName) {
+    s += '<button class="btn btn-sm btn-primary" data-doc-dl="' + d.id + '">' + t('下载文件') + '</button>';
+    s += '<button class="btn btn-sm" data-doc-preview="' + d.id + '">' + t('预览') + '</button>';
+  }
+  if (d.status === '草案') s += '<button class="btn btn-sm" data-doc-adv="' + d.id + ':introduced">' + t('引入文件') + '</button>';
+  if (d.status === '已引入') s += '<button class="btn btn-sm" data-doc-adv="' + d.id + ':discussing">' + t('开始讨论') + '</button>';
+  if (isPostponed(d)) s += '<span class="hint warn">' + t('此决议草案已被延置，不得发起讨论、提出修正案或进行表决，直至取消延置动议通过') + '</span>';
+  else if (d.status === '讨论中') s += '<span class="hint">' + t('可在「动议与表决」中发起表决') + '</span>';
+  s += '<button class="btn btn-sm btn-danger" data-doc-rm="' + d.id + '">' + t('删除') + '</button></div></div>';
+  return s;
+}
+function docSeqHtml(m){
+  var drAll = drListOf(m), seqTxt = [], postponedTxt = [];
+  for (var q = 0; q < drAll.length; q++) {
+    if (isPostponed(drAll[q])) postponedTxt.push(docNoOf(drAll[q]) || drAll[q].title);
+    else seqTxt.push(docNoOf(drAll[q]) || drAll[q].title);
+  }
+  return '<div class="card" data-docid="__seq__"><h3>' + t('当前投票顺序') + '</h3><p class="hint">'
+    + (seqTxt.length ? seqTxt.map(function(x, ix){ return (ix + 1) + '. ' + esc(x); }).join(' → ') : t('暂无可表决的决议草案'))
+    + (postponedTxt.length ? '<br>' + t('已延置，不参与投票') + '：' + esc(postponedTxt.join('、')) : '')
+    + '<br>' + t('如需调整，请在「动议与表决」发起「更改投票顺序」动议。') + '</p></div>';
+}
+/* 文件列表渲染：按卡片定点比对（照搬 renderMotions 的成熟差分模式）。
+   原先每次调用整块重建 docList —— 提交/推进/删除任一文件都会重灌全部卡片，
+   打断按压动画、hover 与滚动位置。改为：数量与顺序吻合时逐卡比签名，只换变化的那张。
+   docList 的点击是事件委托（closest('[data-doc-*]')），替换子节点后交互照常有效。 */
 function renderDocs(m){
   migrateDocs(m);
   syncAmForField();
-  var html = '';
-  for (var i = 0; i < m.docs.length; i++) {
+  var box = document.getElementById('docList'); if (!box) return;
+  var emptyHtml = '<div class="card"><div class="empty">' + esc(t('暂无文件，可提交决议草案、修正案或工作文件')) + '</div></div>';
+  var items = [], i;
+  for (i = 0; i < m.docs.length; i++) {
     var d = m.docs[i];
-    var badge = d.status === '已通过' ? 'green' : (d.status === '已否决' ? 'red' : (d.status === '表决中' ? 'gold' : 'gray'));
-    html += '<div class="doc-card"><div class="d-head"><span class="d-title">' + esc(d.type + ' ' + d.title) + '</span><span class="badge ' + badge + '">' + esc(t(d.status)) + '</span>'
-      + (d.drafters ? '<span class="hint">' + t('起草国：') + esc(d.drafters) + '</span>' : '')
-      + (d.signatories ? '<span class="hint">' + t('附议国：') + esc(d.signatories) + '</span>' : '')
-      + (d.sponsors ? '<span class="hint">' + t('主签/附议：') + esc(d.sponsors) + '</span>' : '')
-      + (isPostponed(d) ? '<span class="badge red">' + t('已延置') + '</span>' : '')
-      + (d.amFor ? '<span class="hint">' + t('针对：') + esc(docLabel(findDoc(m, d.amFor) || { type: '', title: d.amFor })) + '</span>' : '')
-      + '</div>';
-    if (d.fileName) html += fileIconHtml(d);
-    else if (d.content) html += '<div class="doc-content">' + esc(d.content) + '</div>';
-    html += '<div class="row">';
-    if (d.fileName) {
-      html += '<button class="btn btn-sm btn-primary" data-doc-dl="' + d.id + '">' + t('下载文件') + '</button>';
-      /* 所有已提交文件均可预览：PDF 原生渲染，DOCX 本地提取正文，DOC 提示下载 */
-      html += '<button class="btn btn-sm" data-doc-preview="' + d.id + '">' + t('预览') + '</button>';
-    }
-    if (d.status === '草案') html += '<button class="btn btn-sm" data-doc-adv="' + d.id + ':introduced">' + t('引入文件') + '</button>';
-    if (d.status === '已引入') html += '<button class="btn btn-sm" data-doc-adv="' + d.id + ':discussing">' + t('开始讨论') + '</button>';
-    /* 延置态优先：已延置的决议草案不得讨论、修正或表决，直至取消延置动议通过 */
-    if (isPostponed(d)) html += '<span class="hint warn">' + t('此决议草案已被延置，不得发起讨论、提出修正案或进行表决，直至取消延置动议通过') + '</span>';
-    else if (d.status === '讨论中') html += '<span class="hint">' + t('可在「动议与表决」中发起表决') + '</span>';
-    html += '<button class="btn btn-sm btn-danger" data-doc-rm="' + d.id + '">' + t('删除') + '</button></div></div>';
+    items.push({ key: d.id, sig: docCardSig(m, d), html: docCardHtml(m, d) });
   }
-  /* 投票顺序提示：列出未被延置的决议草案当前顺序，已延置者标注不参与 */
-  var drAll = drListOf(m);
-  if (drAll.length) {
-    var seqTxt = [], postponedTxt = [];
-    for (var q = 0; q < drAll.length; q++) {
-      if (isPostponed(drAll[q])) postponedTxt.push(docNoOf(drAll[q]) || drAll[q].title);
-      else seqTxt.push(docNoOf(drAll[q]) || drAll[q].title);
+  if (drListOf(m).length) items.push({ key: '__seq__', sig: docSeqSig(m), html: docSeqHtml(m) });
+  if (!items.length) { box.innerHTML = emptyHtml; return; }
+  /* 快速路径：数量一致且 data-docid 顺序吻合 → 逐卡比对签名，只替换变化项 */
+  if (box.children.length === items.length) {
+    var same = true, v;
+    for (v = 0; v < items.length; v++) {
+      if (box.children[v].getAttribute('data-docid') !== items[v].key) { same = false; break; }
     }
-    html += '<div class="card"><h3>' + t('当前投票顺序') + '</h3><p class="hint">'
-      + (seqTxt.length ? seqTxt.map(function(x, ix){ return (ix + 1) + '. ' + esc(x); }).join(' → ') : t('暂无可表决的决议草案'))
-      + (postponedTxt.length ? '<br>' + t('已延置，不参与投票') + '：' + esc(postponedTxt.join('、')) : '')
-      + '<br>' + t('如需调整，请在「动议与表决」发起「更改投票顺序」动议。') + '</p></div>';
+    if (same) {
+      for (var k = 0; k < items.length; k++) {
+        var cur = box.children[k];
+        if (cur.getAttribute('data-docsig') === items[k].sig) continue;   /* 幂等：未变化完全不动 */
+        var tmp = document.createElement('div');
+        tmp.innerHTML = items[k].html;
+        var fresh = tmp.firstChild;
+        fresh.setAttribute('data-docsig', items[k].sig);
+        box.replaceChild(fresh, cur);
+      }
+      return;
+    }
   }
-  document.getElementById('docList').innerHTML = html || '<div class="card"><div class="empty">' + t('暂无文件，可提交决议草案、修正案或工作文件') + '</div></div>';
+  /* 整体重建兜底 */
+  var htmlAll = '';
+  for (var j = 0; j < items.length; j++) htmlAll += items[j].html;
+  box.innerHTML = htmlAll;
+  for (var s2 = 0; s2 < box.children.length; s2++) box.children[s2].setAttribute('data-docsig', items[s2].sig);
 }
 function findDoc(m, id){ for (var i = 0; i < m.docs.length; i++) if (m.docs[i].id === id) return m.docs[i]; return null; }
 function openDocFile(id, preview){
@@ -6530,6 +7230,154 @@ function bindArchiveSync(){
   }
 }
 bindArchiveSync();
+/* SECTION: js-charts — 统计图表（手写 SVG/CSS，不引外部图表库以保持单文件离线可用）
+   颜色一律用 var(--*)，深浅主题切换自动跟随，无需重绘。
+   所有数值实时取自当前会议对象；数据为空则显示空态，绝不填充假数据。 */
+function svgDonut(parts, size){
+  size = size || 118;
+  var total = 0, i;
+  for (i = 0; i < parts.length; i++) total += Math.max(0, parts[i].value || 0);
+  var cx = size / 2, cy = size / 2, r = size / 2 - 11, c = 2 * Math.PI * r;
+  var body = '';
+  if (total > 0) {
+    var off = 0;
+    for (i = 0; i < parts.length; i++) {
+      var v = Math.max(0, parts[i].value || 0);
+      if (!v) continue;
+      var len = c * v / total;
+      body += '<circle cx="' + cx + '" cy="' + cy + '" r="' + r.toFixed(2) + '" fill="none" stroke="' + parts[i].color + '"'
+        + ' stroke-width="13" stroke-linecap="butt" stroke-dasharray="' + len.toFixed(2) + ' ' + (c - len).toFixed(2) + '"'
+        + ' stroke-dashoffset="' + (-off).toFixed(2) + '" transform="rotate(-90 ' + cx + ' ' + cy + ')"></circle>';
+      off += len;
+    }
+  } else {
+    body = '<circle cx="' + cx + '" cy="' + cy + '" r="' + r.toFixed(2) + '" fill="none" stroke="var(--line)" stroke-width="13"></circle>';
+  }
+  return '<svg class="c-donut" viewBox="0 0 ' + size + ' ' + size + '" width="' + size + '" height="' + size + '" role="img">'
+    + body + '<text class="c-center" x="' + cx + '" y="' + (cy - 3) + '" text-anchor="middle">' + (total || 0) + '</text>'
+    + '<text class="c-center" x="' + cx + '" y="' + (cy + 14) + '" text-anchor="middle" style="font-size:10px;">' + esc(t('合计')) + '</text></svg>';
+}
+function legendHtml(parts){
+  var total = 0, i;
+  for (i = 0; i < parts.length; i++) total += Math.max(0, parts[i].value || 0);
+  var s = '<div class="c-legend">';
+  for (i = 0; i < parts.length; i++) {
+    var p = parts[i], v = Math.max(0, p.value || 0);
+    s += '<span class="c-lg"><i style="background:' + p.color + '"></i>' + esc(t(p.label))
+      + '<b>' + v + '</b>' + (total ? '<em>' + Math.round(v / total * 100) + '%</em>' : '') + '</span>';
+  }
+  return s + '</div>';
+}
+function barsHtml(items, color){
+  if (!items.length) return '<div class="c-empty">' + esc(t('暂无数据')) + '</div>';
+  var max = 0, i;
+  for (i = 0; i < items.length; i++) max = Math.max(max, items[i].value);
+  var s = '<div class="c-bars">';
+  for (i = 0; i < items.length; i++) {
+    var pct = max > 0 ? (items[i].value / max * 100) : 0;
+    s += '<div class="c-bar-row"><span class="c-bar-lb" title="' + esc(items[i].label) + '">' + esc(items[i].label) + '</span>'
+      + '<span class="c-bar-tr"><i style="width:' + pct.toFixed(1) + '%;background:' + color + '"></i></span>'
+      + '<b class="c-bar-v">' + items[i].value + '</b></div>';
+  }
+  return s + '</div>';
+}
+function panelHtml(title, note, inner){
+  return '<div class="c-panel"><h4>' + esc(t(title)) + (note ? '<small>' + esc(note) + '</small>' : '') + '</h4>' + inner + '</div>';
+}
+/* 取代表参与文件数，口径与 renderStats 表格「赞助文件」列逐字一致 */
+function chartDocCount(m, d){
+  var n = 0, docs = m.docs || [];
+  for (var j = 0; j < docs.length; j++) {
+    var dj = docs[j];
+    var inDoc = (dj.drafters && dj.drafters.indexOf(d.country) >= 0)
+      || (dj.signatories && dj.signatories.indexOf(d.country) >= 0)
+      || (dj.sponsors && dj.sponsors.indexOf(d.country) >= 0);
+    if (inDoc) n++;
+  }
+  return n;
+}
+function topByValue(arr, n){
+  arr.sort(function(a, b){ return b.value - a.value || String(a.label).localeCompare(String(b.label)); });
+  return arr.slice(0, n);
+}
+function renderCharts(m){
+  var box = document.getElementById('statsCharts');
+  if (!box) return;
+  if (!m) { box.innerHTML = ''; return; }
+  var dels = m.delegates || [], i, d, st;
+  /* ① 出席构成：按点名四态实时计数（PV/P/A/未点名），与 rollTally 的 presentCount=P+PV 同口径 */
+  var pv = 0, pOnly = 0, ab = 0, un = 0;
+  for (i = 0; i < dels.length; i++) {
+    var r = dels[i].roll;
+    if (r === 'PV') pv++; else if (r === 'P') pOnly++; else if (r === 'A') ab++; else un++;
+  }
+  var rollParts = [
+    { label: '出席并投票', value: pv, color: 'var(--ok)' },
+    { label: '出席', value: pOnly, color: 'var(--un-blue)' },
+    { label: '缺席', value: ab, color: 'var(--no)' },
+    { label: '未点名', value: un, color: 'var(--abs)' }
+  ];
+  /* ② 动议裁定结果：取自 motions[].status */
+  var mos = m.motions || [], mPass = 0, mFail = 0, mPend = 0;
+  for (i = 0; i < mos.length; i++) {
+    if (mos[i].status === 'passed') mPass++;
+    else if (mos[i].status === 'pending') mPend++;
+    else mFail++;
+  }
+  var moParts = [
+    { label: '通过', value: mPass, color: 'var(--ok)' },
+    { label: '未通过', value: mFail, color: 'var(--no)' },
+    { label: '待表决', value: mPend, color: 'var(--abs)' }
+  ];
+  /* ③④ 发言次数 / 参与表决次数 / 赞助文件：取自 stats 与 docs */
+  var sp = [], vo = [], dc = [];
+  for (i = 0; i < dels.length; i++) {
+    d = dels[i]; st = m.stats[d.id] || { speeches: 0, votes: 0 };
+    var lb = cnShort(d.country);
+    if (st.speeches > 0) sp.push({ label: lb, value: st.speeches });
+    if (st.votes > 0) vo.push({ label: lb, value: st.votes });
+    var dn = chartDocCount(m, d);
+    if (dn > 0) dc.push({ label: lb, value: dn });
+  }
+  var html = '';
+  html += panelHtml('出席构成', t('共 {n} 席').replace('{n}', dels.length),
+    '<div class="c-donut-wrap">' + svgDonut(rollParts) + legendHtml(rollParts) + '</div>');
+  html += panelHtml('动议裁定结果', t('共 {n} 项').replace('{n}', mos.length),
+    '<div class="c-donut-wrap">' + svgDonut(moParts) + legendHtml(moParts) + '</div>');
+  html += panelHtml('发言次数排行', t('前 {n} 位').replace('{n}', 8), barsHtml(topByValue(sp, 8), 'var(--un-blue)'));
+  html += panelHtml('参与表决次数', t('前 {n} 位').replace('{n}', 8), barsHtml(topByValue(vo, 8), 'var(--ok)'));
+  html += panelHtml('赞助文件数', t('前 {n} 位').replace('{n}', 8), barsHtml(topByValue(dc, 8), 'var(--gold)'));
+  box.innerHTML = html;
+}
+
+/* SECTION: js-theme — 深浅主题切换（写法沿用既有 applyProjector/toggleProjector） */
+var THEME_KEY = LS_KEY + '.theme';
+function applyTheme(dark){
+  document.body.classList.toggle('dark', !!dark);
+  var b = document.getElementById('sbTheme');
+  if (b) {
+    b.textContent = (dark ? '\u2600\ufe0f ' : '\ud83c\udf19 ') + t(dark ? '浅色' : '深色');
+    b.classList.toggle('on', !!dark);
+  }
+}
+function toggleTheme(){
+  var dark = !document.body.classList.contains('dark');
+  applyTheme(dark);
+  try { localStorage.setItem(THEME_KEY, dark ? '1' : '0'); } catch (e) {}
+  toast(dark ? t('已切换深色模式') : t('已切换浅色模式'));
+}
+(function(){
+  var b = document.getElementById('sbTheme');
+  if (b) b.onclick = toggleTheme;
+  var saved = null;
+  try { saved = localStorage.getItem(THEME_KEY); } catch (e) {}
+  /* v14：无偏好时默认深色舞台（对齐 OS 外壳观感）；显式选过浅色('0')才回浅色 */
+  /* SECTION: js-theme-restore-v18：恢复默认浅色；无偏好时跟随系统，有偏好以偏好为准 */
+  if (saved === '1') applyTheme(true);
+  else if (saved === null && window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) applyTheme(true);
+  else applyTheme(false);
+})();
+
 
 document.getElementById('btnMinutesExport').onclick = function(){
   var m = cur(); if (!m) return;
@@ -6545,6 +7393,26 @@ document.getElementById('btnMinutesExport').onclick = function(){
   setTimeout(function(){ URL.revokeObjectURL(a.href); a.remove(); }, 500);
   toast(t('纪要已导出'));
 };
+
+
+/* SECTION: js-dock-collapse-v20 — dock 收起/展开（对齐 samunos 0.9s 侧边栏外壳动画） */
+var DOCKHIDE_KEY = LS_KEY + '.dockhide';
+function applyDockHidden(on){
+  document.body.classList.toggle('dock-hidden', !!on);
+}
+function toggleDock(forceHide){
+  var hide = (forceHide !== undefined) ? !!forceHide : !document.body.classList.contains('dock-hidden');
+  applyDockHidden(hide);
+  try { hide ? localStorage.setItem(DOCKHIDE_KEY, '1') : localStorage.removeItem(DOCKHIDE_KEY); } catch (e) {}
+}
+(function(){
+  var bc = document.getElementById('dockCollapse'), be = document.getElementById('dockExpand');
+  if (bc) bc.onclick = function(){ toggleDock(true); };
+  if (be) be.onclick = function(){ toggleDock(false); };
+  var saved = null; try { saved = localStorage.getItem(DOCKHIDE_KEY); } catch (e) {}
+  if (saved === '1') applyDockHidden(true);
+})();
+
 
 /* SECTION: js-print — 打印 / 存档 PDF 报告（patch96） */
 function prRuleName(m){
@@ -6687,15 +7555,27 @@ function renderStats(m){
     rows += '<tr><td>' + esc(cnShort(d.country)) + '</td><td>' + rollTxt + '</td><td>' + st.speeches + '</td><td>' + st.votes + '</td><td>' + docs + '</td><td>'
       + (aw.length ? esc(aw.map(function(x){ return t(x); }).join(LANG === 'en' ? ', ' : '、')) : '-') + '</td></tr>';
   }
-  document.getElementById('statsTable').innerHTML = rows;
-  var awSel = document.getElementById('awardDelegate'); var keepAw = awSel.value;
-  awSel.innerHTML = m.delegates.map(function(d){ return '<option value="' + d.id + '">' + esc(cnShort(d.country)) + '</option>'; }).join('');
-  if (keepAw && awSel.querySelector('option[value="' + keepAw + '"]')) awSel.value = keepAw;
+  var stBox = document.getElementById('statsTable');
+  if (stBox) {
+    var stSig = statsSig(m);
+    if (!renderGuardSame('statsTable', m, stSig)) { stBox.innerHTML = rows; renderGuardPut('statsTable', m, stSig); }
+  }
+  fillDelSelectGuarded(document.getElementById('awardDelegate'), 'awardDelegate', m);
   var html = '';
   for (var q = 0; q < m.awards.length; q++) {
     html += '<div class="award-row"><span class="badge gold">' + esc(t(m.awards[q].title)) + '</span><span style="flex:1;">' + esc(delName(m, m.awards[q].delId)) + '</span><button class="btn-icon" data-award-rm="' + q + '">×</button></div>';
   }
-  document.getElementById('awardList').innerHTML = html || '<p class="hint">' + t('暂无奖项记录') + '</p>';
+  /* 奖项行内删除按钮走委托（closest('[data-award-rm]')），替换/跳过均不丢事件。
+     图表与表格同源，签名一致时一并跳过，省掉整组 SVG 重建。 */
+  var awBox = document.getElementById('awardList');
+  if (awBox) {
+    var awSig = statsSig(m);
+    if (!renderGuardSame('awardList', m, awSig)) {
+      awBox.innerHTML = html || '<p class="hint">' + t('暂无奖项记录') + '</p>';
+      renderGuardPut('awardList', m, awSig);
+      renderCharts(m);
+    }
+  } else { renderCharts(m); }
 }
 document.getElementById('btnAwardAdd').onclick = function(){
   var m = cur(); if (!m) return;
@@ -6769,12 +7649,15 @@ document.getElementById('btnGuide').onclick = function(){
     + '<li>' + t('回退：误点后按状态栏「回退」或 Ctrl+Z 可撤销上一步，该操作产生的纪要条目一并移除。') + '</li>'
     + '<li>' + t('暂时休会不计时，由主席决定复会；复会后须重新点名，点名完成后自动进入「主发言名单」栏目（新建会议首次点名完成后同样自动进入）。') + '</li>'
     + '<li>' + t('永久休会后会议正式结束，首页显示「会议结束」，不再提供继续入口，但仍可查看全部内容与导出数据。') + '</li>'
-    + '<li>' + t('投屏模式：点击状态栏「🖥 投屏」放大计时器、发言人与表决计票并提高对比度，供主席台投影使用；再次点击即恢复，该偏好会记住，刷新后保持。') + '</li>'
+    + '<li>' + t('投屏模式：点击状态栏「🖥 投屏」放大计时器、发言人、点名国名与三态选项、逐国表决国名与投票键，并提高对比度，供主席台投影使用；放大仅在宽屏生效，手机与平板显示不受影响；投屏下入场动画不做模糊处理，保证投出的文字始终锐利。再次点击即恢复，该偏好会记住，刷新后保持。') + '</li>'
     + '<li>' + t('打印存档：在「会议纪要」栏目点击「打印存档（PDF）」，生成含会议信息、点名统计、动议记录、文件与表决结果、代表参与统计、奖项与完整纪要的报告，再用浏览器「另存为 PDF」即可存档。') + '</li>'
     + '<li>' + t('多设备同步：在首页「多设备同步」导出存档文件，通过网盘或 U 盘拷到另一台设备导入，即可继续同一批会议。导入按每场会议的最后修改时间自动保留较新版本，已删除的会议不会复活，导入前会自动备份本机存档。') + '</li>'
     + '<li>' + t('回退仅在当前页面内有效：刷新或关闭页面后撤销记录清空，会议数据本身不受影响。') + '</li>'
+    + '<li>' + t('深色模式：点击状态栏「🌙 深色」在深色与浅色主题间切换，偏好会记住，刷新后保持；从未手动切换过时默认深色舞台外观。深浅两套均已按 WCAG AA 校核文字对比度。') + '</li>'
+    + '<li>' + t('数据可视化：「统计与评奖」栏目底部按当前会议存档实时生成两张环形图（出席构成、动议裁定结果）与三张排行条形图（发言次数、参与表决次数、赞助文件数），全部数值实时计算，无数据时显示空态而非补零。') + '</li>'
+    + '<li>' + t('侧边栏收起：宽屏下点击左侧面板底部「收起」可隐藏面板获得更大工作区，点击左上角悬浮按钮「»」展开；该偏好会记住。') + '</li>'
     + '<li>' + t('中英双语：点击状态栏 EN / 中文 即时切换。') + '</li></ul>'
-    + '<b>' + t('快捷键') + '</b><ul><li>' + t('数字键') + ' <b>1–8</b>' + colon() + t('切换左侧面板') + '</li><li><b>' + t('空格') + '</b>' + colon() + t('计时开始 / 暂停') + '</li><li><b>Ctrl</b>+<b>Z</b>' + colon() + t('回退上一步') + '</li><li><b>Esc</b>' + colon() + t('关闭弹窗') + '</li></ul>'
+    + '<b>' + t('快捷键') + '</b><ul><li>' + t('数字键') + ' <b>1–9</b>' + colon() + t('切换左侧面板') + '</li><li><b>' + t('空格') + '</b>' + colon() + t('计时开始 / 暂停') + '</li><li><b>Ctrl</b>+<b>Z</b>' + colon() + t('回退上一步') + '</li><li><b>Esc</b>' + colon() + t('关闭弹窗') + '</li></ul>'
     + '<b>' + t('数据说明') + '</b>' + colon() + t('所有会议与上传文件默认仅保存在当前浏览器本地，不会自动上传到任何外部服务；只有当你主动点击「导出全部存档」时，才会生成一个文件由你自行保管或传输。撤销记录不写入存档，以节省本地空间。'));
 };
 document.getElementById('btnAbout').onclick = function(){
@@ -6815,6 +7698,130 @@ document.addEventListener('keydown', function(e){
   var idx = parseInt(e.key, 10);
   if (idx >= 1 && idx <= order.length) { setTab(order[idx - 1]); renderTab(state.tab); }
 });
+
+/* SECTION: js-spring — 可打断弹簧引擎（Framer Motion 同款：从当前 x/v 继续求解） */
+var SPR = { items: {}, raf: 0, _id: 0 };
+function sprReduce(){ try { return !!(window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches); } catch (e) { return false; } }
+function sprActive(){ return document.body && document.body.classList.contains('spring'); }
+function sprId(el){ return el.__sprid || (el.__sprid = ++SPR._id); }
+function sprKey(el, tag){ return sprId(el) + ':' + tag; }
+function sprAnimate(el, tag, target, apply, opts){
+  if (!el) return;
+  opts = opts || {};
+  var k = sprKey(el, tag), it = SPR.items[k], now = (window.performance && performance.now) ? performance.now() : Date.now();
+  if (it) {
+    /* SECTION: js-spring-replay-v16：入场类（replay）再次触发 = 用户又导航了一次，
+       元素经历过隐藏，必须从隐藏态重播，否则弹簧已在 target 附近、入场动画不可见。
+       同元素 50ms 内重复触发视为同一次导航（show/setTab 同帧双调），跳过防闪烁。 */
+    if (opts.replay) {
+      if (now - (it.startedAt || 0) < 50) return;
+      it.x = (opts.from !== undefined ? opts.from : 0); it.v = 0;
+      it.startedAt = now; it.target = target; it.apply = apply; it.t = now;
+      sprWake(); return;
+    }
+    /* 可打断核心①：同目标且仍在飞行 → 不重启，让弹簧自然跑完（消除连点抽搐） */
+    if (it.target === target && !opts.force) { it.apply = apply; return; }
+    it.target = target; it.apply = apply;
+    if (opts.stiffness) it.stiffness = opts.stiffness;
+    if (opts.damping) it.damping = opts.damping;
+    if (opts.precision != null) it.precision = opts.precision;
+  } else {
+    it = SPR.items[k] = {
+      el: el, tag: tag, x: (opts.from !== undefined ? opts.from : target), v: (opts.v || 0),
+      target: target, apply: apply,
+      stiffness: opts.stiffness || 300, damping: opts.damping || 28, mass: opts.mass || 1,
+      precision: (opts.precision != null ? opts.precision : 0.002), t: now, startedAt: now
+    };
+  }
+  it.t = now;
+  sprWake();
+}
+function sprCancel(el, tag){
+  var k = sprKey(el, tag), it = SPR.items[k];
+  if (it) { delete SPR.items[k]; }
+  if (el && el.style) { el.style.opacity = ''; el.style.transform = ''; }
+}
+function sprWake(){ if (!SPR.raf) SPR.raf = requestAnimationFrame(sprStep); }
+function sprStep(now){
+  SPR.raf = 0;
+  var live = 0;
+  for (var k in SPR.items) {
+    var it = SPR.items[k];
+    /* 元素被移除（切会议/重建列表）→ 清理，避免对游离节点做无用功 */
+    if (!it.el || !it.el.isConnected) { delete SPR.items[k]; continue; }
+    var dt = (now - it.t) / 1000; it.t = now;
+    if (!(dt > 0)) dt = 1 / 60;
+    if (dt > 0.064) dt = 0.064;                       /* 卡顿保护：单帧步长上限 64ms */
+    var stepsN = Math.max(1, Math.ceil(dt / (1 / 120))), h = dt / stepsN;
+    for (var q = 0; q < stepsN; q++) {                /* 子步进：120Hz 求解，稳定不炸 */
+      var a = (-it.stiffness * (it.x - it.target) - it.damping * it.v) / it.mass;
+      it.v += a * h; it.x += it.v * h;
+    }
+    if (Math.abs(it.x - it.target) < it.precision && Math.abs(it.v) < 0.05) {
+      it.x = it.target; try { it.apply(it.el, it.target, true); } catch (e) {} delete SPR.items[k];
+    } else { try { it.apply(it.el, it.x, false); } catch (e) {} live++; }
+  }
+  if (live) sprWake();
+}
+/* --- 各场景的 apply：只写 opacity + transform，done 时清空交回 CSS --- */
+function sprClamp01(x){ return x < 0 ? 0 : (x > 1 ? 1 : x); }
+/* 入场模糊量：投屏模式下为 0——亮底叠加 6px 模糊会糊成白雾，投影幕上文字必须锐利。
+   SECTION: js-spring-noblur-v15 */
+function sprBlurAmt(c, max){ return document.body.classList.contains('projector') ? 0 : (1 - c) * max; }
+
+function sprApplyPane(el, x, done){
+  if (done) { el.style.opacity = ''; el.style.transform = ''; el.style.filter = ''; return; }
+  var c = sprClamp01(x);
+  el.style.opacity = String(c);
+  el.style.transform = 'translateY(' + ((1 - c) * 14).toFixed(2) + 'px) scale(' + (0.985 + 0.015 * c).toFixed(4) + ')';
+  el.style.filter = sprBlurAmt(c, 6) ? 'blur(' + sprBlurAmt(c, 6).toFixed(2) + 'px)' : '';
+}
+function sprApplyWin(el, x, done){
+  if (done) { el.style.opacity = ''; el.style.transform = ''; el.style.filter = ''; return; }
+  var c = sprClamp01(x);
+  el.style.opacity = String(c);
+  el.style.transform = 'scale(' + (0.985 + 0.015 * c).toFixed(4) + ') translateY(' + ((1 - c) * 14).toFixed(2) + 'px)';
+  el.style.filter = sprBlurAmt(c, 5) ? 'blur(' + sprBlurAmt(c, 5).toFixed(2) + 'px)' : '';
+}
+function sprApplyModal(el, x, done){
+  if (done) { el.style.opacity = ''; el.style.transform = ''; el.style.filter = ''; return; }
+  var c = sprClamp01(x);
+  el.style.opacity = String(c);
+  el.style.transform = 'scale(' + (0.94 + 0.06 * c).toFixed(4) + ') translateY(' + ((1 - c) * 12).toFixed(2) + 'px)';
+  el.style.filter = sprBlurAmt(c, 4) ? 'blur(' + sprBlurAmt(c, 4).toFixed(2) + 'px)' : '';
+}
+function sprApplyBump(el, x, done){
+  if (done) { el.style.transform = ''; return; }
+  var sc = x < 0.85 ? 0.85 : (x > 1.32 ? 1.32 : x);   /* clamp，防脉冲叠加过大 */
+  el.style.transform = 'scale(' + sc.toFixed(4) + ')';
+}
+/* --- 对外入口 --- */
+function sprPaneIn(el){ if (!sprActive() || sprReduce() || !el) return; sprAnimate(el, 'pane', 1, sprApplyPane, { from: 0, stiffness: 170, damping: 20, replay: true }); }
+function sprWinIn(el){ if (!sprActive() || sprReduce() || !el) return; sprAnimate(el, 'win', 1, sprApplyWin, { from: 0, stiffness: 190, damping: 22, replay: true }); }
+function sprModalIn(){
+  if (!sprActive() || sprReduce()) return;
+  var el = document.querySelector('#modalMask .modal'); if (!el) return;
+  sprAnimate(el, 'modal', 1, sprApplyModal, { from: 0, stiffness: 210, damping: 23, replay: true });
+}
+function sprModalCancel(){ var el = document.querySelector('#modalMask .modal'); if (el) sprCancel(el, 'modal'); }
+/* 数字 bump：速度脉冲叠加。首次从静止给正速度冲向 >1 再弹回；连续变化时叠加速度，
+   保持持续弹跳而非每次重播 —— 这正是可打断，修掉原 CSS popNum 的"被打断重启、数字跳闪"。 */
+function sprBump(el){
+  if (!sprActive() || sprReduce() || !el) return;
+  var k = sprKey(el, 'bump'), it = SPR.items[k], now = (window.performance && performance.now) ? performance.now() : Date.now();
+  if (it) { it.v += 3.4; it.t = now; sprWake(); }       /* 可打断核心②：叠加脉冲，不重启 */
+  else sprAnimate(el, 'bump', 1, sprApplyBump, { from: 1, v: 3.4, stiffness: 480, damping: 22, precision: 0.002 });
+}
+/* 启动：支持 rAF 且非 reduced-motion 才接管；否则保持原 CSS 动画（优雅降级） */
+(function(){
+  function boot(){
+    if (sprReduce()) return;
+    if (typeof requestAnimationFrame !== 'function') return;
+    if (document.body) document.body.classList.add('spring');
+  }
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', boot);
+  else boot();
+})();
 </script>
 <div id="printReport"></div>
 </body>
