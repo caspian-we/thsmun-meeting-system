@@ -1357,7 +1357,7 @@ body.dark .c-bar-row:hover .c-bar-lb{ color:#8ecbf2; }
 /* 首页 OS 感：hero 区柔光晕，磁贴节奏 */
 .desk-hero{ position:relative; }
 body:not(.dark) .desk-hero::before{ content:''; position:absolute; left:50%; top:26px; transform:translateX(-50%);
-  width:min(560px,86vw); height:200px; border-radius:50%;
+  width:min(560px,100%); height:200px; border-radius:50%;
   background:radial-gradient(ellipse,rgba(26,117,187,.13),transparent 70%); filter:blur(6px); z-index:0; pointer-events:none; }
 .desk-hero > *{ position:relative; z-index:1; }
 /* 状态栏品牌区：字距与分隔，更像系统栏 */
@@ -1454,7 +1454,10 @@ body.projector .doc-card, body.projector .motion-card, body.projector .archive-c
 /* ===== SECTION: styles-stage-v14 — 舞台光晕与缓慢浮动（对齐其 stage 氛围）===== */
 .stage{ position:relative; }
 .stage::before{ content:''; position:absolute; left:50%; top:96px; transform:translateX(-50%);
-  width:min(920px,92vw); height:460px; border-radius:50%; pointer-events:none;
+  /* SECTION: styles-glow-fix-v30 —— 光晕宽度改为 min(X,100%) 而非 vw，
+     避免在 dock 占据部分视口时溢出 stage 导致文档级横向滚动条。
+     100% = stage 自身宽度（position:absolute 相对 position:relative 的 stage）。 */
+  width:min(920px,100%); height:460px; border-radius:50%; pointer-events:none;
   background:radial-gradient(ellipse, rgba(26,117,187,.15), transparent 70%); filter:blur(12px); }
 body.dark .stage::before{ background:radial-gradient(ellipse, rgba(74,163,224,.13), transparent 70%); }
 .stage .window{ position:relative; z-index:1; }
@@ -1476,7 +1479,7 @@ body.dark{ background:
   radial-gradient(1000px 520px at 50% -6%, rgba(74,163,224,.14), transparent 64%),
   radial-gradient(760px 420px at 88% 8%, rgba(201,120,90,.055), transparent 60%),
   var(--bg); }
-body.dark .stage::before{ width:min(1040px,96vw); height:520px;
+body.dark .stage::before{ width:min(1040px,100%); height:520px;
   background:radial-gradient(ellipse, rgba(74,163,224,.10), transparent 72%); }
 /* ④ 存档区在深色下也走幽灵风格，减少"网页块"感 */
 body.dark .archive-card{ background:rgba(255,255,255,.025); border-color:rgba(255,255,255,.07); }
@@ -1554,6 +1557,40 @@ body.projector #view-setup .stage{ animation:none; } /* 投屏求稳：关闭持
   #dockCollapse{ min-height:36px; }
   .btn-icon{ min-height:34px; min-width:34px; }
 }
+
+/* ===== SECTION: styles-statusbar-v29 — 阶段配色与窄屏防溢出 ===== */
+/* 阶段配色：表决类=金（醒目）、发言/磋商=蓝、点名=青、休会=灰、闭幕=暗灰。
+   灯过去只有一种金色且文案固定，现在颜色随阶段变，主席一眼看出会议在做什么 */
+.sb-live-dot{ font-style:normal; line-height:1; }
+.sb-chip.live{ background:rgba(201,162,39,.9); color:#231a02; }
+.sb-chip.live.ph-vote{ background:rgba(201,162,39,.92); color:#231a02; animation:livePulse 2.4s ease-in-out infinite; }
+.sb-chip.live.ph-speak{ background:rgba(26,117,187,.92); color:#fff; animation:none; }
+.sb-chip.live.ph-roll{ background:rgba(30,142,90,.92); color:#fff; animation:none; }
+.sb-chip.live.ph-pause{ background:rgba(255,255,255,.20); color:#fff; animation:none; }
+.sb-chip.live.ph-end{ background:rgba(255,255,255,.14); color:rgba(255,255,255,.78); animation:none; }
+body.dark .sb-chip.live.ph-vote{ background:rgba(227,196,99,.92); color:#1a1400; }
+body.dark .sb-chip.live.ph-speak{ background:rgba(74,163,224,.9); color:#08131d; }
+body.dark .sb-chip.live.ph-roll{ background:rgba(67,201,138,.88); color:#06170f; }
+.sb-exit{ display:inline-flex; align-items:center; gap:4px; white-space:nowrap; flex:none; }
+.sb-exit .sb-txt, .sb-chip{ white-space:nowrap; }
+.statusbar .sb-right{ min-width:0; }
+/* 实测溢出：1024px 时 sb-right 需 1020px 而可用 1014px；360px 时需 708px 而可用 350px。
+   策略为逐级让位（每级 display:none 移除占位，不用 visibility，确保不产生溢出）：
+   ① 法定 chip（点名汇总栏已并列显示同一数据，此处冗余）② 时钟（系统状态栏已有）
+   ③ 按钮收成纯图标（title 属性已带完整说明）④ 表决灯只留圆点 */
+@media (max-width:1280px){ .statusbar .sb-chip.hide-xs{ display:none; } }
+@media (max-width:1100px){ .sb-clock{ display:none; } }
+@media (max-width:900px){ .sb-exit .sb-txt{ display:none; } .sb-exit{ gap:0; padding:3px 9px; } }
+@media (max-width:620px){
+  .sb-chip.live .sb-txt{ display:none; } .sb-chip.live{ padding:2px 8px; }
+  .statusbar{ gap:6px; padding:0 8px; } .statusbar .sb-right{ gap:6px; }
+}
+@media (max-width:420px){
+  .sb-chip{ padding:2px 7px; } .sb-exit{ padding:3px 7px; } .statusbar .sb-brand{ gap:0; }
+}
+/* 投屏：状态栏字号放大后更易溢出，直接收成图标 + 灯只留圆点（计时数字保留） */
+body.projector .sb-exit .sb-txt, body.projector .sb-chip.live .sb-txt, body.projector .sb-clock{ display:none; }
+body.projector .sb-exit{ gap:0; padding:3px 9px; }
 </style>
 </head>
 <body>
@@ -1573,15 +1610,15 @@ body.projector #view-setup .stage{ animation:none; } /* 投屏求稳：关闭持
   </div>
   <div class="sb-title" id="sbTitle">天中模联会议系统</div>
   <div class="sb-right">
-    <span class="sb-chip live" id="sbLive" style="display:none;" data-i18n="● 表决进行中">● 表决进行中</span>
+    <span class="sb-chip live" id="sbLive" style="display:none;"><i class="sb-live-dot">●</i><span class="sb-txt"></span></span>
     <span class="sb-chip" id="sbTimer" style="display:none;">⏱ <b id="sbTimerVal">00:00</b></span>
     <span class="sb-chip hide-xs" id="sbQuorum" style="display:none;"><span data-i18n="法定">法定</span> <b id="sbQuorumVal">-</b></span>
     <span class="sb-clock" id="sbClock">----</span>
-    <button class="sb-exit" id="sbUndo" style="display:none;" data-i18n-title="回退上一步（Ctrl+Z）" title="回退上一步（Ctrl+Z）">↩ 回退</button>
-    <button class="sb-exit" id="sbProject" data-i18n-title="投屏模式（放大计时、点名与表决显示）" title="投屏模式（放大计时、点名与表决显示）" data-i18n="🖥 投屏">🖥 投屏</button>
-    <button class="sb-exit" id="sbTheme" data-i18n-title="切换深色/浅色主题" title="切换深色/浅色主题">🌙 深色</button>
+    <button class="sb-exit" id="sbUndo" style="display:none;" data-i18n-title="回退上一步（Ctrl+Z）" title="回退上一步（Ctrl+Z）"><span class="sb-ico">↩</span><span class="sb-txt"></span></button>
+    <button class="sb-exit" id="sbProject" data-i18n-title="投屏模式（放大计时、点名与表决显示）" title="投屏模式（放大计时、点名与表决显示）"><span class="sb-ico">🖥</span><span class="sb-txt" data-i18n="投屏">投屏</span></button>
+    <button class="sb-exit" id="sbTheme" data-i18n-title="切换深色/浅色主题" title="切换深色/浅色主题"><span class="sb-ico">🌙</span><span class="sb-txt">深色</span></button>
     <button class="sb-exit" id="sbLang" title="切换语言 / Switch language">EN</button>
-    <button class="sb-exit" id="sbExit" style="display:none;" data-nav="home" data-i18n="退出会议">退出会议</button>
+    <button class="sb-exit" id="sbExit" style="display:none;" data-nav="home"><span class="sb-ico">⌂</span><span class="sb-txt" data-i18n="退出会议">退出会议</span></button>
   </div>
 </div>
 <!-- SECTION: view-home -->
@@ -2194,6 +2231,14 @@ function log(m, text){ m.minutes.push({ t: nowStr(), text: normalizePunct(text) 
 /* 轻量双语：以中文原文为键，未收录的字符串自动回退中文，不会出现空键 */
 var LANG = 'zh';
 var I18N = {
+  '投屏':'Projector',
+  '文件表决进行中':'Document vote in progress',
+  '动议待裁定':'Motion awaiting ruling',
+  '发言进行中':'Speech in progress',
+  '磋商进行中':'Caucus in progress',
+  '点名进行中':'Roll call in progress',
+  '已闭幕':'Adjourned',
+  '会议进行中':'Meeting in progress',
   '侧边栏收起：宽屏下点击左侧面板底部「收起」可隐藏面板获得更大工作区，点击左上角悬浮按钮「»」展开；该偏好会记住。':'Sidebar: on wide screens, tap “Collapse” at the bottom of the left panel to hide it for a larger workspace, and tap the floating “»” button at the top-left to bring it back. The preference persists.',
   '收起侧边栏':'Collapse sidebar',
   '展开侧边栏':'Expand sidebar',
@@ -2886,8 +2931,8 @@ function syncUndoBtn(){
   /* 英文模式用半角括号，避免中英标点混排 */
   /* 标签走 undoLabel：英文为名词短语，缺失时回落中文而非留空 */
   var lbl = last ? undoLabel(last.label) : '';
-  b.textContent = '↩ ' + t('回退') + (lbl
-    ? (LANG === 'en' ? ' (' + lbl + ')' : '（' + lbl + '）') : '');
+  setSbTxt('sbUndo', t('回退') + (lbl
+    ? (LANG === 'en' ? ' (' + lbl + ')' : '（' + lbl + '）') : ''));
   b.title = t('回退上一步（Ctrl+Z）');
 }
 /* 撤销后同步栏目计时器（gsl / spk）到恢复后的状态。
@@ -2991,11 +3036,11 @@ function syncStatusBar(){
   var m = cur();
   if (viewActive('meeting') && m) {
     sbTitle.textContent = m.name + (TAB_NAMES[state.tab] ? ' · ' + tabName(state.tab) : '');
-    sbExit.textContent = t('退出会议');
+    setSbTxt('sbExit', t('退出会议'));
     sbExit.style.display = '';
   } else if (viewActive('setup')) {
     sbTitle.textContent = t('新建会议');
-    sbExit.textContent = t('返回首页');
+    setSbTxt('sbExit', t('返回首页'));
     sbExit.style.display = '';
   } else {
     sbTitle.textContent = t('天中模联会议系统');
@@ -3003,15 +3048,69 @@ function syncStatusBar(){
   }
   syncLiveChips(); syncUndoBtn();
 }
+/* SECTION: js-phase-v29 —— 会议阶段单一真相源
+   灯（sbLive）与 dock 角标（badge-docvote/badge-motions）过去各算一套判据，
+   且都用「对象是否存在」而非「状态值」，导致表决结束后灯与角标都不熄灭、
+   动议角标恒为 0（判据 status==='voting' 对动议永不成立）。
+   现统一由 meetingPhase 派生，二者不可能再互相矛盾。
+   优先级：闭幕 > 休会 > 文件表决 > 动议待裁定 > 发言 > 磋商 > 点名 > 空闲 */
+var PHASES = {
+  ended:   { txt: '已闭幕',       cls: 'ph-end',   live: true },
+  susp:    { txt: '已休会',       cls: 'ph-pause', live: true },
+  docvote: { txt: '文件表决进行中', cls: 'ph-vote',  live: true },
+  motion:  { txt: '动议待裁定',    cls: 'ph-vote',  live: true },
+  speak:   { txt: '发言进行中',    cls: 'ph-speak', live: true },
+  caucus:  { txt: '磋商进行中',    cls: 'ph-speak', live: true },
+  roll:    { txt: '点名进行中',    cls: 'ph-roll',  live: true },
+  idle:    { txt: '会议进行中',    cls: '',         live: false }
+};
+function meetingPhase(m){
+  if (!m) return 'idle';
+  if (m.status === 'adjourned') return 'ended';
+  if (m.status === 'suspended') return 'susp';
+  /* 判据必须看 status：finishDocVote 结束后 docVote 对象仍在（status='finished'） */
+  if (m.docVote && m.docVote.status === 'voting') return 'docvote';
+  var i;
+  for (i = 0; i < (m.motions || []).length; i++) if (m.motions[i].status === 'pending') return 'motion';
+  var src = m.currentSpeaker ? (m.currentSpeaker.src || 'gsl') : '';
+  if (src) return 'speak';
+  if (m.modCaucus && m.modCaucus.active) return 'caucus';
+  if (!m.rollDone) return 'roll';
+  return 'idle';
+}
+/* 待主席裁定的动议数（= badge-motions）。pending 即现场已提出、等待裁定 */
+function pendingMotionCount(m){
+  if (!m || !m.motions) return 0;
+  var n = 0;
+  for (var i = 0; i < m.motions.length; i++) if (m.motions[i].status === 'pending') n++;
+  return n;
+}
+/* 文件表决是否进行中（= badge-docvote 与灯的表决态） */
+function docVoteLive(m){ return !!(m && m.docVote && m.docVote.status === 'voting'); }
+/* 状态栏文字/图标统一写入助手：
+   文字由内层 .sb-txt 承载（窄屏可整体隐藏只留图标），故 JS 不得再整体写 textContent，
+   否则会连带销毁 .sb-ico 图标节点。无 .sb-txt 时回落元素本身，兼容旧结构。 */
+function setSbTxt(id, txt){
+  var el = document.getElementById(id); if (!el) return;
+  var sp = el.querySelector('.sb-txt');
+  if (sp) { if (sp.textContent !== txt) sp.textContent = txt; }
+  else if (el.textContent !== txt) el.textContent = txt;
+}
+function setSbIco(id, txt){
+  var el = document.getElementById(id); if (!el) return;
+  var ic = el.querySelector('.sb-ico');
+  if (ic && ic.textContent !== txt) ic.textContent = txt;
+}
 function syncLiveChips(){
   var m = cur();
   var live = document.getElementById('sbLive'), quorum = document.getElementById('sbQuorum'), qv = document.getElementById('sbQuorumVal');
   if (!m || !viewActive('meeting')) { live.style.display = 'none'; quorum.style.display = 'none'; return; }
-  var voting = false;
-  for (var i = 0; i < m.motions.length; i++) if (m.motions[i].status === 'voting') voting = true;
-  if (m.docVote) voting = true;
-  live.textContent = '● ' + t('表决进行中');
-  live.style.display = voting ? '' : 'none';
+  /* v29：文案与颜色全部由 meetingPhase 派生，不再各算一套、不再只看对象是否存在 */
+  var ph = meetingPhase(m), spec = PHASES[ph] || PHASES.idle;
+  live.className = 'sb-chip live ' + spec.cls;
+  setSbTxt('sbLive', t(spec.txt));
+  live.title = t(spec.txt);
+  live.style.display = spec.live ? '' : 'none';
   quorum.style.display = '';
   qv.textContent = presentCount(m) + '/' + m.delegates.length;
   quorum.childNodes[0].nodeValue = t('法定') + ' ';
@@ -3022,8 +3121,9 @@ function updateDockBadges(){
   if (!m) { setB('badge-roll', 0); setB('badge-gsl', 0); setB('badge-speakers', 0); setB('badge-motions', 0); setB('badge-docvote', 0); setB('badge-docs', 0); return; }
   var pendingRoll = 0;
   for (var i = 0; i < m.delegates.length; i++) if (!m.delegates[i].roll) pendingRoll++;
-  var voting = 0;
-  for (var j = 0; j < m.motions.length; j++) if (m.motions[j].status === 'voting') voting++;
+  /* v29：角标 = 待主席裁定的动议数。旧判据 status==='voting' 对动议永不成立
+     （动议只有 pending/passed/failed），角标恒为 0，主席看不出有待裁动议 */
+  var voting = pendingMotionCount(m);
   var pendDocs = 0;
   for (var k = 0; k < m.docs.length; k++) { var s = m.docs[k].status; if (s === '草案' || s === '已引入') pendDocs++; }
   var curSrc = m.currentSpeaker ? (m.currentSpeaker.src || 'gsl') : '';
@@ -3033,7 +3133,8 @@ function updateDockBadges(){
   var spkN = (curSrc === 'mod' ? 1 : 0) + spkPend;
   setB('badge-roll', pendingRoll); setB('badge-gsl', gslN); setB('badge-speakers', spkN);
   setB('badge-motions', voting); setB('badge-docs', pendDocs);
-  setB('badge-docvote', m.docVote ? 1 : 0);
+  /* v29：只在表决进行中亮角标。旧写法 m.docVote ? 1 : 0 在表决结束后仍亮（对象未销毁） */
+  setB('badge-docvote', docVoteLive(m) ? 1 : 0);
 }
 /* 社团徽章以 data URI 内嵌于 BADGE_DATA_URI（见 js-badge 常量区）：
    无网络请求、无签名时效，部署到任何环境都不会过期或图裂 */
@@ -5387,6 +5488,10 @@ function renderDocVote(m){
       mm.updatedAt = nowStr(); saveMeetings(); renderDocVote(mm); renderDocs(mm); renderMinutes(mm);
     }, t('确认取消'));
   };
+  /* v29：表决面板每次渲染都同步状态栏灯与 dock 角标。
+     原先只在 saveMeetings 内同步，直改状态后仅调 renderDocVote 的路径会漏刷，
+     表现为「表决中灯不亮 / 结束后灯不灭」。 */
+  try { syncLiveChips(); updateDockBadges(); } catch (e) { /* DOM 未就绪时跳过 */ }
   box.querySelectorAll('[data-dv]').forEach(function(btn){
     btn.onclick = function(){
       var mm = cur(); if (!mm || !mm.docVote) return;
@@ -5936,6 +6041,8 @@ function renderMotions(m){
   for (var s2 = 0; s2 < box.children.length; s2++) {
     box.children[s2].setAttribute('data-msig', motionCardSig(m, list[s2]));
   }
+  /* v29：动议增删改后同步状态栏灯与角标（pending 数即待裁定数） */
+  try { syncLiveChips(); updateDockBadges(); } catch (e) { /* DOM 未就绪时跳过 */ }
 }
 /* 裁定动议结果：主席团依现场表决结果选择通过或未通过 */
 function ruleMotion(m, moId, passed){
@@ -7189,7 +7296,9 @@ function applyTheme(dark){
   document.body.classList.toggle('dark', !!dark);
   var b = document.getElementById('sbTheme');
   if (b) {
-    b.textContent = (dark ? '\u2600\ufe0f ' : '\ud83c\udf19 ') + t(dark ? '浅色' : '深色');
+    /* v29：图标与文字分离承载（窄屏可只留图标），整体写 textContent 会毁掉 .sb-ico */
+    setSbIco('sbTheme', dark ? '\u2600\ufe0f' : '\ud83c\udf19');
+    setSbTxt('sbTheme', t(dark ? '浅色' : '深色'));
     b.classList.toggle('on', !!dark);
   }
 }
