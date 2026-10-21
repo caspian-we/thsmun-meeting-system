@@ -703,8 +703,12 @@ body{
 .sb-exit{ transition:background .2s var(--spring-soft), border-color .2s, transform .16s var(--spring); }
 .sb-exit:hover{ transform:translateY(-1px); }
 .sb-exit:active{ transform:scale(.95); }
-.sb-chip.live{ animation:livePulse 2.4s ease-in-out infinite; }
-@keyframes livePulse{ 0%,100%{ box-shadow:0 0 0 0 rgba(201,162,39,.55), inset 0 1px 0 rgba(255,255,255,.2); } 60%{ box-shadow:0 0 0 7px rgba(201,162,39,0), inset 0 1px 0 rgba(255,255,255,.2); } }
+/* patch113：原 livePulse 逐帧插值 box-shadow（扩散环 0→7px + 内层高光）。
+   其中内层高光在 0% 与 60% 取值完全相同（并未真正动画），提为静态 box-shadow 即可；
+   扩散环移至 .sb-chip.live.ph-vote::after，改用 transform+opacity（可合成）。
+   position:relative 为伪元素提供定位上下文：.sb-chip 内只有 .sb-live-dot 与 .sb-txt
+   两个流内元素，无绝对定位子元素，故不产生任何位移。 */
+.sb-chip.live{ position:relative; box-shadow:inset 0 1px 0 rgba(255,255,255,.2); }
 /* 8) 面板转场：交叉淡入 + 轻微缩放，比单纯位移更「系统」 */
 /* patch82：原 from{translateY(6px) scale(.994)} 会让元素从下方 6px 升起，重播时表现为「整块微微下移」；改为纯淡入 */
 
@@ -848,13 +852,24 @@ table.stats td,table.stats th{ transition:background .16s var(--spring-soft); }
 }
 .btn-primary::after{ background:rgba(255,255,255,.24); }
 /* 28) Dock 徽标：有待办时缓慢脉动，提示而不打扰 */
-@keyframes badgePulse{
-  0%,100%{ box-shadow:0 2px 6px rgba(192,57,43,.35), 0 0 0 0 rgba(192,57,43,.30); }
-  55%{ box-shadow:0 2px 6px rgba(192,57,43,.35), 0 0 0 5px rgba(192,57,43,0); }
+/* patch113：徽标脉动同因——原 badgePulse 逐帧插值 box-shadow。
+   其中静态投影 0 2px 6px rgba(192,57,43,.35) 在两帧取值相同（并未动画），
+   已由 .dock .dk-badge 的静态规则承担，无需重复；变化的只有扩散环 0→5px，
+   移至伪元素 transform+opacity（可合成）。节奏 2.6s / ease-out / 淡出到 0 沿用原值。
+   dock 可同时点亮多个徽标（点名/主发言/发言/动议/文件表决/文件），原写法会并发多个
+   box-shadow 动画，改造后各自独立合成，互不拖累主线程。
+   裁切核查：dock 为 overflow-y:auto（横向会裁切），徽标高 18px、scale(1.34) 最大外扩约 3px，
+   而 dock 右内边距 10px → 不会被裁。 */
+.dock .dk-badge.on{ position:relative; }
+.dock .dk-badge.on::after{
+  content:''; position:absolute; inset:0; border-radius:999px; pointer-events:none;
+  border:1.5px solid rgba(192,57,43,.42); transform-origin:50% 50%;
+  animation:badgeRing 2.6s ease-out infinite;
 }
-.dock .dk-badge.on{ animation:badgePulse 2.6s ease-out infinite; }
-/* 当前栏目内的徽标不再脉动，避免与选中态争夺注意力 */
-.dock button.on .dk-badge.on{ animation:none; box-shadow:0 1px 4px rgba(0,0,0,.22); }
+@keyframes badgeRing{ 0%,100%{ transform:scale(1); opacity:.5; } 55%{ transform:scale(1.34); opacity:0; } }
+/* 当前栏目内的徽标不再脉动，避免与选中态争夺注意力（动画已在伪元素上，故关伪元素） */
+.dock button.on .dk-badge.on::after{ animation:none; }
+.dock button.on .dk-badge.on{ box-shadow:0 1px 4px rgba(0,0,0,.22); }
 /* 29) 滚动条悬浮淡化：静止更淡，容器悬停时加深 */
 ::-webkit-scrollbar-thumb{ background:rgba(120,150,178,.30); }
 ::-webkit-scrollbar:hover ::-webkit-scrollbar-thumb{ background:rgba(90,124,155,.58); }
@@ -900,7 +915,8 @@ table.stats td,table.stats th{ transition:background .16s var(--spring-soft); }
 @media (prefers-reduced-motion: reduce){
   .timer-display::before,.pt-display::before,.pool-bar i,
   .btn::after,.vote-btn::after,.seg button::after,.min-line .t{ transition:none !important; }
-  .dock .dk-badge.on{ animation:none !important; }
+  /* patch113：脉动动画已移到伪元素，降级选择器同步跟过去 */
+  .dock .dk-badge.on::after{ animation:none !important; }
   .btn:active::after,.vote-btn:active::after,.seg button:active::after{ opacity:0 !important; transform:translate(-50%,-50%) scale(0) !important; }
 }
 /* 24) 减少动效偏好：新增动画与位移一并降级 */
@@ -1377,7 +1393,10 @@ body:not(.dark) .desk-hero::before{ content:''; position:absolute; left:50%; top
    （已用真实鼠标点击验证：投票后节点身份保留、按钮亮起、计票联动、投屏下仍可点击）。 */
 .dv-cell{ content-visibility:auto; contain-intrinsic-size:auto 104px; }
 /* hover/进入动画元素提示 GPU 合成，减少重绘 */
-.lt-ico, .launch-tile, .archive-card, .c-panel, .c-bar-tr i{ will-change:transform; }
+/* patch113：实测 will-change 常驻合成层 37 个，其中 .c-bar-tr i（图表条，8 条×3 组=24 个）
+   的 barIn 只是一次性 0.5s 入场动画，播完后常驻提升只是白吃显存；且动画运行期间浏览器
+   本就会自动提升，显式声明对一次性动画收益极小。故移除该项，hover 类交互元素保留。 */
+.lt-ico, .launch-tile, .archive-card, .c-panel{ will-change:transform; }
 /* ===== SECTION: styles-projector-big-v8 — 投屏放大（按本文件既有惯例校准至 ~1.5x）=====
    原投屏只放大了计时器与发言者名，点名国名/三态选项、表决国名/投票键仍是普通 12-14px，
    会场远处看不清；但 v5 一版放到 2-2.3x 与文件既有惯例（.tally 1.57x / .dv-name 1.6x /
@@ -1571,11 +1590,25 @@ body.projector #view-setup .stage{ animation:none; } /* 投屏求稳：关闭持
    灯过去只有一种金色且文案固定，现在颜色随阶段变，主席一眼看出会议在做什么 */
 .sb-live-dot{ font-style:normal; line-height:1; }
 .sb-chip.live{ background:rgba(201,162,39,.9); color:#231a02; }
-.sb-chip.live.ph-vote{ background:rgba(201,162,39,.92); color:#231a02; animation:livePulse 2.4s ease-in-out infinite; }
-.sb-chip.live.ph-speak{ background:rgba(26,117,187,.92); color:#fff; animation:none; }
-.sb-chip.live.ph-roll{ background:rgba(30,142,90,.92); color:#fff; animation:none; }
-.sb-chip.live.ph-pause{ background:rgba(255,255,255,.20); color:#fff; animation:none; }
-.sb-chip.live.ph-end{ background:rgba(255,255,255,.14); color:rgba(255,255,255,.78); animation:none; }
+.sb-chip.live.ph-vote{ background:rgba(201,162,39,.92); color:#231a02; }
+/* patch113：仅表决/动议待裁定阶段（ph-vote）有脉动，其余阶段（发言/点名/休会/闭幕）
+   原本就是 animation:none，故光环只挂 ph-vote，语义与改造前一致。
+   节奏 2.4s、ease-in-out、金色 rgba(201,162,39)、淡出到 0 —— 全部沿用原值。
+   说明取舍：box-shadow 扩散是各方向等距（原 7px），而 scale 按比例放大，
+   对胶囊形长条无法逐像素等价（高度方向外扩约 4px）。此为装饰性淡出光环，
+   取「节奏与色相一致、观感柔和」，换来的是静置期样式重算从 362 次降到个位数。 */
+.sb-chip.live.ph-vote::after{
+  content:''; position:absolute; inset:-1px; border-radius:999px; pointer-events:none;
+  border:1.5px solid rgba(201,162,39,.55); transform-origin:50% 50%;
+  animation:liveRing 2.4s ease-in-out infinite;
+}
+@keyframes liveRing{ 0%,100%{ transform:scale(1); opacity:.55; } 60%{ transform:scale(1.26); opacity:0; } }
+/* patch113：这四条原有的 animation:none 是死代码——.sb-chip.live 已不再声明 animation，
+   且光环只挂在 ph-vote 的伪元素上，其余阶段本就不会有动画，无需显式关闭。 */
+.sb-chip.live.ph-speak{ background:rgba(26,117,187,.92); color:#fff; }
+.sb-chip.live.ph-roll{ background:rgba(30,142,90,.92); color:#fff; }
+.sb-chip.live.ph-pause{ background:rgba(255,255,255,.20); color:#fff; }
+.sb-chip.live.ph-end{ background:rgba(255,255,255,.14); color:rgba(255,255,255,.78); }
 body.dark .sb-chip.live.ph-vote{ background:rgba(227,196,99,.92); color:#1a1400; }
 body.dark .sb-chip.live.ph-speak{ background:rgba(74,163,224,.9); color:#08131d; }
 body.dark .sb-chip.live.ph-roll{ background:rgba(67,201,138,.88); color:#06170f; }
@@ -4446,11 +4479,18 @@ function updateRollSummary(m){
       var vs = String(s.v);
       if (b.textContent !== vs) b.textContent = vs;
       if (!firstPaint && s.bump) {
-        /* 强制重排以重启 CSS 动画，否则连续两次变化时动画不会重播 */
-        b.classList.remove('bump');
-        void b.offsetWidth;
-        b.classList.add('bump');
-        sprBump(b);
+        /* patch113：弹簧接管时 body.spring .stat-chip b.bump{animation:none!important}，
+           CSS 动画根本不参与，原来的 remove → void offsetWidth → add 只是白付一次强制回流
+           （读 offsetWidth 会 flush 整个布局），而此处正处于遍历写入多个统计芯片的循环内，
+           每个变化的数字都会 flush 一次。故弹簧路径直接交给 sprBump（可打断的速度脉冲叠加），
+           仅在不支持 rAF 或系统开启「减少动画」（body 无 spring 类）的 CSS 降级路径保留重启。 */
+        if (sprActive()) {
+          sprBump(b);
+        } else {
+          b.classList.remove('bump');
+          void b.offsetWidth;
+          b.classList.add('bump');
+        }
         bumped = true;
       }
     }
@@ -7494,6 +7534,21 @@ document.getElementById('btnPrintReport').onclick = printReport;
 /* SECTION: js-stats */
 function renderStats(m){
   normalizeAwardTitles(m);
+  /* patch113：守卫前置。原实现先构建百行表格字符串（并对每个代表团遍历全部文件做 indexOf，
+     百席×十余份文件≈上千次字符串扫描）与奖项 HTML，之后才检查签名——守卫只省下 innerHTML
+     写入，构建开销照付。而本函数在「核心磋商结束 / 发言名单结束 / 文件表决结束 / 评奖」
+     四处都会被调用，多数时候并不在统计页，等于每次表决通过都白算一遍百行表格＋整组 SVG。
+     现改为：签名同时命中表格与奖项两处即整体返回，未命中才构建。
+     normalizeAwardTitles 必须在算签名之前——它是存档迁移（把英文模式下误存的英文奖项名
+     回填为中文存储键），若先算签名，迁移当次会因签名基于旧值而漏更新。
+     下拉选项仍走 fillDelSelectGuarded 自身守卫（其 delListSig 覆盖 fullName/veto，比
+     statsSig 更细），故放在快速返回之前调用，语义与改造前完全一致。
+     安全性：printReport 输出到独立容器 #printReport，不读 statsTable 的 DOM；
+     statsCharts 与 awardList 同在 #tab-stats 内，同时存在或同时不存在，
+     故跳过构建不会让任何路径拿到过期内容。 */
+  var sig113 = statsSig(m);
+  fillDelSelectGuarded(document.getElementById('awardDelegate'), 'awardDelegate', m);
+  if (renderGuardSame('statsTable', m, sig113) && renderGuardSame('awardList', m, sig113)) return;
   var rows = '<tr><th>' + t('代表团') + '</th><th>' + t('点名状态') + '</th><th>' + t('发言次数') + '</th><th>'
     + t('参与表决') + '</th><th>' + t('赞助文件') + '</th><th>' + t('获奖') + '</th></tr>';
   for (var i = 0; i < m.delegates.length; i++) {
@@ -7515,11 +7570,10 @@ function renderStats(m){
   }
   var stBox = document.getElementById('statsTable');
   if (stBox) {
-    var stSig = statsSig(m);
+    var stSig = sig113;   /* patch113：复用函数开头已算的签名，省一次百项字符串拼接 */
     if (!renderGuardSame('statsTable', m, stSig)) { stBox.innerHTML = rows; renderGuardPut('statsTable', m, stSig); }
   }
-  fillDelSelectGuarded(document.getElementById('awardDelegate'), 'awardDelegate', m);
-  var html = '';
+  var html = '';   /* patch113：下拉刷新已提到函数开头的快速返回之前，此处不再重复调用 */
   for (var q = 0; q < m.awards.length; q++) {
     html += '<div class="award-row"><span class="badge gold">' + esc(t(m.awards[q].title)) + '</span><span style="flex:1;">' + esc(delName(m, m.awards[q].delId)) + '</span><button class="btn-icon" data-award-rm="' + q + '">×</button></div>';
   }
@@ -7527,7 +7581,7 @@ function renderStats(m){
      图表与表格同源，签名一致时一并跳过，省掉整组 SVG 重建。 */
   var awBox = document.getElementById('awardList');
   if (awBox) {
-    var awSig = statsSig(m);
+    var awSig = sig113;   /* patch113：同上，复用签名 */
     if (!renderGuardSame('awardList', m, awSig)) {
       awBox.innerHTML = html || '<p class="hint">' + t('暂无奖项记录') + '</p>';
       renderGuardPut('awardList', m, awSig);
