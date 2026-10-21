@@ -1369,6 +1369,13 @@ body:not(.dark) .desk-hero::before{ content:''; position:absolute; left:50%; top
 .roll-row{ content-visibility:auto; contain-intrinsic-size:auto 48px; }
 .spk-row{ content-visibility:auto; contain-intrinsic-size:auto 44px; }
 .doc-card, .motion-card, .archive-card{ content-visibility:auto; contain-intrinsic-size:auto 88px; }
+/* patch112：逐国表决格（.dv-cell，每格含 4 个投票键）是全场节点密度最高的一处——
+   百席会议产生约 500 个节点，切到表决面板时整屏布局/绘制成本即由此而来（实测该面板切页
+   由 13.5ms 降至 2.6ms）。与 .roll-row 同批补配渲染跳过：屏外格不参与 paint/layout，
+   尺寸估值交由 auto 记住真实高度，滚动条不跳动。
+   只跳过渲染、不改 DOM 结构，故 paintDocVote 的 data-del 定点更新不受影响
+   （已用真实鼠标点击验证：投票后节点身份保留、按钮亮起、计票联动、投屏下仍可点击）。 */
+.dv-cell{ content-visibility:auto; contain-intrinsic-size:auto 104px; }
 /* hover/进入动画元素提示 GPU 合成，减少重绘 */
 .lt-ico, .launch-tile, .archive-card, .c-panel, .c-bar-tr i{ will-change:transform; }
 /* ===== SECTION: styles-projector-big-v8 — 投屏放大（按本文件既有惯例校准至 ~1.5x）=====
@@ -1404,7 +1411,8 @@ body:not(.dark) .desk-hero::before{ content:''; position:absolute; left:50%; top
    （34/44/48/88px）远小于真实高度，会让初始滚动条长度偏低、渲染后跳动。
    恢复 content-visibility:visible 即解除尺寸包含，估值不再生效，滚动条恒准。 */
 body.projector .min-line, body.projector .roll-row, body.projector .spk-row,
-body.projector .doc-card, body.projector .motion-card, body.projector .archive-card{
+body.projector .doc-card, body.projector .motion-card, body.projector .archive-card,
+body.projector .dv-cell{
   content-visibility:visible;
 }
 /* ===== SECTION: styles-motion-v10 — 动效手感升级（spring 入场 + 可打断按压反馈）===== */
@@ -4139,7 +4147,21 @@ function setTab(t){
   var ps = document.querySelectorAll('.tabpane');
   for (var j = 0; j < ps.length; j++) ps[j].classList.toggle('on', ps[j].id === 'tab-' + t);
   var win = document.getElementById('meetingWindow');
-  if (win) { win.classList.remove('swap'); void win.offsetWidth; win.classList.add('swap'); }
+  /* patch112：原写法 remove('swap') + void offsetWidth + add('swap') 会强制同步重排整个会议窗口
+     （含百余行点名表、上百个逐国表决格），只为重启一段入场动画——实测这是切页延迟主因：
+     切到重面板时单次切页 32.7ms，而同面板热态 JS 渲染仅 2.6ms，差额全在这次全窗口重排。
+     改用 Web Animations API 直接播放同参数动画（时长 620ms / 缓动 / 位移与原 cssWinIn 完全一致，
+     视觉不变）：重启动画无需读取布局，故不再触发同步重排。transform 只作用于 .window 自身，
+     dock 与 statusbar 是 .window 的兄弟节点（同在 .stage 内），其 fixed 定位不受影响。
+     尊重系统「减少动画」偏好；不支持 WAAPI 的旧浏览器保留原 class 路径降级。 */
+  if (win && !sprReduce()) {
+    if (win.animate) {
+      win.animate([{ opacity: 0, transform: 'translateY(14px) scale(.985)' }, { opacity: 1, transform: 'none' }],
+        { duration: 620, easing: 'cubic-bezier(.22,1,.36,1)', fill: 'backwards' });
+    } else {
+      win.classList.remove('swap'); void win.offsetWidth; win.classList.add('swap');
+    }
+  }
   window.scrollTo(0, 0);
   syncStatusBar();
 }
