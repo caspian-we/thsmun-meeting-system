@@ -904,6 +904,89 @@ table.stats td,table.stats th{ transition:background .16s var(--spring-soft); }
 .dv-result::before{ content:""; position:absolute; left:0; top:0; bottom:0; width:4px; }
 .dv-result.pass::before{ background:linear-gradient(180deg,#2fa86c,var(--ok)); }
 .dv-result.fail::before{ background:linear-gradient(180deg,#d9574a,var(--no)); }
+/* SECTION: styles-dv-result-detail — 实质性表决「结果呈现」图表化（历次表决切换条 / 票型环图 / 门槛条形 / 逐国明细）。
+   刻意复用统计栏目既有的 .c-panel / .c-donut / .c-lg / .c-bar-* 与 barIn / scIn / rowInR 关键帧，
+   不新增任何外部依赖、不引入第二套图表实现，保证与全系统同一套缓动变量（--spring / --spring-soft）。
+   呈现动画分三层递进：结果条 scIn → 图表面板 scIn（错峰 70ms）→ 逐国明细行 rowInR（错峰 22ms，封顶 440ms），
+   与 .tabpane.on 的 cssPaneIn .62s 切页动画叠加时不冲突：本区动画总时长 ≤ .62s，切页结束前即落定，
+   且全部使用 transform/opacity（走 GPU，不触发 layout），因此中途切页被打断时只会出现「重新从头播」，
+   与本文件既有面板动画的中断行为完全一致（fill-mode 一律 both/backwards，不留半透明残帧）。 */
+.dv-result{ animation:scIn .34s var(--spring) both; }
+.dv-detail{ animation:cssPaneIn .62s cubic-bezier(.22,1,.36,1) both; }
+.dv-detail > h3{ display:flex; align-items:center; gap:8px; }
+.dv-detail > h3 small{ font-weight:400; font-size:11.5px; color:var(--muted); margin-left:auto; }
+.dv-charts{ display:grid; grid-template-columns:repeat(auto-fit,minmax(258px,1fr)); gap:12px; margin-top:10px; }
+.dv-charts .c-panel{ animation:scIn .34s var(--spring) both; }
+.dv-charts .c-panel:nth-child(2){ animation-delay:.07s; }
+.dv-charts .c-panel:nth-child(3){ animation-delay:.14s; }
+.dv-roster-wrap{ margin-top:12px; animation:scIn .34s var(--spring) .1s both; }
+.dv-roster{ display:grid; grid-template-columns:repeat(auto-fill,minmax(212px,1fr)); gap:6px; }
+.dv-rs{ display:flex; align-items:center; gap:8px; padding:6px 9px; font-size:12.5px;
+  border:1px solid var(--line); border-left-width:3px; border-radius:8px; background:var(--card);
+  animation:rowInR .3s var(--spring) both;
+  transition:box-shadow .2s var(--spring-soft), border-color .2s var(--spring-soft), transform .2s var(--spring); }
+/* 逐国明细行是只读信息，不是可操作控件：hover 只保留阴影提示，刻意不做 translateY 上提。
+   上提会让整片明细在鼠标扫过时此起彼伏地跳动，读票时干扰视线（用户 2026-10-24 反馈）。 */
+.dv-rs:hover{ box-shadow:var(--e1); }
+/* 补漏（2026-10-24 用户二次反馈）：明细行本身的上提已去掉，但逐国明细与两张图表都包在
+   .c-panel 里，而本文件第 1435 行的全局规则 .c-panel:hover{ transform:translateY(-2px) }
+   会让整块面板在鼠标划过时上浮 —— 这才是用户实际感受到的「触碰后上浮」。
+   统计栏目的图表面板是可浏览的卡片，上浮有其意义；但表决结果区是宣布后只读复核的信息，
+   鼠标扫过时整块跳动会干扰读票。故在本区取消位移，只保留阴影提示。
+   选择器 .dv-detail .c-panel:hover 特异性 (0,3,0) 高于全局的 (0,2,0)，无需 !important 即可覆盖，
+   且不影响统计与评奖栏目里 .c-panel 的原有上浮手感。 */
+.dv-detail .c-panel:hover{ transform:none; }
+.dv-detail .c-panel{ will-change:auto; }
+/* 历次表决切换条：一次会议可通过多份决议草案，结果宣布后仍需回看每一份的表决情况。
+   胶囊按钮同样不做位移，只走颜色/边框/阴影，避免与明细区的静态阅读体验冲突。 */
+.dv-hist{ display:flex; flex-wrap:wrap; align-items:center; gap:6px; margin-bottom:10px; }
+.dv-hist-lb{ font-size:12px; color:var(--muted); margin-right:2px; }
+.dv-hist-b{ display:inline-flex; align-items:center; gap:6px; padding:5px 10px; font-size:12.5px;
+  cursor:pointer; border:1px solid var(--line); border-radius:999px; background:var(--card); color:var(--muted);
+  transition:background .18s var(--spring-soft), color .18s, border-color .18s, box-shadow .18s; }
+.dv-hist-b i{ width:7px; height:7px; border-radius:50%; background:var(--abs); flex:none; }
+.dv-hist-b.pass i{ background:var(--ok); }
+.dv-hist-b.fail i{ background:var(--no); }
+.dv-hist-b:hover{ border-color:var(--un-blue); color:var(--ink); box-shadow:var(--e1); }
+.dv-hist-b.on{ background:var(--un-blue); border-color:var(--un-blue); color:#fff; font-weight:600; }
+.dv-hist-b.on i{ background:#fff; }
+body.dark .dv-hist-b.on{ color:#08131d; }
+body.dark .dv-hist-b.on i{ background:#08131d; }
+body.projector .dv-hist-b{ font-size:16px; padding:7px 13px; }
+body.projector .dv-hist-lb{ font-size:15px; }
+.dv-rs-n{ color:var(--ink); min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+.dv-rs-v{ margin-left:auto; flex:none; font-weight:600; font-variant-numeric:tabular-nums; }
+.dv-rs.y{ border-left-color:var(--ok); }  .dv-rs.y .dv-rs-v{ color:var(--ok); }
+.dv-rs.n{ border-left-color:var(--no); }   .dv-rs.n .dv-rs-v{ color:var(--no); }
+.dv-rs.a{ border-left-color:var(--abs); }  .dv-rs.a .dv-rs-v{ color:var(--abs); }
+.dv-rs.x{ border-left-color:var(--line); } .dv-rs.x .dv-rs-v{ color:var(--muted); }
+.dv-rs.veto{ border-color:var(--no); background:linear-gradient(120deg,rgba(192,57,43,.09),transparent 62%); }
+.dv-rs.veto .dv-rs-v{ color:var(--no); }
+body.dark .dv-rs.veto{ background:linear-gradient(120deg,rgba(239,122,108,.14),transparent 62%); }
+/* 投屏：按本文件既有惯例（.dv-result 22px / b 30px）同步放大结果图表，供主席台投影 */
+body.projector .dv-detail > h3{ font-size:20px; }
+body.projector .dv-charts .c-panel h4{ font-size:17px; }
+body.projector .dv-detail .c-donut{ width:150px; height:150px; }
+body.projector .dv-detail .c-center{ font-size:15px; }
+body.projector .dv-detail .c-center b{ font-size:24px; }
+body.projector .dv-detail .c-lg{ font-size:16px; }
+body.projector .dv-detail .c-lg em{ font-size:14px; }
+body.projector .dv-detail .c-bar-tr{ height:13px; }
+body.projector .dv-detail .c-bar-lb,
+body.projector .dv-detail .c-bar-v{ font-size:16px; }
+body.projector .dv-rs{ font-size:16px; padding:8px 11px; }
+@media (max-width:720px){
+  .dv-roster{ grid-template-columns:1fr; }
+  .dv-charts{ grid-template-columns:1fr; }
+}
+/* 减少动效降级：本区动画用了错峰 animation-delay（面板 70ms、明细行 22ms 封顶 440ms、条形 60ms）。
+   全局降级规则只把 animation-duration 压到 .001ms，delay 仍在 —— 配合 fill-mode:both/both 会让元素
+   在 delay 期间保持首帧（opacity:0），表现为「内容迟半秒才出现」。故此处把 delay 一并清零。
+   用 !important 覆盖行内 animation-delay（作者样式表的 !important 优先于无 !important 的行内声明）。 */
+@media (prefers-reduced-motion: reduce){
+  .dv-result,.dv-detail,.dv-charts .c-panel,.dv-roster-wrap,.dv-rs,
+  .dv-charts .c-bar-tr i{ animation:none !important; animation-delay:0s !important; }
+}
 /* 35) 移动端：进度条与池条收窄，避免与触控区打架 */
 @media (max-width:720px){
   .timer-display::after,.timer-display::before{ width:min(230px,84%); bottom:-10px; }
@@ -2473,7 +2556,12 @@ Object.assign(I18N, {
   '法定出席数（需 ':'Quorum (need ','法定出席数':'Quorum',
   '三分之二多数需':'two-thirds majority needs','票':'vote(s)','弃权已达简单多数':'abstentions reached a simple majority',
   '弃权已达简单多数，文件未通过':'Abstentions reached a simple majority; the document failed',
-  '通过门槛':'Passing threshold','弃权不计入':'abstentions excluded'
+  '通过门槛':'Passing threshold','弃权不计入':'abstentions excluded',
+  /* 实质性表决结果呈现（图表化）新增词条 */
+  '表决结果详情':'Vote result detail','票型构成':'Vote breakdown','门槛达成':'Threshold check',
+  '逐国投票明细':'Roll-call detail','弃权阻断线':'Abstention block line','未投票':'Did not vote',
+  '被否决权推翻':'overridden by veto','弃权阻断':'blocked by abstentions',
+  '历次表决':'Vote history'
 });
 /* 词典补充（二）：动议裁定、横幅、统计、使用指引 */
 Object.assign(I18N, {
@@ -2706,7 +2794,7 @@ Object.assign(I18N, {
   '评定奖项':'Award granted','导出时间':'Exported at',
   '天中模联 · THSMUN':'THSMUN',
   '立足天台 · 放眼世界。':'Rooted in Tiantai, facing the world.',
-  '本系统（THSMUN OS）为社团会议量身打造，覆盖点名、主发言名单、动议裁定、实质性表决文件两轮投票（安理会门槛在新建会议时选定：宪章 9 票制或出席国家三分之二多数，并含否决权）、计时、文件流转、纪要导出、统计评奖与中英双语的完整流程，参照安理会等委员会的真实议事规则设计，供主席团与代表在会议中直接使用。':'Built for THSMUN, this system (THSMUN OS) covers the complete workflow: roll call, the general speaker list, motion rulings, two-round substantive votes on documents (the Security Council threshold — either the Charter 9-vote rule or a two-thirds majority of the members holding a vote — is chosen when the meeting is created, and the veto applies), timing, document handling, minutes export, statistics and awards, and full Chinese/English bilingual support. It follows the real rules of procedure of committees such as the Security Council, for direct use by chairs and delegates.',
+  '本系统（THSMUN OS）为社团会议量身打造，覆盖点名、主发言名单、动议裁定、实质性表决文件两轮投票（安理会门槛在新建会议时选定：宪章 9 票制或出席国家三分之二多数，并含否决权）、计时、文件流转、表决结果图表化呈现与历次表决回看、纪要导出、统计评奖与中英双语的完整流程，参照安理会等委员会的真实议事规则设计，供主席团与代表在会议中直接使用。':'Built for THSMUN, this system (THSMUN OS) covers the complete workflow: roll call, the general speaker list, motion rulings, two-round substantive votes on documents (the Security Council threshold — either the Charter 9-vote rule or a two-thirds majority of the members holding a vote — is chosen when the meeting is created, and the veto applies), timing, document handling, charted vote results with vote-history review, minutes export, statistics and awards, and full Chinese/English bilingual support. It follows the real rules of procedure of committees such as the Security Council, for direct use by chairs and delegates.',
   '纪要为历史记录，按写入时的界面语言定稿，不随语言切换而重译；导出的纪要同样保留当时的语言。':'Minutes are historical records: each entry is finalised in the interface language at the time it was written and is not re-translated when the language changes. Exported minutes likewise keep their original language.',
   '确认操作':'Confirm Action',
   /* —— 发言名单「结束名单」 —— */
@@ -3300,6 +3388,7 @@ Object.assign(I18N, {
   '暂无文件':'No documents',
   '类型':'Type',
   '最近一次实质性表决':'Most Recent Substantive Vote',
+  '历次实质性表决':'Substantive votes (all rounds of documents)','轮次':'Round',
   '表决时间':'Vote time',
   '奖项':'Award',
   '本存档由天中模联会议系统（THSMUN OS）生成，记录会议全过程。':'This archive was generated by the THSMUN Meeting System (THSMUN OS) and records the whole meeting.',
@@ -3308,8 +3397,11 @@ Object.assign(I18N, {
   '打印存档：在「会议纪要」栏目点击「打印存档（PDF）」，生成含会议信息、点名统计、动议记录、文件与表决结果、代表参与统计、奖项与完整纪要的报告，再用浏览器「另存为 PDF」即可存档。':'Print archive: in the Minutes panel click "Print Archive (PDF)" to generate a report covering meeting info, roll call, motions, documents and vote results, participation stats, awards and the full minutes — then use the browser\'s "Save as PDF" to keep it.',
   '多设备同步：在首页「多设备同步」导出存档文件，通过网盘或 U 盘拷到另一台设备导入，即可继续同一批会议。导入按每场会议的最后修改时间自动保留较新版本，已删除的会议不会复活，导入前会自动备份本机存档。':'Multi-device sync: export an archive file from "Multi-device Sync" on the home page, copy it to another device via a cloud drive or USB stick, and import it there to continue with the same meetings. Importing keeps the newer version of each meeting automatically, deleted meetings are not revived, and your local archives are backed up before importing.',
   '回退仅在当前页面内有效：刷新或关闭页面后撤销记录清空，会议数据本身不受影响。':'Undo works within the current page only: the undo history is cleared after a refresh or when the page is closed, though the meeting data itself is unaffected.',
-  '所有会议与上传文件默认仅保存在当前浏览器本地，不会自动上传到任何外部服务；只有当你主动点击「导出全部存档」时，才会生成一个文件由你自行保管或传输。撤销记录不写入存档，以节省本地空间。':'All meetings and uploaded files are stored in this browser only by default and are never uploaded automatically. A file is produced only when you click "Export All Archives", for you to keep or transfer yourself. Undo history is not written into archives, saving local space.',
-  '本系统（THSMUN OS）为社团会议量身打造，覆盖点名、主发言名单、动议裁定、实质性表决文件两轮投票（安理会门槛在新建会议时选定：宪章 9 票制或出席国家三分之二多数，并含否决权）、计时、文件流转、纪要导出、打印存档、统计评奖、投屏模式、多设备存档同步与中英双语的完整流程，参照安理会等委员会的真实议事规则设计，供主席团与代表在会议中直接使用。':'Built for THSMUN, this system (THSMUN OS) covers the complete workflow: roll call, the general speaker list, motion rulings, two-round substantive votes on documents (the Security Council threshold — either the Charter 9-vote rule or a two-thirds majority of the members holding a vote — is chosen when the meeting is created, and the veto applies), timing, document handling, minutes export, printable archives, statistics and awards, projection mode, multi-device archive sync, and full Chinese/English bilingual support. It follows the real rules of procedure of committees such as the Security Council, for direct use by chairs and delegates.'
+  /* —— 使用指引新增条目（表决结果呈现 / 历次表决回看）—— */
+  '表决结果呈现：宣布结果后，结论条下方给出「表决结果详情」——票型构成环形图（赞成 / 反对 / 弃权及占比）、门槛达成条形（赞成对比通过门槛、弃权对比弃权阻断线，同基线并列，可直接看出差几票或弃权是否踩线）、以及逐国投票明细（国家全称、★ 常任理事国标记，行使否决权者红色高亮并标注「否决权行使」）。全部数字取自宣布结果当时留存的快照，此后点名状态变化不会改写已宣布的结果。':'Vote result display: once the result is announced, a "Vote result detail" block appears below the verdict bar — a donut chart of the breakdown (in favour / against / abstention, with percentages), threshold bars (affirmative votes against the passing threshold, abstentions against the abstention block line, drawn on the same baseline so you can see at a glance how many votes short it fell or whether abstentions crossed the line), and a roll-call detail list (full country names, ★ for permanent members, and any permanent member casting a veto highlighted in red and labelled "Veto exercised"). Every figure comes from the snapshot taken when the result was announced, so later roll-call changes never rewrite an announced result.',
+  '历次表决回看：一场会议往往要表决多份决议草案，而表决面板一次只承载当前这一份。因此每次宣布结果都会固化为一条历史记录（票数、门槛口径、否决情况、逐国票与宣布时间），随会议存档一并保存，最多留存 50 条。结果卡片上方的「历次表决」胶囊条列出全部记录，最近的排在最前，绿点为通过、红点为未通过或被否决，点击即可回看任意一份文件的表决情况；开始新表决、取消表决或切换会议时自动回到最近一次。回看是只读的，不会改动任何会议数据。':'Vote history: one meeting usually votes on several draft resolutions while the voting panel carries only the current one, so each announced result is frozen into a history record (tally, threshold basis, vetoes, roll-call votes and announcement time), saved with the meeting archive, up to 50 records. The "Vote history" pill strip above the result card lists them all — most recent first, green dot for adopted, red dot for not adopted or vetoed — and clicking one shows the result of that document again. Starting a new vote, cancelling a vote or switching meetings returns the view to the most recent record. Reviewing is read-only and never changes meeting data.',
+  '所有会议与上传文件默认仅保存在当前浏览器本地，不会自动上传到任何外部服务；只有当你主动点击「导出全部存档」时，才会生成一个文件由你自行保管或传输。历次表决记录属于会议数据，会随存档保存并一同导出；撤销记录不写入存档，以节省本地空间。':'All meetings and uploaded files are stored in this browser only by default and are never uploaded automatically. A file is produced only when you click "Export All Archives", for you to keep or transfer yourself. Vote history records are part of the meeting data and are saved and exported with the archive. Undo history is not written into archives, saving local space.',
+  '本系统（THSMUN OS）为社团会议量身打造，覆盖点名、主发言名单、动议裁定、实质性表决文件两轮投票（安理会门槛在新建会议时选定：宪章 9 票制或出席国家三分之二多数，并含否决权）、计时、文件流转、表决结果图表化呈现与历次表决回看、纪要导出、打印存档、统计评奖、投屏模式、多设备存档同步与中英双语的完整流程，参照安理会等委员会的真实议事规则设计，供主席团与代表在会议中直接使用。':'Built for THSMUN, this system (THSMUN OS) covers the complete workflow: roll call, the general speaker list, motion rulings, two-round substantive votes on documents (the Security Council threshold — either the Charter 9-vote rule or a two-thirds majority of the members holding a vote — is chosen when the meeting is created, and the veto applies), timing, document handling, charted vote results with vote-history review, minutes export, printable archives, statistics and awards, projection mode, multi-device archive sync, and full Chinese/English bilingual support. It follows the real rules of procedure of committees such as the Security Council, for direct use by chairs and delegates.'
 });
 /* 词典补充（十二）：安理会表决权随门槛口径变化（patch101/102 配套） */
 Object.assign(I18N, {
@@ -4107,6 +4199,9 @@ function openMeeting(id){
   state.currentId = id;
   /* 换会议：清空渲染守卫，避免上一场的签名被误判为命中 */
   _rgM = {}; _rgSig = {};
+  /* 换会议同时复位「正在回看哪一次表决」：docVoteViewId 是面板浏览位置、不属于会议数据，
+     不复位会把上一场会议选中的记录 id 带进来（匹配不到时虽会回落最近一次，但语义上应显式清空）。 */
+  docVoteViewId = null;
   var m = cur(); if (!m) { renderHome(); show('home'); return; }
   document.getElementById('mName').textContent = m.name;
   document.getElementById('mMeta').textContent = [m.committee, m.topic, meetingDateTxt(m)]
@@ -5353,6 +5448,7 @@ function startDocVoteRound(m){
   m.docVote = {
     docId: docId, round: 1, votes: {}, startedAt: nowStr(), status: 'voting'
   };
+  docVoteViewId = null;   /* 新表决开始：面板回到「当前这次」，不停留在上一份文件的回看视图 */
   doc.status = '表决中';
   log(m, t('开始实质性表决文件') + '：' + doc.type + '《' + doc.title + '》 — ' + t('第一轮投票')
     + '（' + docVoteRuleText(m) + '）');
@@ -5442,6 +5538,189 @@ function paintDocVote(m, delId){
     break;
   }
 }
+/* SECTION: js-dv-result-detail — 实质性表决「结果呈现」：历次表决记录、图表与逐国明细。
+   只服务 dv.status !== 'voting' 的结果态，不参与投票中的定点刷新（paintDocVote），
+   因此不影响逐国投票格的按压动画与选中态。
+   全部数字取自 dv.final 历史快照（y/n/ab/need/simple/abBlocked），与结果卡片、纪要同源，
+   不按当前出席数重算 —— 与 finishDocVote 的快照约定保持一致，避免事后出席变化篡改已宣布的结果。
+   图表复用统计栏目的 svgDonut / legendHtml / .c-bar-* 结构与 barIn 关键帧，不引入任何外部库。 */
+function docVoteResultCharts(fv){
+  var y = fv.y | 0, n = fv.n | 0, ab = fv.ab | 0;
+  var need = fv.need | 0, simple = fv.simple | 0;
+  var total = y + n + ab;
+  var parts = [
+    { label: '赞成', value: y,  color: 'var(--ok)'  },
+    { label: '反对', value: n,  color: 'var(--no)'  },
+    { label: '弃权', value: ab, color: 'var(--abs)' }
+  ];
+  var s = '<div class="dv-charts">';
+  s += panelHtml('票型构成', total + ' ' + t('票'),
+    '<div class="c-donut-wrap">' + svgDonut(parts) + legendHtml(parts) + '</div>');
+  /* 门槛达成：把「赞成 vs 通过门槛」「弃权 vs 弃权阻断线」画成同基线对比条，
+     主席一眼能看出是差几票、还是弃权踩线、还是被否决权推翻。
+     基数取两者较大值，保证达标时条满格、未达标时缺口可见；门槛为 0（投票池为空）时不画该组。 */
+  var rows = [];
+  var baseY = Math.max(y, need, 1);
+  rows.push({ label: t('赞成'),     value: y,    base: baseY, color: 'var(--ok)' });
+  if (need > 0) rows.push({ label: t('通过门槛'), value: need, base: baseY, color: 'var(--un-blue)' });
+  var baseA = Math.max(ab, simple, 1);
+  rows.push({ label: t('弃权'),     value: ab,   base: baseA, color: 'var(--abs)' });
+  if (simple > 0) rows.push({ label: t('弃权阻断线'), value: simple, base: baseA, color: 'var(--no)' });
+  var bh = '<div class="c-bars">';
+  for (var i = 0; i < rows.length; i++) {
+    var pct = rows[i].base > 0 ? (rows[i].value / rows[i].base * 100) : 0;
+    bh += '<div class="c-bar-row"><span class="c-bar-lb" title="' + esc(rows[i].label) + '">' + esc(rows[i].label) + '</span>'
+      + '<span class="c-bar-tr"><i style="width:' + pct.toFixed(1) + '%;background:' + rows[i].color
+      /* 错峰 60ms 入场，与图表面板的 70ms 错峰同节奏；barIn 已在 .c-bar-tr i 上声明 */
+      + ';animation-delay:' + (i * 60) + 'ms"></i></span>'
+      + '<b class="c-bar-v">' + rows[i].value + '</b></div>';
+  }
+  bh += '</div>';
+  s += panelHtml('门槛达成', need > 0 ? (y + ' / ' + need) : '', bh);
+  return s + '</div>';
+}
+/* 逐国投票明细：结果宣布后仍可查每一席投了什么（投票格在结果态已被结果卡片替换，
+   此前逐国票只在汇总里保留，复盘时无从查起）。票值口径与 dv-cell 按钮完全一致：
+   Y 赞成 / N 反对 / AB 弃权 / P2 过（仅第一轮有意义；第二轮仍是 P2 表示未重新投票）。
+   行使否决权的常任理事国单独高亮，与结果卡片的「否决权行使：xxx ★」互为印证。 */
+/* 把投票池 + 票值解析成「与会议状态无关」的只读名单：[{name, veto, vote}]。
+   历史记录必须在宣布结果的那一刻就把国家全称固化下来 —— 之后点名状态若被修改、
+   代表团被删除或改名，已宣布的表决结果也不应随之变化（与 dv.final 快照同理）。 */
+function docVoteRosterOf(m, dv, pool){
+  var out = [];
+  if (!pool || !pool.length) return out;
+  for (var i = 0; i < pool.length; i++) {
+    var d = pool[i];
+    out.push({ name: fullNameOf(m, d.id), veto: !!d.veto, vote: (dv && dv.votes && dv.votes[d.id]) || '' });
+  }
+  return out;
+}
+/* 逐国投票明细：结果宣布后仍可查每一席投了什么（投票格在结果态已被结果卡片替换，
+   此前逐国票只在汇总里保留，复盘时无从查起）。票值口径与 dv-cell 按钮完全一致：
+   Y 赞成 / N 反对 / AB 弃权 / P2 过（仅第一轮有意义；第二轮仍是 P2 表示未重新投票）。
+   行使否决权的常任理事国单独高亮，与结果卡片的「否决权行使：xxx ★」互为印证。
+   刻意不做 hover 位移：明细是只读信息，鼠标扫过时整片跳动会干扰读票。 */
+function dvRosterRows(list, round){
+  if (!list || !list.length) return '<div class="c-empty">' + esc(t('暂无数据')) + '</div>';
+  var r2 = round === 2;
+  var s = '<div class="dv-roster">';
+  for (var i = 0; i < list.length; i++) {
+    var r = list[i], v = r.vote || '';
+    var lab = v === 'Y' ? t('赞成') : v === 'N' ? t('反对') : v === 'AB' ? t('弃权')
+      : (v === 'P2' && !r2) ? t('过') : t('未投票');
+    var cls = v === 'Y' ? 'y' : v === 'N' ? 'n' : v === 'AB' ? 'a' : 'x';
+    var isVeto = !!(r.veto && v === 'N');
+    s += '<div class="dv-rs ' + cls + (isVeto ? ' veto' : '')
+      /* 错峰入场封顶 440ms：百席会议不会把动画拖到 2 秒以上，且短于切页动画总时长 */
+      + '" style="animation-delay:' + Math.min(i * 22, 440) + 'ms">'
+      + '<span class="dv-rs-n" title="' + esc(r.name) + '">' + esc(r.name)
+      + (r.veto ? ' <span class="veto-star">★</span>' : '') + '</span>'
+      + '<span class="dv-rs-v">' + esc(lab) + (isVeto ? ' · ' + esc(t('否决权行使')) : '') + '</span>'
+      + '</div>';
+  }
+  return s + '</div>';
+}
+/* 宣布结果时把本次表决固化成一条历史记录，追加到 m.docVoteHistory。
+   一次会议可以通过多份决议草案，而 m.docVote 是单例、下一次 beginDocVote 就会覆盖它，
+   因此上一份文件的票数、门槛口径、否决情况与逐国票必须另行留存，否则宣布后即无从回看。
+   上限 50 条：超出后丢弃最早的一条，避免长会期把 localStorage 撑爆。 */
+function pushDocVoteHistory(m, dv, pool){
+  if (!m || !dv) return null;
+  if (!Array.isArray(m.docVoteHistory)) m.docVoteHistory = [];
+  var doc = findDoc(m, dv.docId);
+  var rec = {
+    id: 'dv' + Date.now() + '_' + Math.floor(Math.random() * 1e6),
+    docId: dv.docId,
+    docType: doc ? (doc.type || '') : '',
+    docTitle: doc ? (doc.title || '') : '',
+    round: dv.round,
+    result: dv.result,
+    vetoedBy: (dv.vetoedBy || []).slice(),
+    /* final 深拷贝：dv.final 之后不会被改写，但历史条目必须与当前对象彻底脱钩 */
+    final: JSON.parse(JSON.stringify(dv.final || {})),
+    finishedAt: dv.finishedAt || nowStr(),
+    roster: docVoteRosterOf(m, dv, pool)
+  };
+  m.docVoteHistory.push(rec);
+  if (m.docVoteHistory.length > 50) m.docVoteHistory.shift();
+  return rec;
+}
+/* 归一化「可回看的表决记录列表」：以 m.docVoteHistory 为准；
+   本功能上线前保存的旧存档没有该字段，但 dv.final 仍在，故现场合成一条只读记录，
+   保证旧存档也能看到图表与逐国明细（合成条 id 为空，不作为可寻址的历史项）。 */
+function dvHistoryList(m, dv, pool){
+  var hist = (m && Array.isArray(m.docVoteHistory)) ? m.docVoteHistory.slice() : [];
+  var hasCur = false;
+  for (var i = 0; i < hist.length; i++) {
+    if (hist[i].docId === dv.docId && hist[i].finishedAt === (dv.finishedAt || '')) { hasCur = true; break; }
+  }
+  if (!hasCur) {
+    var doc = findDoc(m, dv.docId);
+    hist.push({
+      id: '', docId: dv.docId, docType: doc ? (doc.type || '') : '', docTitle: doc ? (doc.title || '') : '',
+      round: dv.round, result: dv.result, vetoedBy: (dv.vetoedBy || []).slice(),
+      final: dv.final || {}, finishedAt: dv.finishedAt || '', roster: docVoteRosterOf(m, dv, pool)
+    });
+  }
+  return hist;
+}
+function dvShortTitle(s){
+  s = String(s || '');
+  return s.length > 13 ? s.slice(0, 13) + '…' : s;
+}
+/* 当前正在回看哪一次表决（null = 最近一次）。刻意放在模块作用域而不是 m 上：
+   它只是面板的浏览位置，不属于会议数据，不应写入存档、也不应进入撤销栈。
+   开始新表决 / 取消表决 / 切换会议时重置为 null，避免停留在已不存在的记录上。 */
+var docVoteViewId = null;
+/* 结果卡片：历次表决切换条 + 结论条 + 表决结果详情（环图 / 门槛条形 / 逐国明细）。
+   所有内容只读 rec（历史记录或合成记录），不回读 m.docVote 的实时字段，
+   因此查看旧记录时不会被当前点名状态或后续表决影响。 */
+function docVoteResultCard(m, rec, hist){
+  var fv = rec.final || {};
+  var vetoed = !!(rec.vetoedBy && rec.vetoedBy.length);
+  var fReason = vetoed ? t('否决权行使') + '：' + esc(rec.vetoedBy.join('、')) + ' ★'
+    /* 旧存档缺 fv.simple 时会显示「undefined/undefined」，用 |0 兜底 */
+    : (fv.abBlocked ? t('弃权已达简单多数') + '（' + (fv.ab | 0) + '/' + (fv.simple | 0) + '）' : '');
+  var s = '<div class="card">';
+  if (hist.length > 1) {
+    s += '<div class="dv-hist"><span class="dv-hist-lb">' + esc(t('历次表决')) + '</span>';
+    /* 最近的排在最前：主席通常要回看的是刚通过的上一份 */
+    for (var i = hist.length - 1; i >= 0; i--) {
+      var r = hist[i], on = (r === rec);
+      var tip = (r.docType ? r.docType + ' ' : '') + (r.docTitle || '') + ' · '
+        + t('第') + ' ' + (r.round || 1) + ' ' + t('轮') + ' · '
+        + (r.result === 'passed' ? t('已通过') : (r.vetoedBy && r.vetoedBy.length ? t('被否决') : t('未获通过')))
+        + (r.finishedAt ? ' · ' + r.finishedAt : '');
+      s += '<button type="button" class="dv-hist-b' + (on ? ' on' : '') + (r.result === 'passed' ? ' pass' : ' fail')
+        + '" data-dvh="' + esc(r.id) + '" title="' + esc(tip) + '"><i></i>'
+        + esc(r.docType || 'DOC') + (r.docTitle ? ' ' + esc(dvShortTitle(r.docTitle)) : '') + '</button>';
+    }
+    s += '</div>';
+  }
+  s += '<div class="dv-result ' + (rec.result === 'passed' ? 'pass' : 'fail') + '">'
+    + '<b>' + (rec.result === 'passed' ? t('已通过') : (vetoed ? t('被否决') : t('未获通过'))) + '</b>'
+    /* fv 取自历史快照，缺字段时 |0 兜底为 0，不显示 undefined */
+    + '<span>' + t('赞成') + ' ' + (fv.y | 0) + ' · ' + t('反对') + ' ' + (fv.n | 0) + ' · ' + t('弃权') + ' ' + (fv.ab | 0) + '</span>'
+    + '<span class="hint">' + t('通过门槛') + '：' + (((fv.need | 0) === 0)
+      /* 门槛为 0 只可能是投票池为空：无人持有表决权，无从表决 */
+      ? t('无有表决权代表团，文件不获通过')
+      /* 按表决当时记录的口径复述（快照），不按当前出席数重算 */
+      : docVoteRuleText(m, fv)) + '</span>'
+    + (fReason ? '<span class="hint">' + fReason + '</span>' : '')
+    + '</div>'
+    + '<div class="dv-detail">'
+    + '<h3>' + t('表决结果详情')
+    + '<small>' + (rec.docType ? esc(rec.docType) + (rec.docTitle ? '《' + esc(rec.docTitle) + '》' : '') + ' · ' : '')
+    + t('第') + ' ' + (rec.round || 1) + ' ' + t('轮') + ' · ' + t('有表决权') + ' '
+    + ((fv.voting | 0) || (rec.roster ? rec.roster.length : 0)) + ' ' + t('席')
+    + (rec.finishedAt ? ' · ' + esc(rec.finishedAt) : '') + '</small></h3>'
+    + docVoteResultCharts(fv)
+    + '<div class="dv-roster-wrap">'
+    + panelHtml('逐国投票明细', (rec.roster ? rec.roster.length : 0) + ' ' + t('席'), dvRosterRows(rec.roster || [], rec.round))
+    + '</div>'
+    + '</div></div>';
+  return s;
+}
 function renderDocVote(m){
   var box = document.getElementById('docVoteBox'); if (!box) return;
   var dv = m.docVote;
@@ -5516,22 +5795,17 @@ function renderDocVote(m){
       + '<br>' + t('通过门槛') + '：' + docVoteRuleText(m)
       + '</p></div>';
   } else {
-    /* 门槛数字一律由 docVoteRuleText(m, fv) 按历史快照复述，此处不自行推算。
-       旧 fNeed 兜底以「赞成+反对」为基数，与实现（以投票池为基数、弃权计入分母）矛盾，
-       且从未被读取，已移除 */
-    var fv = dv.final || {};
-    var fReason = (dv.vetoedBy && dv.vetoedBy.length) ? t('否决权行使') + '：' + esc(dv.vetoedBy.join('、')) + ' ★'
-      : (fv.abBlocked ? t('弃权已达简单多数') + '（' + fv.ab + '/' + fv.simple + '）' : '');
-    html += '<div class="card"><div class="dv-result ' + (dv.result === 'passed' ? 'pass' : 'fail') + '">'
-      + '<b>' + (dv.result === 'passed' ? t('已通过') : (dv.vetoedBy && dv.vetoedBy.length ? t('被否决') : t('未获通过'))) + '</b>'
-      + '<span>' + t('赞成') + ' ' + fv.y + ' · ' + t('反对') + ' ' + fv.n + ' · ' + t('弃权') + ' ' + fv.ab + '</span>'
-      + '<span class="hint">' + t('通过门槛') + '：' + (((fv.need | 0) === 0)
-        /* 门槛为 0 只可能是投票池为空：无人持有表决权，无从表决 */
-        ? t('无有表决权代表团，文件不获通过')
-        /* 按表决当时记录的口径复述（dv.final 快照），不按当前出席数重算 */
-        : docVoteRuleText(m, fv)) + '</span>'
-      + (fReason ? '<span class="hint">' + fReason + '</span>' : '')
-      + '</div></div>';
+    /* 结果态：从「历次表决记录」中取出要展示的一条（默认最近一次），整块交给 docVoteResultCard。
+       门槛数字一律由 docVoteRuleText(m, fv) 按历史快照复述，此处不自行推算。
+       一次会议可通过多份决议草案，m.docVote 会被下一次 beginDocVote 覆盖，
+       故历史票数存于 m.docVoteHistory（见 pushDocVoteHistory），宣布后仍可逐份回看。 */
+    var hist = dvHistoryList(m, dv, pool);
+    var rec = null;
+    if (docVoteViewId) {
+      for (var hi = 0; hi < hist.length; hi++) if (hist[hi].id === docVoteViewId) { rec = hist[hi]; break; }
+    }
+    if (!rec) rec = hist[hist.length - 1];
+    html += docVoteResultCard(m, rec, hist);
   }
   box.innerHTML = html;
   var r2 = document.getElementById('btnDvRound2');
@@ -5547,9 +5821,18 @@ function renderDocVote(m){
       if (d0 && (d0.status === '表决中' || d0.status === '已通过' || d0.status === '已否决')) d0.status = '讨论中';
       log(mm, t('取消本次实质性表决文件'));
       mm.docVote = null;
+      docVoteViewId = null;
       mm.updatedAt = nowStr(); saveMeetings(); renderDocVote(mm); renderDocs(mm); renderMinutes(mm);
     }, t('确认取消'));
   };
+  /* 历次表决切换条：点击某一条即把面板切到那一次表决的结果（只读回看，不改任何会议数据）。
+     id 为空的合成记录（旧存档）落到 null，等价于「最近一次」。 */
+  box.querySelectorAll('[data-dvh]').forEach(function(btn){
+    btn.onclick = function(){
+      docVoteViewId = this.getAttribute('data-dvh') || null;
+      var mm = cur(); if (mm) renderDocVote(mm);
+    };
+  });
   /* v29：表决面板每次渲染都同步状态栏灯与 dock 角标。
      原先只在 saveMeetings 内同步，直改状态后仅调 renderDocVote 的路径会漏刷，
      表现为「表决中灯不亮 / 结束后灯不灭」。 */
@@ -5641,6 +5924,10 @@ function finishDocVote(m){
     simpleBase: simpleBase };
   dv.vetoedBy = vetoedBy;
   dv.finishedAt = nowStr();
+  /* 固化本次表决为历史记录：m.docVote 是单例，下一次 beginDocVote 就会覆盖它，
+     而一次会议往往会表决多份决议草案，宣布后仍需逐份回看票数与否决情况。
+     必须在 snapshot('宣布实质性表决结果') 之后追加，撤销时可一并回滚。 */
+  pushDocVoteHistory(m, dv, pool);
   m.hasVotedOnce = true;
   var doc = findDoc(m, dv.docId);
   if (doc) {
@@ -7472,18 +7759,46 @@ function buildReportHtml(m){
     }
     L.push('</table>');
   }
-  if (m.docVote && m.docVote.final) {
-    var dv = m.docVote, fv = dv.final, vd = findDoc(m, dv.docId);
-    L.push('<h2 style="font-size:11pt;border:none;margin:12px 0 4px;">' + esc(t('最近一次实质性表决')) + '</h2>');
-    L.push('<table>');
-    kv(t('表决文件'), esc(vd ? (vd.type + ' ' + vd.title) : (dv.docId || '-')));
-    kv(t('表决结果'), dv.result === 'passed' ? '<span class="pr-pass">' + esc(t('已通过')) + '</span>'
-      : (dv.vetoedBy && dv.vetoedBy.length ? '<span class="pr-fail">' + esc(t('被否决')) + '</span>' : '<span class="pr-fail">' + esc(t('未获通过')) + '</span>'));
-    kv(t('赞成') + ' / ' + t('反对') + ' / ' + t('弃权'), fv.y + ' / ' + fv.n + ' / ' + fv.ab);
-    kv(t('通过门槛'), esc(docVoteRuleText(m, fv)));
-    if (dv.vetoedBy && dv.vetoedBy.length) kv(t('否决权行使'), esc(dv.vetoedBy.join(LANG === 'en' ? ', ' : '、')));
-    if (dv.finishedAt) kv(t('表决时间'), esc(dv.finishedAt));
-    L.push('</table>');
+  /* 四之二、历次实质性表决。
+     一场会议往往会表决多份决议草案，而旧写法只输出 m.docVote（单例，会被下一次表决覆盖）的
+     「最近一次实质性表决」，之前几份的票数、门槛口径与否决情况在存档报告里直接丢失。
+     改为逐份列出，数据源与结果面板同源：优先 m.docVoteHistory（见 pushDocVoteHistory）；
+     本功能上线前保存的旧存档没有该字段，则回落到 m.docVote.final 现场合成一条，
+     保证旧存档仍能打印出最近一次结果，行为与升级前一致。 */
+  var prRecs = (Array.isArray(m.docVoteHistory) && m.docVoteHistory.length) ? m.docVoteHistory.slice() : [];
+  if (!prRecs.length && m.docVote && m.docVote.final) {
+    var dv0 = m.docVote, vd0 = findDoc(m, dv0.docId);
+    prRecs.push({
+      docId: dv0.docId, docType: vd0 ? (vd0.type || '') : '', docTitle: vd0 ? (vd0.title || '') : '',
+      round: dv0.round, result: dv0.result, vetoedBy: (dv0.vetoedBy || []).slice(),
+      final: dv0.final, finishedAt: dv0.finishedAt || ''
+    });
+  }
+  if (prRecs.length) {
+    L.push('<h2 style="font-size:11pt;border:none;margin:12px 0 4px;">'
+      + esc(prRecs.length > 1 ? t('历次实质性表决') : t('最近一次实质性表决'))
+      + (prRecs.length > 1 ? ' (' + prRecs.length + ')' : '') + '</h2>');
+    for (var vi = 0; vi < prRecs.length; vi++) {
+      var vr = prRecs[vi], vf = vr.final || {};
+      /* 历史记录已固化文件类型与标题；旧存档合成条目缺这两项时回查当前文件表 */
+      var vd1 = (vr.docType || vr.docTitle) ? null : findDoc(m, vr.docId);
+      var vlabel = ((vr.docType || (vd1 ? vd1.type : '')) + ' ' + (vr.docTitle || (vd1 ? vd1.title : ''))).replace(/^\s+|\s+$/g, '');
+      if (prRecs.length > 1) {
+        L.push('<p class="pr-min" style="margin:8px 0 2px;"><b>' + (vi + 1) + '. '
+          + esc(vlabel || (vr.docId || '-')) + '</b></p>');
+      }
+      L.push('<table>');
+      if (prRecs.length === 1) kv(t('表决文件'), esc(vlabel || (vr.docId || '-')));
+      kv(t('表决结果'), vr.result === 'passed' ? '<span class="pr-pass">' + esc(t('已通过')) + '</span>'
+        : ((vr.vetoedBy && vr.vetoedBy.length) ? '<span class="pr-fail">' + esc(t('被否决')) + '</span>'
+          : '<span class="pr-fail">' + esc(t('未获通过')) + '</span>'));
+      kv(t('赞成') + ' / ' + t('反对') + ' / ' + t('弃权'), (vf.y | 0) + ' / ' + (vf.n | 0) + ' / ' + (vf.ab | 0));
+      kv(t('通过门槛'), esc(docVoteRuleText(m, vf)));
+      kv(t('轮次'), (vr.round || 1));
+      if (vr.vetoedBy && vr.vetoedBy.length) kv(t('否决权行使'), esc(vr.vetoedBy.join(LANG === 'en' ? ', ' : '、')) + ' ★');
+      if (vr.finishedAt) kv(t('表决时间'), esc(vr.finishedAt));
+      L.push('</table>');
+    }
   }
   /* 五、代表参与统计 */
   h(t('代表参与统计'));
@@ -7656,6 +7971,8 @@ document.getElementById('btnGuide').onclick = function(){
     + '<li>' + t('实质性表决文件：单独栏目、使用国家全称。动议通过后须重新点名，点名完成自动进入本栏目；第一轮可投赞成 / 反对 / 弃权 / 过，选「过」者进入第二轮，第二轮仅可赞成或反对。所有委员会（含安理会）均为两轮制。安理会通过门槛在新建会议时二选一：宪章第 27 条的至少 9 票赞成，或有表决权国家的三分之二多数；两种口径均须无常任理事国（★）否决，且弃权未达简单多数（按有表决权席数计）。安理会门槛选「宪章第 27 条」时所有出席理事国均默认拥有决议草案表决权，点名时无需区分「出席」与「出席并投票」；门槛选「有表决权国家的三分之二多数」时非常任理事国须点名选「出席并投票」才拥有表决权，五个常任理事国默认拥有表决权，其一票否决权在两种门槛下都保留。其他委员会一律为三分之二多数，且仅点名选「出席并投票」者拥有表决权。') + '</li>'
     + '<li>' + t('决议草案表决规则：以「有决议草案表决权国家」为基数，赞成须达其三分之二多数，且弃权票不得超过其简单多数，方可通过（安理会宪章 9 票制的弃权简单多数同样按实际有表决权席数计算，不按 15 国固定）；安理会采用三分之二口径时，五个常任理事国另有一票否决权。安理会采用宪章第 27 条口径时：赞成须达 9 票、无常任理事国否决，且弃权票不得达到有表决权国家席数的简单多数（满席 15 国时为 8 票，不满席时按实际有表决权席数计算）。点名栏目的汇总条同时列出两种基数：「三分之二多数」按出席数计（用于程序性动议），「有表决权 2/3 多数」与「有表决权简单多数」按有表决权国家计（用于决议草案），两者都随点名逐次实时更新，与表决面板显示的门槛同源。') + '</li>'
     + '<li>' + t('安理会表决权随门槛口径变化：门槛选「宪章第 27 条」时，所有出席理事国都有实质性文件表决权，点名无需区分「出席」与「出席并投票」；门槛选「有表决权国家的三分之二多数」时，非常任理事国须点名选「出席并投票」才有文件表决权（点名须区分），而五个常任理事国默认拥有表决权；两种门槛下五个常任理事国的一票否决权都保留。') + '</li>'
+    + '<li>' + t('表决结果呈现：宣布结果后，结论条下方给出「表决结果详情」——票型构成环形图（赞成 / 反对 / 弃权及占比）、门槛达成条形（赞成对比通过门槛、弃权对比弃权阻断线，同基线并列，可直接看出差几票或弃权是否踩线）、以及逐国投票明细（国家全称、★ 常任理事国标记，行使否决权者红色高亮并标注「否决权行使」）。全部数字取自宣布结果当时留存的快照，此后点名状态变化不会改写已宣布的结果。') + '</li>'
+    + '<li>' + t('历次表决回看：一场会议往往要表决多份决议草案，而表决面板一次只承载当前这一份。因此每次宣布结果都会固化为一条历史记录（票数、门槛口径、否决情况、逐国票与宣布时间），随会议存档一并保存，最多留存 50 条。结果卡片上方的「历次表决」胶囊条列出全部记录，最近的排在最前，绿点为通过、红点为未通过或被否决，点击即可回看任意一份文件的表决情况；开始新表决、取消表决或切换会议时自动回到最近一次。回看是只读的，不会改动任何会议数据。') + '</li>'
     + '<li>' + t('回退：误点后按状态栏「回退」或 Ctrl+Z 可撤销上一步，该操作产生的纪要条目一并移除。') + '</li>'
     + '<li>' + t('暂时休会不计时，由主席决定复会；复会后须重新点名，点名完成后自动进入「主发言名单」栏目（新建会议首次点名完成后同样自动进入）。') + '</li>'
     + '<li>' + t('永久休会后会议正式结束，首页显示「会议结束」，不再提供继续入口，但仍可查看全部内容与导出数据。') + '</li>'
@@ -7668,12 +7985,12 @@ document.getElementById('btnGuide').onclick = function(){
     + '<li>' + t('侧边栏收起：宽屏下点击左侧面板底部「收起」可隐藏面板获得更大工作区，点击左上角悬浮按钮「»」展开；该偏好会记住。') + '</li>'
     + '<li>' + t('中英双语：点击状态栏 EN / 中文 即时切换。') + '</li></ul>'
     + '<b>' + t('快捷键') + '</b><ul><li>' + t('数字键') + ' <b>1–9</b>' + colon() + t('切换左侧面板') + '</li><li><b>' + t('空格') + '</b>' + colon() + t('计时开始 / 暂停') + '</li><li><b>Ctrl</b>+<b>Z</b>' + colon() + t('回退上一步') + '</li><li><b>Esc</b>' + colon() + t('关闭弹窗') + '</li></ul>'
-    + '<b>' + t('数据说明') + '</b>' + colon() + t('所有会议与上传文件默认仅保存在当前浏览器本地，不会自动上传到任何外部服务；只有当你主动点击「导出全部存档」时，才会生成一个文件由你自行保管或传输。撤销记录不写入存档，以节省本地空间。'));
+    + '<b>' + t('数据说明') + '</b>' + colon() + t('所有会议与上传文件默认仅保存在当前浏览器本地，不会自动上传到任何外部服务；只有当你主动点击「导出全部存档」时，才会生成一个文件由你自行保管或传输。历次表决记录属于会议数据，会随存档保存并一同导出；撤销记录不写入存档，以节省本地空间。'));
 };
 document.getElementById('btnAbout').onclick = function(){
   askInfo(t('关于社团'), '<b>' + t('浙江省天台中学模拟联合国社团') + '</b><br>' + t('天中模联 · THSMUN') + '<br><br>'
     + t('立足天台 · 放眼世界。') + '<br><br>'
-    + t('本系统（THSMUN OS）为社团会议量身打造，覆盖点名、主发言名单、动议裁定、实质性表决文件两轮投票（安理会门槛在新建会议时选定：宪章 9 票制或出席国家三分之二多数，并含否决权）、计时、文件流转、纪要导出、打印存档、统计评奖、投屏模式、多设备存档同步与中英双语的完整流程，参照安理会等委员会的真实议事规则设计，供主席团与代表在会议中直接使用。'));
+    + t('本系统（THSMUN OS）为社团会议量身打造，覆盖点名、主发言名单、动议裁定、实质性表决文件两轮投票（安理会门槛在新建会议时选定：宪章 9 票制或出席国家三分之二多数，并含否决权）、计时、文件流转、表决结果图表化呈现与历次表决回看、纪要导出、打印存档、统计评奖、投屏模式、多设备存档同步与中英双语的完整流程，参照安理会等委员会的真实议事规则设计，供主席团与代表在会议中直接使用。'));
 };
 /* 面板快捷键：数字 1-8 切换，空格控制计时，Ctrl+Z 回退 */
 document.addEventListener('keydown', function(e){
