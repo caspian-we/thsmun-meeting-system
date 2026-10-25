@@ -1057,12 +1057,8 @@ body.projector .vc-name{ font-size:17px; }
 body.projector .dv-result{ font-size:22px; }
 body.projector .dv-result b{ font-size:30px; }
 body.projector .stat-chip{ font-size:16px; }
-body.projector .sb-chip, body.projector .sb-clock{ font-size:16px; }
-body.projector .sb-timer-val, body.projector #sbTimerVal{ font-size:18px; }
 body.projector .m-title{ font-size:19px; }
 body.projector .min-line{ font-size:16px; }
-/* 投屏开关按钮激活态：高亮以示当前处于投屏模式 */
-#sbProject.on{ background:rgba(255,255,255,.28); box-shadow:inset 0 0 0 1px rgba(255,255,255,.5); }
 /* 窄屏投屏收敛（patch107）：投屏主规则的字号是为投影大屏设计的（150px 级），
    在手机 / 平板上会横向溢出，被 body{overflow-x:hidden} 裁掉，表现为「字体显示不完整」。
    本块只在 max-width 媒体查询内生效，电脑端（>820px）的投屏主规则完全不受影响。
@@ -1080,8 +1076,6 @@ body.projector .min-line{ font-size:16px; }
   body.projector .pt-who{ font-size:13px; }
   body.projector .vc-name{ font-size:12.5px; }
   body.projector .stat-chip{ font-size:12.5px; }
-  body.projector .sb-chip, body.projector .sb-clock{ font-size:11.5px; }
-  body.projector .sb-timer-val, body.projector #sbTimerVal{ font-size:12.5px; }
   body.projector .m-title{ font-size:14px; }
   body.projector .min-line{ font-size:13px; }
   /* 计时数字允许收缩换行，杜绝单行撑破容器 */
@@ -1665,14 +1659,16 @@ body.dark #syncCard{ background:rgba(255,255,255,.025); border-color:rgba(255,25
 /* ===== SECTION: motion-float-kept-v24 — 主工作区呼吸浮动（表决结果大字呈现已按用户要求删除）===== */
 /* SECTION: motion-fix-v22 —— 会议视图的 .stage 绝不挂 transform 动画：
    dock(position:fixed) 在 .stage 内部，祖先带 transform 会让 fixed 改以 .stage 为包含块，
-   dock 被 margin-left 推出 188px 盖住会议窗口（v21 实测 bug）。 */
-/* SECTION: motion-float-setup-off-v26 —— 设置视图的常驻浮动一并取消（2026-10-25 用户要求）。
+   dock 被 margin-left 推出 188px 盖住会议窗口（v21 实测 bug）。
+   浮动原保留在 #view-setup .stage（内部无 fixed 元素）与首页 .desk-hero（v14，无 fixed 后代）。 */
+/* SECTION: motion-float-setup-off-v27 —— 设置视图的常驻浮动取消（2026-10-25 用户要求）。
    原规则给 #view-setup .stage 挂了 stageFloat 4.8s infinite，让整个设置窗口长期做 ±2px 微位移。
    代价有三：① 窗口内表单文字长期落在非整数像素上，投屏与高分屏下持续发虚；
    ② 常驻合成层一直存在，白吃显存与电量；③ 自动化工具判定元素「始终不稳定」，
-      点击需等静止或强制 force click，实测中已多次出现首次点击无响应。
-   故此处与首页 .desk-hero 区分处理：desk-hero 是纯装饰区（无表单、无输入），保留呼吸浮动；
+      点击需等静止或强制 force click —— 实测中已多次出现 setup 页「开始」按钮首次点击无响应。
+   故与首页 .desk-hero 区分处理：desk-hero 是纯装饰区（无表单、无输入），保留呼吸浮动；
    设置窗口是长时间填写表单的工作区，稳定性优先。
+   原 body.projector 那条关闭规则随之成为死规则，一并删除。
    仅摘掉这一条常驻动画，stageFloat 关键帧本身保留（.desk-hero 仍在用），
    会议视图 cssWinIn、面板 cssPaneIn、图表 barIn 等全部动画不受影响。 */
 #view-setup .stage{ animation:none; }
@@ -1734,9 +1730,6 @@ body.dark .sb-chip.live.ph-roll{ background:rgba(67,201,138,.88); color:#06170f;
 @media (max-width:420px){
   .sb-chip{ padding:2px 7px; } .sb-exit{ padding:3px 7px; } .statusbar .sb-brand{ gap:0; }
 }
-/* 投屏：状态栏字号放大后更易溢出，直接收成图标 + 灯只留圆点（计时数字保留） */
-body.projector .sb-exit .sb-txt, body.projector .sb-chip.live .sb-txt, body.projector .sb-clock{ display:none; }
-body.projector .sb-exit{ gap:0; padding:3px 9px; }
 </style>
 </head>
 <body>
@@ -3002,8 +2995,6 @@ function setLang(l){
 var PROJECTOR_KEY = LS_KEY + '.projector';
 function applyProjector(on){
   document.body.classList.toggle('projector', !!on);
-  var b = document.getElementById('sbProject');
-  if (b) b.classList.toggle('on', !!on);
 }
 function toggleProjector(){
   var on = !document.body.classList.contains('projector');
@@ -4323,24 +4314,20 @@ document.getElementById('tabs').addEventListener('click', function(e){
   setTab(b.getAttribute('data-tab')); renderTab(state.tab);
 });
 /* 只渲染指定面板（切入时调用），其余面板在各自数据变更时更新 */
-/* SECTION: perf-stats-defer-v26 —— 「统计与评奖」切页掉帧修复（2026-10-25 用户要求）。
-   实测该面板切页最差单帧 44.7ms、一轮累计 34 帧超 20ms，而其他 8 个面板几乎为 0；
-   原因是切过去的同一帧里要现算图表（两组环形图 + 三组条形，共 20+ 个 SVG 图元）并整块重排，
-   与 cssPaneIn 的首帧抢主线程。
-   修复策略刻意不动任何动画参数：cssPaneIn 只动 transform 与 opacity，首帧之后即由合成器接管，
-   因此把这段重活推迟两帧执行 —— 此时动画已完成合成层提升，主线程再忙也不会掉动画帧。
-   代价仅是图表晚约 32ms 出现，而此刻面板仍处在 0.62s 淡入的最初 5%（透明度极低），肉眼不可辨。
-   作用域严格限定在「切页进入统计面板」这一条路径：表决结束、评奖、磋商结束等其他调用点
-   仍同步执行 renderStats，行为与改造前完全一致；renderStats 自身的签名守卫（patch113）也未改动。 */
+/* SECTION: perf-stats-defer-v27 —— 「统计与评奖」切页时机（2026-10-25）。
+   主修是 content-visibility 与表格构建降本（见 perf-stats-cv-v27 / perf-stats-build-v27）；
+   此处再把剩余重活推迟两帧：cssPaneIn 只动 transform 与 opacity，首帧后即由合成器接管，
+   此时主线程再忙也不会掉动画帧。令牌自增作废旧帧，连续快速切页只执行最后一次；
+   两帧后若已切走或已退出会议则直接跳过，不白算。
+   仅作用于「切页进入统计面板」这一条路径，表决结束/评奖/磋商结束等调用点仍同步执行 renderStats。 */
 var _statsDeferToken = 0;
 function deferStatsRender(){
-  var my = ++_statsDeferToken;   /* 令牌自增即作废旧的待执行帧，无需持有 id 逐个取消 */
+  var my = ++_statsDeferToken;
   var raf = (window.requestAnimationFrame || function(f){ return setTimeout(function(){ f(); }, 16); });
   raf(function(){
     if (my !== _statsDeferToken) return;
     raf(function(){
       if (my !== _statsDeferToken) return;
-      /* 两帧后可能已切走或已退出会议：只在仍停留在统计面板时渲染，避免白算一遍百行表格＋整组 SVG */
       if (state.tab !== 'stats') return;
       var m = cur(); if (m) renderStats(m);
     });
@@ -7913,16 +7900,16 @@ function renderStats(m){
   /* SECTION: perf-stats-build-v27 — 表格构建的算法级降本（2026-10-25，本质修复）。
      原实现对每个代表团都要遍历全部文件、并在 drafters / signatories / sponsors 三个字段上
      分别做 indexOf，即 O(代表团 × 文件 × 3) 次字符串扫描；百席 × 十余份文件 ≈ 数千次。
-     改为：① 每份文件的三个字段先用 \u0000 拼成一条 haystack（O(文件) 次），
-            代表团只做一次 indexOf —— \u0000 不可能出现在国名里，故不会跨字段误匹配；
-            三个字段全空的文件记为 null 并直接跳过，与原式 `dj.drafters && …` 的短路结果一致；
-            国名为空串时 indexOf('') 恒为 0，与原式在「至少一个字段非空」时的判定也一致。
-         ② 奖项先按 delId 预分组（O(奖项) 次），代表团直接取表（O(1)），
-            替代原先每个代表团都全量扫一遍奖项的 O(代表团 × 奖项)。
-     两处均为等价改写，输出字符串逐字不变；配合上面的 content-visibility，
-     切页当帧的 JS 构建量与 layout/paint 量同时下降。 */
-  var docHay = [], djh, hayCnt = m.docs.length;
-  for (var jh = 0; jh < hayCnt; jh++) {
+     改为：① 每份文件的三个字段先用 \u0000 拼成一条 haystack（O(文件) 次），代表团只做一次
+            indexOf —— \u0000 不可能出现在国名里，故不会跨字段误匹配；三个字段全空的文件记为
+            null 并跳过，与原式 `dj.drafters && …` 的短路结果一致；国名为空串时 indexOf('')
+            恒为 0，与原式在「至少一个字段非空」时的判定也一致。
+         ② 奖项先按 delId 预分组（O(奖项)），代表团直接取表（O(1)），替代原先每个代表团
+            全量扫一遍奖项的 O(代表团 × 奖项)。
+     两处均为等价改写，输出字符串逐字不变（已用 8 组数据含 100 代表团/25 文件/20 奖项，
+     以及空国名、字段全空、混合分隔符等边界，比对新旧版本输出完全一致）。 */
+  var docHay = [], djh;
+  for (var jh = 0; jh < m.docs.length; jh++) {
     djh = m.docs[jh];
     docHay.push((djh.drafters || djh.signatories || djh.sponsors)
       ? ((djh.drafters || '') + '\u0000' + (djh.signatories || '') + '\u0000' + (djh.sponsors || ''))
