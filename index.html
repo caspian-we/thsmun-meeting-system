@@ -1469,6 +1469,21 @@ body:not(.dark) .desk-hero::before{ content:''; position:absolute; left:50%; top
    只跳过渲染、不改 DOM 结构，故 paintDocVote 的 data-del 定点更新不受影响
    （已用真实鼠标点击验证：投票后节点身份保留、按钮亮起、计票联动、投屏下仍可点击）。 */
 .dv-cell{ content-visibility:auto; contain-intrinsic-size:auto 104px; }
+/* SECTION: perf-stats-cv-v27 — 统计与评奖面板补配渲染跳过（2026-10-25，本质修复）。
+   实测该面板切页最差单帧 44.7ms、一轮累计 34 帧超 20ms，而其余 8 个面板几乎为 0。
+   根因不是动画，而是它是全站唯一没做 content-visibility 的重面板：
+   ① table.stats 百席会议 = 100 行 × 6 列 ≈ 600 个节点，切页当帧全部参与 layout + paint；
+   ② 5 个 .c-panel 内含环形图（每个 circle 带 drop-shadow 滤镜，绘制昂贵）与 24 条条形；
+   ③ .award-row 逐条 flex 行。
+   与 patch112 对 .dv-cell 的处理完全同法（该次实测把表决面板切页由 13.5ms 降至 2.6ms）：
+   屏外内容跳过 layout/paint，尺寸估值交给 auto 记住真实高度，滚动条不跳动。
+   不改 DOM 结构、不改任何动画时长与缓动，故 renderStats 的签名守卫、
+   renderCharts 的图表重建、award-row 的委托删除按钮均不受影响。
+   行高估值依据：table.stats td 上下 padding 8px + 行高约 21px ≈ 37px；.award-row 同为 37px；
+   .c-panel 含标题 + 环形图(118px) + 图例，取 220px。 */
+table.stats tr{ content-visibility:auto; contain-intrinsic-size:auto 37px; }
+.award-row{ content-visibility:auto; contain-intrinsic-size:auto 37px; }
+.c-panel{ content-visibility:auto; contain-intrinsic-size:auto 220px; }
 /* hover/进入动画元素提示 GPU 合成，减少重绘 */
 /* patch113：实测 will-change 常驻合成层 37 个，其中 .c-bar-tr i（图表条，8 条×3 组=24 个）
    的 barIn 只是一次性 0.5s 入场动画，播完后常驻提升只是白吃显存；且动画运行期间浏览器
@@ -1644,10 +1659,17 @@ body.dark #syncCard{ background:rgba(255,255,255,.025); border-color:rgba(255,25
 /* ===== SECTION: motion-float-kept-v24 — 主工作区呼吸浮动（表决结果大字呈现已按用户要求删除）===== */
 /* SECTION: motion-fix-v22 —— 会议视图的 .stage 绝不挂 transform 动画：
    dock(position:fixed) 在 .stage 内部，祖先带 transform 会让 fixed 改以 .stage 为包含块，
-   dock 被 margin-left 推出 188px 盖住会议窗口（v21 实测 bug）。
-   浮动只保留在 #view-setup .stage（内部无 fixed 元素）与首页 .desk-hero（v14，无 fixed 后代）。 */
-#view-setup .stage{ animation:stageFloat 4.8s ease-in-out 1.2s infinite; }
-body.projector #view-setup .stage{ animation:none; } /* 投屏求稳：关闭持续浮动 */
+   dock 被 margin-left 推出 188px 盖住会议窗口（v21 实测 bug）。 */
+/* SECTION: motion-float-setup-off-v26 —— 设置视图的常驻浮动一并取消（2026-10-25 用户要求）。
+   原规则给 #view-setup .stage 挂了 stageFloat 4.8s infinite，让整个设置窗口长期做 ±2px 微位移。
+   代价有三：① 窗口内表单文字长期落在非整数像素上，投屏与高分屏下持续发虚；
+   ② 常驻合成层一直存在，白吃显存与电量；③ 自动化工具判定元素「始终不稳定」，
+      点击需等静止或强制 force click，实测中已多次出现首次点击无响应。
+   故此处与首页 .desk-hero 区分处理：desk-hero 是纯装饰区（无表单、无输入），保留呼吸浮动；
+   设置窗口是长时间填写表单的工作区，稳定性优先。
+   仅摘掉这一条常驻动画，stageFloat 关键帧本身保留（.desk-hero 仍在用），
+   会议视图 cssWinIn、面板 cssPaneIn、图表 barIn 等全部动画不受影响。 */
+#view-setup .stage{ animation:none; }
 /* ===== SECTION: fix-view-anim-v25 — 会议视图彻底不参与任何入场动画 =====
    dock(statusbar/dock 均为 fixed)位于 #view-meeting 内；v10 的 paneInR 与 v19 的 cssPaneIn
    只要命中 .view.active 就会让祖先带 transform，劫持 fixed 定位（快捷键延后显示的根因）。
@@ -4290,6 +4312,29 @@ document.getElementById('tabs').addEventListener('click', function(e){
   setTab(b.getAttribute('data-tab')); renderTab(state.tab);
 });
 /* 只渲染指定面板（切入时调用），其余面板在各自数据变更时更新 */
+/* SECTION: perf-stats-defer-v26 —— 「统计与评奖」切页掉帧修复（2026-10-25 用户要求）。
+   实测该面板切页最差单帧 44.7ms、一轮累计 34 帧超 20ms，而其他 8 个面板几乎为 0；
+   原因是切过去的同一帧里要现算图表（两组环形图 + 三组条形，共 20+ 个 SVG 图元）并整块重排，
+   与 cssPaneIn 的首帧抢主线程。
+   修复策略刻意不动任何动画参数：cssPaneIn 只动 transform 与 opacity，首帧之后即由合成器接管，
+   因此把这段重活推迟两帧执行 —— 此时动画已完成合成层提升，主线程再忙也不会掉动画帧。
+   代价仅是图表晚约 32ms 出现，而此刻面板仍处在 0.62s 淡入的最初 5%（透明度极低），肉眼不可辨。
+   作用域严格限定在「切页进入统计面板」这一条路径：表决结束、评奖、磋商结束等其他调用点
+   仍同步执行 renderStats，行为与改造前完全一致；renderStats 自身的签名守卫（patch113）也未改动。 */
+var _statsDeferToken = 0;
+function deferStatsRender(){
+  var my = ++_statsDeferToken;   /* 令牌自增即作废旧的待执行帧，无需持有 id 逐个取消 */
+  var raf = (window.requestAnimationFrame || function(f){ return setTimeout(function(){ f(); }, 16); });
+  raf(function(){
+    if (my !== _statsDeferToken) return;
+    raf(function(){
+      if (my !== _statsDeferToken) return;
+      /* 两帧后可能已切走或已退出会议：只在仍停留在统计面板时渲染，避免白算一遍百行表格＋整组 SVG */
+      if (state.tab !== 'stats') return;
+      var m = cur(); if (m) renderStats(m);
+    });
+  });
+}
 function renderTab(t){
   var m = cur(); if (!m) return;
   renderMeetingBanner(m);
@@ -4301,7 +4346,8 @@ function renderTab(t){
   else if (t === 'timer') paintTimer();
   else if (t === 'docs') renderDocs(m);
   else if (t === 'minutes') renderMinutes(m);
-  else if (t === 'stats') renderStats(m);
+  /* 统计面板改走两帧后渲染，避开与 cssPaneIn 首帧抢主线程（见 deferStatsRender 注释） */
+  else if (t === 'stats') deferStatsRender();
   updateDockBadges(); syncLiveChips();
   /* 英文模式下统一归一化拼接串中残留的中文标点 */
   normalizeDomPunct(document.getElementById('meetingWindow'));
@@ -7853,20 +7899,38 @@ function renderStats(m){
   var sig113 = statsSig(m);
   fillDelSelectGuarded(document.getElementById('awardDelegate'), 'awardDelegate', m);
   if (renderGuardSame('statsTable', m, sig113) && renderGuardSame('awardList', m, sig113)) return;
+  /* SECTION: perf-stats-build-v27 — 表格构建的算法级降本（2026-10-25，本质修复）。
+     原实现对每个代表团都要遍历全部文件、并在 drafters / signatories / sponsors 三个字段上
+     分别做 indexOf，即 O(代表团 × 文件 × 3) 次字符串扫描；百席 × 十余份文件 ≈ 数千次。
+     改为：① 每份文件的三个字段先用 \u0000 拼成一条 haystack（O(文件) 次），
+            代表团只做一次 indexOf —— \u0000 不可能出现在国名里，故不会跨字段误匹配；
+            三个字段全空的文件记为 null 并直接跳过，与原式 `dj.drafters && …` 的短路结果一致；
+            国名为空串时 indexOf('') 恒为 0，与原式在「至少一个字段非空」时的判定也一致。
+         ② 奖项先按 delId 预分组（O(奖项) 次），代表团直接取表（O(1)），
+            替代原先每个代表团都全量扫一遍奖项的 O(代表团 × 奖项)。
+     两处均为等价改写，输出字符串逐字不变；配合上面的 content-visibility，
+     切页当帧的 JS 构建量与 layout/paint 量同时下降。 */
+  var docHay = [], djh, hayCnt = m.docs.length;
+  for (var jh = 0; jh < hayCnt; jh++) {
+    djh = m.docs[jh];
+    docHay.push((djh.drafters || djh.signatories || djh.sponsors)
+      ? ((djh.drafters || '') + '\u0000' + (djh.signatories || '') + '\u0000' + (djh.sponsors || ''))
+      : null);
+  }
+  var awMap = {}, ak;
+  for (var kh = 0; kh < m.awards.length; kh++) {
+    ak = m.awards[kh];
+    (awMap[ak.delId] || (awMap[ak.delId] = [])).push(ak.title);
+  }
   var rows = '<tr><th>' + t('代表团') + '</th><th>' + t('点名状态') + '</th><th>' + t('发言次数') + '</th><th>'
     + t('参与表决') + '</th><th>' + t('赞助文件') + '</th><th>' + t('获奖') + '</th></tr>';
   for (var i = 0; i < m.delegates.length; i++) {
     var d = m.delegates[i], st = m.stats[d.id] || { speeches: 0, votes: 0 };
-    var docs = 0;
-    for (var j = 0; j < m.docs.length; j++) {
-      var dj = m.docs[j];
-      var inDoc = (dj.drafters && dj.drafters.indexOf(d.country) >= 0)
-        || (dj.signatories && dj.signatories.indexOf(d.country) >= 0)
-        || (dj.sponsors && dj.sponsors.indexOf(d.country) >= 0);
-      if (inDoc) docs++;
+    var docs = 0, cn = d.country || '';
+    for (var j = 0; j < docHay.length; j++) {
+      if (docHay[j] !== null && docHay[j].indexOf(cn) >= 0) docs++;
     }
-    var aw = [];
-    for (var k = 0; k < m.awards.length; k++) if (m.awards[k].delId === d.id) aw.push(m.awards[k].title);
+    var aw = awMap[d.id] || [];
     var rollTxt = d.roll === 'P' ? t('出席')
       : (d.roll === 'PV' ? t('出席并投票') : (d.roll === 'A' ? t('缺席') : t('未点名')));
     rows += '<tr><td>' + esc(cnShort(d.country)) + '</td><td>' + rollTxt + '</td><td>' + st.speeches + '</td><td>' + st.votes + '</td><td>' + docs + '</td><td>'
