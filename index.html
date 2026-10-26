@@ -909,40 +909,39 @@ table.stats td,table.stats th{ transition:background .16s var(--spring-soft); }
 .dv-result::before{ content:""; position:absolute; left:0; top:0; bottom:0; width:4px; }
 .dv-result.pass::before{ background:linear-gradient(180deg,#2fa86c,var(--ok)); }
 .dv-result.fail::before{ background:linear-gradient(180deg,#d9574a,var(--no)); }
-/* SECTION: styles-dv-result-detail — 实质性表决「结果呈现」图表化（历次表决切换条 / 票型环图 / 门槛条形 / 逐国明细）。
-   刻意复用统计栏目既有的 .c-panel / .c-donut / .c-lg / .c-bar-* 与 barIn / scIn / rowInR 关键帧，
-   不新增任何外部依赖、不引入第二套图表实现，保证与全系统同一套缓动变量（--spring / --spring-soft）。
-   呈现动画分三层递进：结果条 scIn → 图表面板 scIn（错峰 70ms）→ 逐国明细行 rowInR（错峰 22ms，封顶 440ms），
-   与 .tabpane.on 的 cssPaneIn .62s 切页动画叠加：本区多数元素在 .62s 内落定，
-   唯一例外是逐国明细行的错峰入场（单行 .3s + 延迟封顶 440ms ≈ 最长 .74s），略长于切页动画，
-   百席会议下最后几行会在切页动画结束后继续淡入 —— 这是有意的（否则百行同时淡入更突兀），
-   不是缺陷。全部动画只用 transform/opacity（走 GPU，不触发 layout），fill-mode 一律 both/backwards，
-   因此中途切页被打断时只会出现「重新从头播」，不留半透明残帧；该中断行为已在动画强制启用的
-   条件下实测确认（100ms 打断采样 opacity=0.000、交替连打采样 opacity=0.510，均只有 1 个面板可见）。 */
-.dv-result{ animation:scIn .34s var(--spring) both; }
-.dv-detail{ animation:cssPaneIn .62s cubic-bezier(.22,1,.36,1) both; }
+/* SECTION: styles-dv-result-detail — 实质性表决结果区（历次表决切换条 / 票型环图 / 门槛条形 / 逐国明细）。
+   复用统计栏目既有的 .c-panel / .c-donut / .c-lg / .c-bar-* 与全局 barIn，不引入外部依赖。
+   入场动画保留，但一律挂在容器上（.dv-hist / .dv-result / .dv-detail / .dv-charts .c-panel / .dv-roster），
+   动画数量恒定，不随代表团数增长；明细行本身无逐行动画、无 inline 错峰延迟，
+   只保留 box-shadow / border-color 过渡。原因见下方 .dv-roster 处说明。 */
 .dv-detail > h3{ display:flex; align-items:center; gap:8px; }
 .dv-detail > h3 small{ font-weight:400; font-size:11.5px; color:var(--muted); margin-left:auto; }
 .dv-charts{ display:grid; grid-template-columns:repeat(auto-fit,minmax(258px,1fr)); gap:12px; margin-top:10px; }
-.dv-charts .c-panel{ animation:scIn .34s var(--spring) both; }
-.dv-charts .c-panel:nth-child(2){ animation-delay:.07s; }
-.dv-charts .c-panel:nth-child(3){ animation-delay:.14s; }
-.dv-roster-wrap{ margin-top:12px; animation:scIn .34s var(--spring) .1s both; }
+.dv-roster-wrap{ margin-top:12px; }
 .dv-roster{ display:grid; grid-template-columns:repeat(auto-fill,minmax(212px,1fr)); gap:6px; }
+/* 结果区入场动画：全部挂在容器上，恒为 6 个动画，与代表团数无关。
+   曾按行给每个 .dv-rs 加 rowInR + 错峰延迟（封顶 440ms），百席会议即上百个并发动画，
+   与外层 .tabpane.on 的 cssPaneIn 同帧争抢，表现为切页掉帧、打断后恢复变慢、整体延迟增大。
+   改为整片一次入场：观感仍是淡入 + 轻微上滑，成本从 O(席位) 降到 O(1)。
+   .dv-detail 用 scIn .42s 而非 cssPaneIn .62s，避免与外层同一条 .62s 曲线叠成双重动画，
+   并保证结果区在切页动画结束前落定 —— 打断时只会出现「重新从头播」，不留半透明残帧。
+   全部只用 transform / opacity（走合成器，不触发 layout）；图表条形的 barIn 来自全局既有
+   规则 .c-bar-tr i，非本区新增。系统级 prefers-reduced-motion 下由第 312 行的
+   *{animation:none!important} 统一关闭，无需本区另写降级。 */
+.dv-hist{ animation:scIn .3s var(--spring) both; }
+.dv-result{ animation:scIn .34s var(--spring) both; }
+.dv-detail{ animation:scIn .42s var(--spring) both; }
+.dv-charts .c-panel{ animation:scIn .34s var(--spring) both; }
+.dv-charts .c-panel:nth-child(2){ animation-delay:.06s; }
+.dv-charts .c-panel:nth-child(3){ animation-delay:.12s; }
+.dv-roster{ animation:rowInR .34s var(--spring) both; }
 .dv-rs{ display:flex; align-items:center; gap:8px; padding:6px 9px; font-size:12.5px;
   border:1px solid var(--line); border-left-width:3px; border-radius:8px; background:var(--card);
-  animation:rowInR .3s var(--spring) both;
-  transition:box-shadow .2s var(--spring-soft), border-color .2s var(--spring-soft), transform .2s var(--spring); }
-/* 逐国明细行是只读信息，不是可操作控件：hover 只保留阴影提示，刻意不做 translateY 上提。
-   上提会让整片明细在鼠标扫过时此起彼伏地跳动，读票时干扰视线（用户 2026-10-24 反馈）。 */
+  transition:box-shadow .2s var(--spring-soft), border-color .2s var(--spring-soft); }
+/* 明细行是只读信息：hover 只给阴影不做位移（用户 2026-10-24 反馈）。
+   .c-panel 的全局 hover 上浮在结果区一并取消，特异性 (0,3,0) 高于全局 (0,2,0)，无需 !important；
+   统计与评奖栏目的 .c-panel 上浮手感不受影响。 */
 .dv-rs:hover{ box-shadow:var(--e1); }
-/* 补漏（2026-10-24 用户二次反馈）：明细行本身的上提已去掉，但逐国明细与两张图表都包在
-   .c-panel 里，而本文件第 1435 行的全局规则 .c-panel:hover{ transform:translateY(-2px) }
-   会让整块面板在鼠标划过时上浮 —— 这才是用户实际感受到的「触碰后上浮」。
-   统计栏目的图表面板是可浏览的卡片，上浮有其意义；但表决结果区是宣布后只读复核的信息，
-   鼠标扫过时整块跳动会干扰读票。故在本区取消位移，只保留阴影提示。
-   选择器 .dv-detail .c-panel:hover 特异性 (0,3,0) 高于全局的 (0,2,0)，无需 !important 即可覆盖，
-   且不影响统计与评奖栏目里 .c-panel 的原有上浮手感。 */
 .dv-detail .c-panel:hover{ transform:none; }
 .dv-detail .c-panel{ will-change:auto; }
 /* 历次表决切换条：一次会议可通过多份决议草案，结果宣布后仍需回看每一份的表决情况。
@@ -986,14 +985,6 @@ body.projector .dv-rs{ font-size:16px; padding:8px 11px; }
 @media (max-width:720px){
   .dv-roster{ grid-template-columns:1fr; }
   .dv-charts{ grid-template-columns:1fr; }
-}
-/* 减少动效降级：本区动画用了错峰 animation-delay（面板 70ms、明细行 22ms 封顶 440ms、条形 60ms）。
-   全局降级规则只把 animation-duration 压到 .001ms，delay 仍在 —— 配合 fill-mode:both/both 会让元素
-   在 delay 期间保持首帧（opacity:0），表现为「内容迟半秒才出现」。故此处把 delay 一并清零。
-   用 !important 覆盖行内 animation-delay（作者样式表的 !important 优先于无 !important 的行内声明）。 */
-@media (prefers-reduced-motion: reduce){
-  .dv-result,.dv-detail,.dv-charts .c-panel,.dv-roster-wrap,.dv-rs,
-  .dv-charts .c-bar-tr i{ animation:none !important; animation-delay:0s !important; }
 }
 /* 35) 移动端：进度条与池条收窄，避免与触控区打架 */
 @media (max-width:720px){
@@ -1477,24 +1468,9 @@ body:not(.dark) .desk-hero::before{ content:''; position:absolute; left:50%; top
    只跳过渲染、不改 DOM 结构，故 paintDocVote 的 data-del 定点更新不受影响
    （已用真实鼠标点击验证：投票后节点身份保留、按钮亮起、计票联动、投屏下仍可点击）。 */
 .dv-cell{ content-visibility:auto; contain-intrinsic-size:auto 104px; }
-/* SECTION: perf-stats-cv-v27 —— 已试验并撤回，此处不留规则，只留结论（2026-10-26 订正）。
-   曾按 patch112 对 .dv-cell 的成功经验，给 table.stats tr / .award-row / .c-panel 补
-   content-visibility:auto + contain-intrinsic-size，理由是统计面板是全站唯一没做渲染跳过的重面板。
-   两轮浏览器实测结论互相矛盾，最终判定为「无法证明有效，也无法证明有害」：
-   · 第一轮（单次、无交叉、两版分别测）报出 最差单帧 16.80ms→33.40ms、TaskDuration +86.3%，
-     据此写成「实测否决」。该轮两组数字并非同场同条件取得，相减无效，结论已撤回。
-   · 第二轮（三版同场、同一份 100 代表团存档、已核验 #statsTable 101 行与 .c-panel 5 个确实重建、
-     已核验 computed content-visibility 分别为 visible/auto/visible）结果：
-       最差单帧 基线 83.4 / 含规则 83.3 / 不含规则 83.3 ms；
-       平均帧间隔 27.32 / 27.24 / 27.00 ms；>20ms 帧数 389 / 374 / 358；>50ms 帧数 26 / 28 / 42。
-     三版差异均在 2% 以内且互有胜负，属噪声，不构成任何一方更好。
-   环境底噪说明（为何该环境分辨不出差异）：云桌面系统级 prefers-reduced-motion:reduce=true，
-   两轮动画均被强制关闭（.tabpane.on 的 computed animation-name 实测为 none）；三个本地服务与
-   三个标签页并发；空闲轮 p50 已达 16.7ms、最差 50ms。
-   处置：不加这三条规则 —— 在 100 代表团规模下没有任何可测收益，而 .dv-cell 的收益来自其
-   节点密度（每格 104px 含 4 个按钮），不能类推到纯文本行。保留本注释是为了防止日后
-   再按 patch112 的类比把它加回来。若将来要重新评估，必须满足：关闭系统级减少动态效果、
-   单标签页单服务、代表团规模与实际会期一致。 */
+/* perf-stats-cv-v27：曾试给 table.stats tr / .award-row / .c-panel 加 content-visibility:auto。
+   三版同场实测（100 代表团、101 行、5 面板）最差单帧 83.4/83.3/83.3ms、均帧 27.32/27.24/27.00ms，
+   差异在噪声内、无可测收益，故不采用。勿按 patch112 对 .dv-cell 的经验类推到纯文本行。 */
 /* hover/进入动画元素提示 GPU 合成，减少重绘 */
 /* patch113：实测 will-change 常驻合成层 37 个，其中 .c-bar-tr i（图表条，8 条×3 组=24 个）
    的 barIn 只是一次性 0.5s 入场动画，播完后常驻提升只是白吃显存；且动画运行期间浏览器
@@ -1672,18 +1648,10 @@ body.dark #syncCard{ background:rgba(255,255,255,.025); border-color:rgba(255,25
    dock(position:fixed) 在 .stage 内部，祖先带 transform 会让 fixed 改以 .stage 为包含块，
    dock 被 margin-left 推出 188px 盖住会议窗口（v21 实测 bug）。
    浮动原保留在 #view-setup .stage（内部无 fixed 元素）与首页 .desk-hero（v14，无 fixed 后代）。 */
-/* SECTION: motion-float-setup-off-v27 —— 设置视图的常驻浮动取消（2026-10-25 用户要求）。
-   原规则给 #view-setup .stage 挂了 stageFloat 4.8s infinite，让整个设置窗口长期做 ±2px 微位移。
-   代价有三：① 窗口内表单文字长期落在非整数像素上，投屏与高分屏下持续发虚；
-   ② 常驻合成层一直存在，白吃显存与电量；③ 元素长期处于运动中，
-      自动化点击需等静止或强制 force click。自动化测试中曾观察到 setup 页「开始」按钮首次点击
-      无响应、需第二次或 force click 才生效；该现象与此处常驻位移疑似相关，但未做单独对照验证，
-      故只作为观察记录，不作为已证因果。
-   故与首页 .desk-hero 区分处理：desk-hero 是纯装饰区（无表单、无输入），保留呼吸浮动；
-   设置窗口是长时间填写表单的工作区，稳定性优先。
-   原 body.projector 那条关闭规则随之成为死规则，一并删除。
-   仅摘掉这一条常驻动画，stageFloat 关键帧本身保留（.desk-hero 仍在用），
-   会议视图 cssWinIn、面板 cssPaneIn、图表 barIn 等全部动画不受影响。 */
+/* motion-float-setup-off-v27：取消 #view-setup .stage 的 stageFloat 4.8s infinite。
+   设置窗口是长时间填表的工作区，常驻 ±2px 位移会让表单文字长期非像素对齐（投屏发虚）并常驻合成层。
+   首页 .desk-hero 是纯装饰区，其呼吸浮动保留，stageFloat 关键帧本身仍在用；
+   原 body.projector 下的关闭规则随之成为死规则，已删。 */
 #view-setup .stage{ animation:none; }
 /* ===== SECTION: fix-view-anim-v25 — 会议视图彻底不参与任何入场动画 =====
    dock(statusbar/dock 均为 fixed)位于 #view-meeting 内；v10 的 paneInR 与 v19 的 cssPaneIn
@@ -4225,8 +4193,7 @@ function openMeeting(id){
   state.currentId = id;
   /* 换会议：清空渲染守卫，避免上一场的签名被误判为命中 */
   _rgM = {}; _rgSig = {};
-  /* 换会议同时复位「正在回看哪一次表决」：docVoteViewId 是面板浏览位置、不属于会议数据，
-     不复位会把上一场会议选中的记录 id 带进来（匹配不到时虽会回落最近一次，但语义上应显式清空）。 */
+  /* 换会议复位回看位置，避免带入上一场选中的记录 id */
   docVoteViewId = null;
   var m = cur(); if (!m) { renderHome(); show('home'); return; }
   document.getElementById('mName').textContent = m.name;
@@ -4327,27 +4294,6 @@ document.getElementById('tabs').addEventListener('click', function(e){
   setTab(b.getAttribute('data-tab')); renderTab(state.tab);
 });
 /* 只渲染指定面板（切入时调用），其余面板在各自数据变更时更新 */
-/* SECTION: perf-stats-defer-v27 —— 「统计与评奖」切页时机（2026-10-25）。
-   主修是表格构建的算法级降本（见 perf-stats-build-v27）；content-visibility 方案已试验并撤回
-   （见 perf-stats-cv-v27），故本项是一条独立措施，其收益尚未单独量化验证：
-   做法是把切页当帧的重活推迟两帧执行。依据是 cssPaneIn 只动 transform 与 opacity，首帧之后
-   动画由合成器驱动，主线程繁忙不再直接掉动画帧 —— 这是原理推断，实测环境底噪过大，
-   未能单独量化收益，也未观测到副作用。令牌自增作废旧帧，连续快速切页只执行最后一次；
-   两帧后若已切走或已退出会议则直接跳过，不白算。
-   仅作用于「切页进入统计面板」这一条路径，表决结束/评奖/磋商结束等调用点仍同步执行 renderStats。 */
-var _statsDeferToken = 0;
-function deferStatsRender(){
-  var my = ++_statsDeferToken;
-  var raf = (window.requestAnimationFrame || function(f){ return setTimeout(function(){ f(); }, 16); });
-  raf(function(){
-    if (my !== _statsDeferToken) return;
-    raf(function(){
-      if (my !== _statsDeferToken) return;
-      if (state.tab !== 'stats') return;
-      var m = cur(); if (m) renderStats(m);
-    });
-  });
-}
 function renderTab(t){
   var m = cur(); if (!m) return;
   renderMeetingBanner(m);
@@ -4359,8 +4305,7 @@ function renderTab(t){
   else if (t === 'timer') paintTimer();
   else if (t === 'docs') renderDocs(m);
   else if (t === 'minutes') renderMinutes(m);
-  /* 统计面板改走两帧后渲染，避开与 cssPaneIn 首帧抢主线程（见 deferStatsRender 注释） */
-  else if (t === 'stats') deferStatsRender();
+  else if (t === 'stats') renderStats(m);
   updateDockBadges(); syncLiveChips();
   /* 英文模式下统一归一化拼接串中残留的中文标点 */
   normalizeDomPunct(document.getElementById('meetingWindow'));
@@ -4437,11 +4382,23 @@ function hasAnyVote(m){
   return false;
 }
 /* SECTION: js-banner */
+/* perf-banner-guard-v28 —— renderMeetingBanner 是 renderTab 每次都调用的函数，此前无任何守卫：
+   常态下把空字符串重复写进 innerHTML，休会/闭幕态则每次重建整块横幅并重新绑定按钮 onclick。
+   现按本文件既有的 renderGuardSame / renderGuardPut / renderGuardDrop 三件套加守卫，
+   签名取「状态 + 语言」并以 m 的对象身份为准（换会议时 openMeeting 已清空 _rgM/_rgSig，
+   故不会命中上一场的守卫；同一 m 内按钮闭包持有的仍是同一个对象，跳过重建不会绑到旧数据）。
+   输出 HTML 与事件绑定完全等价，不改任何视觉与交互。 */
 function renderMeetingBanner(m){
   var box = document.getElementById('meetingBanner');
   if (!box) return;
-  if (!m || m.status === 'active' || !m.status) { box.innerHTML = ''; return; }
+  if (!m || m.status === 'active' || !m.status) {
+    /* 常态横幅为空：已经空就不重复写 innerHTML，省掉一次无谓的子树清空与样式失效 */
+    if (box.childNodes.length) box.innerHTML = '';
+    renderGuardDrop('mBanner');
+    return;
+  }
   if (m.status === 'suspended') {
+    if (renderGuardSame('mBanner', m, 'suspended|' + LANG) && box.firstChild) return;
     box.innerHTML = '<div class="m-banner suspended"><span class="mb-ico">⏸️</span>'
       + '<div class="mb-txt"><div class="mb-title">' + t('会议已暂时休会') + '</div>'
       + '<div class="mb-sub">' + t('休会期间不计时，由主席决定复会时间。宣布复会后需重新点名以确认法定人数。') + '</div></div>'
@@ -4464,9 +4421,11 @@ function renderMeetingBanner(m){
       m.updatedAt = nowStr(); saveMeetings(); renderAll(); setTab('roll'); renderTab('roll');
       toast(t('会议已复会，请重新点名'));
     };
+    renderGuardPut('mBanner', m, 'suspended|' + LANG);
     return;
   }
   if (m.status === 'adjourned') {
+    if (renderGuardSame('mBanner', m, 'adjourned|' + LANG) && box.firstChild) return;
     box.innerHTML = '<div class="m-banner adjourned"><span class="mb-ico">🏁</span>'
       + '<div class="mb-txt"><div class="mb-title">' + t('本次会议已闭幕') + '</div>'
       + '<div class="mb-sub">' + t('永久休会动议已通过。会议纪要与统计数据仍可查看、导出与评奖。') + '</div></div>'
@@ -4482,6 +4441,7 @@ function renderMeetingBanner(m){
         toast(t('会议已重新开启'));
       }, t('确认开启'));
     };
+    renderGuardPut('mBanner', m, 'adjourned|' + LANG);
   }
 }
 /* SECTION: js-roll */
@@ -5496,7 +5456,7 @@ function startDocVoteRound(m){
   m.docVote = {
     docId: docId, round: 1, votes: {}, startedAt: nowStr(), status: 'voting'
   };
-  docVoteViewId = null;   /* 新表决开始：面板回到「当前这次」，不停留在上一份文件的回看视图 */
+  docVoteViewId = null;   /* 新表决开始：回到「当前这次」 */
   doc.status = '表决中';
   log(m, t('开始实质性表决文件') + '：' + doc.type + '《' + doc.title + '》 — ' + t('第一轮投票')
     + '（' + docVoteRuleText(m) + '）');
@@ -5586,12 +5546,9 @@ function paintDocVote(m, delId){
     break;
   }
 }
-/* SECTION: js-dv-result-detail — 实质性表决「结果呈现」：历次表决记录、图表与逐国明细。
-   只服务 dv.status !== 'voting' 的结果态，不参与投票中的定点刷新（paintDocVote），
-   因此不影响逐国投票格的按压动画与选中态。
-   全部数字取自 dv.final 历史快照（y/n/ab/need/simple/abBlocked），与结果卡片、纪要同源，
-   不按当前出席数重算 —— 与 finishDocVote 的快照约定保持一致，避免事后出席变化篡改已宣布的结果。
-   图表复用统计栏目的 svgDonut / legendHtml / .c-bar-* 结构与 barIn 关键帧，不引入任何外部库。 */
+/* SECTION: js-dv-result-detail — 实质性表决结果区：历次表决记录、图表、逐国明细。
+   只在结果态渲染，不参与投票中的定点刷新（paintDocVote）。数字一律取自 dv.final 历史快照，
+   不按当前出席数重算，与结论条、纪要同源。图表复用统计栏目的 svgDonut / legendHtml / .c-bar-*。 */
 function docVoteResultCharts(fv){
   var y = fv.y | 0, n = fv.n | 0, ab = fv.ab | 0;
   var need = fv.need | 0, simple = fv.simple | 0;
@@ -5619,21 +5576,17 @@ function docVoteResultCharts(fv){
     var pct = rows[i].base > 0 ? (rows[i].value / rows[i].base * 100) : 0;
     bh += '<div class="c-bar-row"><span class="c-bar-lb" title="' + esc(rows[i].label) + '">' + esc(rows[i].label) + '</span>'
       + '<span class="c-bar-tr"><i style="width:' + pct.toFixed(1) + '%;background:' + rows[i].color
-      /* 错峰 60ms 入场，与图表面板的 70ms 错峰同节奏；barIn 已在 .c-bar-tr i 上声明 */
-      + ';animation-delay:' + (i * 60) + 'ms"></i></span>'
+      + '"></i></span>'
       + '<b class="c-bar-v">' + rows[i].value + '</b></div>';
   }
   bh += '</div>';
   s += panelHtml('门槛达成', need > 0 ? (y + ' / ' + need) : '', bh);
   return s + '</div>';
 }
-/* 逐国投票明细：结果宣布后仍可查每一席投了什么（投票格在结果态已被结果卡片替换，
-   此前逐国票只在汇总里保留，复盘时无从查起）。票值口径与 dv-cell 按钮完全一致：
-   Y 赞成 / N 反对 / AB 弃权 / P2 过（仅第一轮有意义；第二轮仍是 P2 表示未重新投票）。
-   行使否决权的常任理事国单独高亮，与结果卡片的「否决权行使：xxx ★」互为印证。 */
-/* 把投票池 + 票值解析成「与会议状态无关」的只读名单：[{name, veto, vote}]。
-   历史记录必须在宣布结果的那一刻就把国家全称固化下来 —— 之后点名状态若被修改、
-   代表团被删除或改名，已宣布的表决结果也不应随之变化（与 dv.final 快照同理）。 */
+/* 逐国明细。票值口径与 dv-cell 按钮一致：Y 赞成 / N 反对 / AB 弃权 / P2 过
+   （P2 仅第一轮有意义，第二轮仍为 P2 表示未重新投票）。行使否决权的常任理事国单独高亮。 */
+/* 把投票池与票值解析成只读名单 [{name,veto,vote}]：宣布结果当时即固化国家全称，
+   此后点名变化、代表团改名或删除都不会改写已宣布的结果（与 dv.final 快照同理）。 */
 function docVoteRosterOf(m, dv, pool){
   var out = [];
   if (!pool || !pool.length) return out;
@@ -5643,11 +5596,8 @@ function docVoteRosterOf(m, dv, pool){
   }
   return out;
 }
-/* 逐国投票明细：结果宣布后仍可查每一席投了什么（投票格在结果态已被结果卡片替换，
-   此前逐国票只在汇总里保留，复盘时无从查起）。票值口径与 dv-cell 按钮完全一致：
-   Y 赞成 / N 反对 / AB 弃权 / P2 过（仅第一轮有意义；第二轮仍是 P2 表示未重新投票）。
-   行使否决权的常任理事国单独高亮，与结果卡片的「否决权行使：xxx ★」互为印证。
-   刻意不做 hover 位移：明细是只读信息，鼠标扫过时整片跳动会干扰读票。 */
+/* 逐国明细。票值口径与 dv-cell 按钮一致：Y 赞成 / N 反对 / AB 弃权 / P2 过
+   （P2 仅第一轮有意义，第二轮仍为 P2 表示未重新投票）。行使否决权的常任理事国单独高亮。 */
 function dvRosterRows(list, round){
   if (!list || !list.length) return '<div class="c-empty">' + esc(t('暂无数据')) + '</div>';
   var r2 = round === 2;
@@ -5659,8 +5609,7 @@ function dvRosterRows(list, round){
     var cls = v === 'Y' ? 'y' : v === 'N' ? 'n' : v === 'AB' ? 'a' : 'x';
     var isVeto = !!(r.veto && v === 'N');
     s += '<div class="dv-rs ' + cls + (isVeto ? ' veto' : '')
-      /* 错峰入场封顶 440ms：百席会议不会把动画拖到 2 秒以上，且短于切页动画总时长 */
-      + '" style="animation-delay:' + Math.min(i * 22, 440) + 'ms">'
+      + '">'
       + '<span class="dv-rs-n" title="' + esc(r.name) + '">' + esc(r.name)
       + (r.veto ? ' <span class="veto-star">★</span>' : '') + '</span>'
       + '<span class="dv-rs-v">' + esc(lab) + (isVeto ? ' · ' + esc(t('否决权行使')) : '') + '</span>'
@@ -5668,10 +5617,9 @@ function dvRosterRows(list, round){
   }
   return s + '</div>';
 }
-/* 宣布结果时把本次表决固化成一条历史记录，追加到 m.docVoteHistory。
-   一次会议可以通过多份决议草案，而 m.docVote 是单例、下一次 beginDocVote 就会覆盖它，
-   因此上一份文件的票数、门槛口径、否决情况与逐国票必须另行留存，否则宣布后即无从回看。
-   上限 50 条：超出后丢弃最早的一条，避免长会期把 localStorage 撑爆。 */
+/* 固化为历史记录追加到 m.docVoteHistory：m.docVote 是单例，下一次 beginDocVote 就会覆盖它，
+   而一场会议往往表决多份决议草案，宣布后仍需逐份回看。上限 50 条，超出丢弃最早的一条。
+   必须在 snapshot('宣布实质性表决结果') 之后追加，撤销时可一并回滚。 */
 function pushDocVoteHistory(m, dv, pool){
   if (!m || !dv) return null;
   if (!Array.isArray(m.docVoteHistory)) m.docVoteHistory = [];
@@ -5693,9 +5641,8 @@ function pushDocVoteHistory(m, dv, pool){
   if (m.docVoteHistory.length > 50) m.docVoteHistory.shift();
   return rec;
 }
-/* 归一化「可回看的表决记录列表」：以 m.docVoteHistory 为准；
-   本功能上线前保存的旧存档没有该字段，但 dv.final 仍在，故现场合成一条只读记录，
-   保证旧存档也能看到图表与逐国明细（合成条 id 为空，不作为可寻址的历史项）。 */
+/* 归一化可回看的记录列表：以 m.docVoteHistory 为准；旧存档没有该字段但 dv.final 仍在，
+   故现场合成一条只读记录（id 为空，不作为可寻址历史项），保证旧存档也能看到图表与明细。 */
 function dvHistoryList(m, dv, pool){
   var hist = (m && Array.isArray(m.docVoteHistory)) ? m.docVoteHistory.slice() : [];
   var hasCur = false;
@@ -5720,9 +5667,8 @@ function dvShortTitle(s){
    它只是面板的浏览位置，不属于会议数据，不应写入存档、也不应进入撤销栈。
    开始新表决 / 取消表决 / 切换会议时重置为 null，避免停留在已不存在的记录上。 */
 var docVoteViewId = null;
-/* 结果卡片：历次表决切换条 + 结论条 + 表决结果详情（环图 / 门槛条形 / 逐国明细）。
-   所有内容只读 rec（历史记录或合成记录），不回读 m.docVote 的实时字段，
-   因此查看旧记录时不会被当前点名状态或后续表决影响。 */
+/* 结果卡片：历次表决切换条 + 结论条 + 结果详情。只读 rec，不回读 m.docVote 的实时字段，
+   故查看旧记录不受当前点名状态或后续表决影响。fv 缺字段时一律 |0 兜底，不显示 undefined。 */
 function docVoteResultCard(m, rec, hist){
   var fv = rec.final || {};
   var vetoed = !!(rec.vetoedBy && rec.vetoedBy.length);
@@ -5873,8 +5819,7 @@ function renderDocVote(m){
       mm.updatedAt = nowStr(); saveMeetings(); renderDocVote(mm); renderDocs(mm); renderMinutes(mm);
     }, t('确认取消'));
   };
-  /* 历次表决切换条：点击某一条即把面板切到那一次表决的结果（只读回看，不改任何会议数据）。
-     id 为空的合成记录（旧存档）落到 null，等价于「最近一次」。 */
+  /* 历次表决切换条：只读回看，不改会议数据；id 为空的合成记录落到 null，即「最近一次」 */
   box.querySelectorAll('[data-dvh]').forEach(function(btn){
     btn.onclick = function(){
       docVoteViewId = this.getAttribute('data-dvh') || null;
@@ -5972,9 +5917,6 @@ function finishDocVote(m){
     simpleBase: simpleBase };
   dv.vetoedBy = vetoedBy;
   dv.finishedAt = nowStr();
-  /* 固化本次表决为历史记录：m.docVote 是单例，下一次 beginDocVote 就会覆盖它，
-     而一次会议往往会表决多份决议草案，宣布后仍需逐份回看票数与否决情况。
-     必须在 snapshot('宣布实质性表决结果') 之后追加，撤销时可一并回滚。 */
   pushDocVoteHistory(m, dv, pool);
   m.hasVotedOnce = true;
   var doc = findDoc(m, dv.docId);
@@ -7622,17 +7564,35 @@ function barsHtml(items, color){
 function panelHtml(title, note, inner){
   return '<div class="c-panel"><h4>' + esc(t(title)) + (note ? '<small>' + esc(note) + '</small>' : '') + '</h4>' + inner + '</div>';
 }
-/* 取代表参与文件数，口径与 renderStats 表格「赞助文件」列逐字一致 */
-function chartDocCount(m, d){
-  var n = 0, docs = m.docs || [];
-  for (var j = 0; j < docs.length; j++) {
-    var dj = docs[j];
-    var inDoc = (dj.drafters && dj.drafters.indexOf(d.country) >= 0)
-      || (dj.signatories && dj.signatories.indexOf(d.country) >= 0)
-      || (dj.sponsors && dj.sponsors.indexOf(d.country) >= 0);
-    if (inDoc) n++;
+/* perf-doccount-v28 —— 消除统计面板最后一处 O(代表团×文件×3) 字符串扫描。
+   chartDocCount 原实现对每个代表团都遍历全部文件，并在 drafters / signatories / sponsors
+   三个字段上各做一次 indexOf。它被 renderCharts 在「每个代表团」上调用一次，
+   100 席 × 25 份文件 = 7500 次字符串扫描，每次切入统计面板都要重跑一遍
+   （renderStats 与 renderCharts 各一次）—— 这是该面板独有的开销，也是它比其他面板慢的原因。
+   现改为：haystack 每份文件只拼一次（O(文件)），之后每个代表团只做一次 indexOf。
+   等价性：\u0000 不会出现在国名中，故不会跨字段误匹配；三字段全空的文件记 null 并跳过，
+   与原式 (dj.drafters && …) || … 的短路结果一致；国名为空串时 indexOf('') 恒为 0，
+   与原式在「至少一个字段非空」时的判定也一致。输出逐字不变，纯计算量下降，
+   不涉及任何 DOM 结构、样式、动画或视觉表现。 */
+function docHaystacks(m){
+  var docs = (m && m.docs) || [], out = [], j, dj;
+  for (j = 0; j < docs.length; j++) {
+    dj = docs[j];
+    out.push((dj.drafters || dj.signatories || dj.sponsors)
+      ? ((dj.drafters || '') + '\u0000' + (dj.signatories || '') + '\u0000' + (dj.sponsors || ''))
+      : null);
   }
+  return out;
+}
+function docCountByHay(hay, country){
+  var cn = country || '', n = 0, i;
+  for (i = 0; i < hay.length; i++) if (hay[i] !== null && hay[i].indexOf(cn) >= 0) n++;
   return n;
+}
+/* 取代表参与文件数，口径与 renderStats 表格「赞助文件」列逐字一致。
+   保留原签名以兼容既有调用；批量场景请用 docHaystacks + docCountByHay，避免重复拼 haystack。 */
+function chartDocCount(m, d){
+  return docCountByHay(docHaystacks(m), d ? d.country : '');
 }
 function topByValue(arr, n){
   arr.sort(function(a, b){ return b.value - a.value || String(a.label).localeCompare(String(b.label)); });
@@ -7669,12 +7629,14 @@ function renderCharts(m){
   ];
   /* ③④ 发言次数 / 参与表决次数 / 赞助文件：取自 stats 与 docs */
   var sp = [], vo = [], dc = [];
+  /* perf-doccount-v28：haystack 整轮只拼一次，替代原先每个代表团各拼一遍全部文件字段 */
+  var hay = docHaystacks(m);
   for (i = 0; i < dels.length; i++) {
     d = dels[i]; st = m.stats[d.id] || { speeches: 0, votes: 0 };
     var lb = cnShort(d.country);
     if (st.speeches > 0) sp.push({ label: lb, value: st.speeches });
     if (st.votes > 0) vo.push({ label: lb, value: st.votes });
-    var dn = chartDocCount(m, d);
+    var dn = docCountByHay(hay, d.country);
     if (dn > 0) dc.push({ label: lb, value: dn });
   }
   var html = '';
@@ -7807,12 +7769,8 @@ function buildReportHtml(m){
     }
     L.push('</table>');
   }
-  /* 四之二、历次实质性表决。
-     一场会议往往会表决多份决议草案，而旧写法只输出 m.docVote（单例，会被下一次表决覆盖）的
-     「最近一次实质性表决」，之前几份的票数、门槛口径与否决情况在存档报告里直接丢失。
-     改为逐份列出，数据源与结果面板同源：优先 m.docVoteHistory（见 pushDocVoteHistory）；
-     本功能上线前保存的旧存档没有该字段，则回落到 m.docVote.final 现场合成一条，
-     保证旧存档仍能打印出最近一次结果，行为与升级前一致。 */
+  /* 四之二、历次实质性表决：逐份列出。数据源与结果面板同源，优先 m.docVoteHistory；
+     旧存档没有该字段时回落到 m.docVote.final 现场合成一条，行为与升级前一致。 */
   var prRecs = (Array.isArray(m.docVoteHistory) && m.docVoteHistory.length) ? m.docVoteHistory.slice() : [];
   if (!prRecs.length && m.docVote && m.docVote.final) {
     var dv0 = m.docVote, vd0 = findDoc(m, dv0.docId);
@@ -7828,7 +7786,7 @@ function buildReportHtml(m){
       + (prRecs.length > 1 ? ' (' + prRecs.length + ')' : '') + '</h2>');
     for (var vi = 0; vi < prRecs.length; vi++) {
       var vr = prRecs[vi], vf = vr.final || {};
-      /* 历史记录已固化文件类型与标题；旧存档合成条目缺这两项时回查当前文件表 */
+      /* 历史条目已固化类型与标题；旧存档合成条目缺这两项时回查当前文件表 */
       var vd1 = (vr.docType || vr.docTitle) ? null : findDoc(m, vr.docId);
       var vlabel = ((vr.docType || (vd1 ? vd1.type : '')) + ' ' + (vr.docTitle || (vd1 ? vd1.title : ''))).replace(/^\s+|\s+$/g, '');
       if (prRecs.length > 1) {
@@ -7912,24 +7870,13 @@ function renderStats(m){
   var sig113 = statsSig(m);
   fillDelSelectGuarded(document.getElementById('awardDelegate'), 'awardDelegate', m);
   if (renderGuardSame('statsTable', m, sig113) && renderGuardSame('awardList', m, sig113)) return;
-  /* SECTION: perf-stats-build-v27 — 表格构建的算法级降本（2026-10-25，本质修复）。
-     原实现对每个代表团都要遍历全部文件、并在 drafters / signatories / sponsors 三个字段上
-     分别做 indexOf，即 O(代表团 × 文件 × 3) 次字符串扫描；百席 × 十余份文件 ≈ 数千次。
-     改为：① 每份文件的三个字段先用 \u0000 拼成一条 haystack（O(文件) 次），代表团只做一次
-            indexOf —— \u0000 不可能出现在国名里，故不会跨字段误匹配；三个字段全空的文件记为
-            null 并跳过，与原式 `dj.drafters && …` 的短路结果一致；国名为空串时 indexOf('')
-            恒为 0，与原式在「至少一个字段非空」时的判定也一致。
-         ② 奖项先按 delId 预分组（O(奖项)），代表团直接取表（O(1)），替代原先每个代表团
-            全量扫一遍奖项的 O(代表团 × 奖项)。
-     两处均为等价改写，输出字符串逐字不变（已用 8 组数据含 100 代表团/25 文件/20 奖项，
-     以及空国名、字段全空、混合分隔符等边界，比对新旧版本输出完全一致）。 */
-  var docHay = [], djh;
-  for (var jh = 0; jh < m.docs.length; jh++) {
-    djh = m.docs[jh];
-    docHay.push((djh.drafters || djh.signatories || djh.sponsors)
-      ? ((djh.drafters || '') + '\u0000' + (djh.signatories || '') + '\u0000' + (djh.sponsors || ''))
-      : null);
-  }
+  /* perf-stats-build-v27：表格构建降本。原实现对每个代表团遍历全部文件并在 drafters /
+     signatories / sponsors 上各做一次 indexOf，即 O(代表团×文件×3)；改为每份文件先拼一条
+     \u0000 分隔的 haystack（\u0000 不会出现在国名中，不会跨字段误匹配；三字段全空记 null 跳过，
+     与原式短路结果一致），代表团只做一次 indexOf；奖项按 delId 预分组，取代 O(代表团×奖项)。
+     等价性已验证：8 组数据（最多 100 代表团 / 25 文件 / 20 奖项，含空国名、字段全空、混合分隔符）
+     下 renderStats 的表格 + 奖项 + 图表输出与改造前逐字节一致。 */
+  var docHay = docHaystacks(m);   /* perf-doccount-v28：与 renderCharts 共用同一套 haystack 构建 */
   var awMap = {}, ak;
   for (var kh = 0; kh < m.awards.length; kh++) {
     ak = m.awards[kh];
