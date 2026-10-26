@@ -4,6 +4,11 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>天中模联会议系统 · THSMUN Meeting System</title>
+<!-- 浏览器会自动请求 /favicon.ico；本系统部署在 GitHub Pages 且仓库根目录没有该文件，
+     该自动请求返回 404，是 Network 面板里唯一的一条红。用空 data URI 声明即可止住请求，
+     不引入任何外部文件、不改变单文件零依赖结构、不产生任何视觉元素。
+     若要显示社团徽章，把 href 换成内联 SVG data URI 即可，同样不需要外部图片。 -->
+<link rel="icon" href="data:,">
 <style>
 /* SECTION: styles-base */
 :root{
@@ -908,9 +913,12 @@ table.stats td,table.stats th{ transition:background .16s var(--spring-soft); }
    刻意复用统计栏目既有的 .c-panel / .c-donut / .c-lg / .c-bar-* 与 barIn / scIn / rowInR 关键帧，
    不新增任何外部依赖、不引入第二套图表实现，保证与全系统同一套缓动变量（--spring / --spring-soft）。
    呈现动画分三层递进：结果条 scIn → 图表面板 scIn（错峰 70ms）→ 逐国明细行 rowInR（错峰 22ms，封顶 440ms），
-   与 .tabpane.on 的 cssPaneIn .62s 切页动画叠加时不冲突：本区动画总时长 ≤ .62s，切页结束前即落定，
-   且全部使用 transform/opacity（走 GPU，不触发 layout），因此中途切页被打断时只会出现「重新从头播」，
-   与本文件既有面板动画的中断行为完全一致（fill-mode 一律 both/backwards，不留半透明残帧）。 */
+   与 .tabpane.on 的 cssPaneIn .62s 切页动画叠加：本区多数元素在 .62s 内落定，
+   唯一例外是逐国明细行的错峰入场（单行 .3s + 延迟封顶 440ms ≈ 最长 .74s），略长于切页动画，
+   百席会议下最后几行会在切页动画结束后继续淡入 —— 这是有意的（否则百行同时淡入更突兀），
+   不是缺陷。全部动画只用 transform/opacity（走 GPU，不触发 layout），fill-mode 一律 both/backwards，
+   因此中途切页被打断时只会出现「重新从头播」，不留半透明残帧；该中断行为已在动画强制启用的
+   条件下实测确认（100ms 打断采样 opacity=0.000、交替连打采样 opacity=0.510，均只有 1 个面板可见）。 */
 .dv-result{ animation:scIn .34s var(--spring) both; }
 .dv-detail{ animation:cssPaneIn .62s cubic-bezier(.22,1,.36,1) both; }
 .dv-detail > h3{ display:flex; align-items:center; gap:8px; }
@@ -1469,21 +1477,24 @@ body:not(.dark) .desk-hero::before{ content:''; position:absolute; left:50%; top
    只跳过渲染、不改 DOM 结构，故 paintDocVote 的 data-del 定点更新不受影响
    （已用真实鼠标点击验证：投票后节点身份保留、按钮亮起、计票联动、投屏下仍可点击）。 */
 .dv-cell{ content-visibility:auto; contain-intrinsic-size:auto 104px; }
-/* SECTION: perf-stats-cv-v27 — 统计与评奖面板补配渲染跳过（2026-10-25，本质修复）。
-   实测该面板切页最差单帧 44.7ms、一轮累计 34 帧超 20ms，而其余 8 个面板几乎为 0。
-   根因不是动画，而是它是全站唯一没做 content-visibility 的重面板：
-   ① table.stats 百席会议 = 100 行 × 6 列 ≈ 600 个节点，切页当帧全部参与 layout + paint；
-   ② 5 个 .c-panel 内含环形图（每个 circle 带 drop-shadow 滤镜，绘制昂贵）与 24 条条形；
-   ③ .award-row 逐条 flex 行。
-   与 patch112 对 .dv-cell 的处理完全同法（该次实测把表决面板切页由 13.5ms 降至 2.6ms）：
-   屏外内容跳过 layout/paint，尺寸估值交给 auto 记住真实高度，滚动条不跳动。
-   不改 DOM 结构、不改任何动画时长与缓动，故 renderStats 的签名守卫、
-   renderCharts 的图表重建、award-row 的委托删除按钮均不受影响。
-   行高估值依据：table.stats td 上下 padding 8px + 行高约 21px ≈ 37px；.award-row 同为 37px；
-   .c-panel 含标题 + 环形图(118px) + 图例，取 220px。 */
-table.stats tr{ content-visibility:auto; contain-intrinsic-size:auto 37px; }
-.award-row{ content-visibility:auto; contain-intrinsic-size:auto 37px; }
-.c-panel{ content-visibility:auto; contain-intrinsic-size:auto 220px; }
+/* SECTION: perf-stats-cv-v27 —— 已试验并撤回，此处不留规则，只留结论（2026-10-26 订正）。
+   曾按 patch112 对 .dv-cell 的成功经验，给 table.stats tr / .award-row / .c-panel 补
+   content-visibility:auto + contain-intrinsic-size，理由是统计面板是全站唯一没做渲染跳过的重面板。
+   两轮浏览器实测结论互相矛盾，最终判定为「无法证明有效，也无法证明有害」：
+   · 第一轮（单次、无交叉、两版分别测）报出 最差单帧 16.80ms→33.40ms、TaskDuration +86.3%，
+     据此写成「实测否决」。该轮两组数字并非同场同条件取得，相减无效，结论已撤回。
+   · 第二轮（三版同场、同一份 100 代表团存档、已核验 #statsTable 101 行与 .c-panel 5 个确实重建、
+     已核验 computed content-visibility 分别为 visible/auto/visible）结果：
+       最差单帧 基线 83.4 / 含规则 83.3 / 不含规则 83.3 ms；
+       平均帧间隔 27.32 / 27.24 / 27.00 ms；>20ms 帧数 389 / 374 / 358；>50ms 帧数 26 / 28 / 42。
+     三版差异均在 2% 以内且互有胜负，属噪声，不构成任何一方更好。
+   环境底噪说明（为何该环境分辨不出差异）：云桌面系统级 prefers-reduced-motion:reduce=true，
+   两轮动画均被强制关闭（.tabpane.on 的 computed animation-name 实测为 none）；三个本地服务与
+   三个标签页并发；空闲轮 p50 已达 16.7ms、最差 50ms。
+   处置：不加这三条规则 —— 在 100 代表团规模下没有任何可测收益，而 .dv-cell 的收益来自其
+   节点密度（每格 104px 含 4 个按钮），不能类推到纯文本行。保留本注释是为了防止日后
+   再按 patch112 的类比把它加回来。若将来要重新评估，必须满足：关闭系统级减少动态效果、
+   单标签页单服务、代表团规模与实际会期一致。 */
 /* hover/进入动画元素提示 GPU 合成，减少重绘 */
 /* patch113：实测 will-change 常驻合成层 37 个，其中 .c-bar-tr i（图表条，8 条×3 组=24 个）
    的 barIn 只是一次性 0.5s 入场动画，播完后常驻提升只是白吃显存；且动画运行期间浏览器
@@ -1664,8 +1675,10 @@ body.dark #syncCard{ background:rgba(255,255,255,.025); border-color:rgba(255,25
 /* SECTION: motion-float-setup-off-v27 —— 设置视图的常驻浮动取消（2026-10-25 用户要求）。
    原规则给 #view-setup .stage 挂了 stageFloat 4.8s infinite，让整个设置窗口长期做 ±2px 微位移。
    代价有三：① 窗口内表单文字长期落在非整数像素上，投屏与高分屏下持续发虚；
-   ② 常驻合成层一直存在，白吃显存与电量；③ 自动化工具判定元素「始终不稳定」，
-      点击需等静止或强制 force click —— 实测中已多次出现 setup 页「开始」按钮首次点击无响应。
+   ② 常驻合成层一直存在，白吃显存与电量；③ 元素长期处于运动中，
+      自动化点击需等静止或强制 force click。自动化测试中曾观察到 setup 页「开始」按钮首次点击
+      无响应、需第二次或 force click 才生效；该现象与此处常驻位移疑似相关，但未做单独对照验证，
+      故只作为观察记录，不作为已证因果。
    故与首页 .desk-hero 区分处理：desk-hero 是纯装饰区（无表单、无输入），保留呼吸浮动；
    设置窗口是长时间填写表单的工作区，稳定性优先。
    原 body.projector 那条关闭规则随之成为死规则，一并删除。
@@ -4315,9 +4328,11 @@ document.getElementById('tabs').addEventListener('click', function(e){
 });
 /* 只渲染指定面板（切入时调用），其余面板在各自数据变更时更新 */
 /* SECTION: perf-stats-defer-v27 —— 「统计与评奖」切页时机（2026-10-25）。
-   主修是 content-visibility 与表格构建降本（见 perf-stats-cv-v27 / perf-stats-build-v27）；
-   此处再把剩余重活推迟两帧：cssPaneIn 只动 transform 与 opacity，首帧后即由合成器接管，
-   此时主线程再忙也不会掉动画帧。令牌自增作废旧帧，连续快速切页只执行最后一次；
+   主修是表格构建的算法级降本（见 perf-stats-build-v27）；content-visibility 方案已试验并撤回
+   （见 perf-stats-cv-v27），故本项是一条独立措施，其收益尚未单独量化验证：
+   做法是把切页当帧的重活推迟两帧执行。依据是 cssPaneIn 只动 transform 与 opacity，首帧之后
+   动画由合成器驱动，主线程繁忙不再直接掉动画帧 —— 这是原理推断，实测环境底噪过大，
+   未能单独量化收益，也未观测到副作用。令牌自增作废旧帧，连续快速切页只执行最后一次；
    两帧后若已切走或已退出会议则直接跳过，不白算。
    仅作用于「切页进入统计面板」这一条路径，表决结束/评奖/磋商结束等调用点仍同步执行 renderStats。 */
 var _statsDeferToken = 0;
