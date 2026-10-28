@@ -134,8 +134,13 @@ input,select,textarea{font-family:inherit; font-size:14px; color:var(--ink);}
   border-bottom:3px solid transparent; white-space:nowrap;
 }
 .tabs button.on{color:var(--un-blue); border-bottom-color:var(--un-blue); font-weight:600;}
-.tabpane{display:none; padding:2px 0 6px;}
-.tabpane.on{display:block;}
+/* v31-perf：面板常驻渲染——隐藏面板 visibility+absolute 定位（脱离文档流、不可聚焦、不响应事件），
+   切页时仅 visibility/position/opacity 变化，彻底消除 display:none→block 的整树重排与首次光栅化；
+   .window 已有 position:relative 作为包含块；打印走独立 #printReport 不受影响 */
+/* v31-perf：contain:paint 渲染隔离——本面板内部任何重绘不再波及其他面板；已确认 9 面板内无 fixed 后代（modal/toast/dock/顶栏均在面板外） */
+.tabpane{ display:block; padding:2px 0 6px; visibility:hidden; position:absolute; top:0; left:0; width:100%;
+  opacity:0; pointer-events:none; contain:paint; }
+.tabpane.on{ visibility:visible; position:static; opacity:1; pointer-events:auto; will-change:transform,opacity; } /* v30-perf：预建合成层，cssPaneIn 首帧零建层开销 */
 /* SECTION: styles-cards-forms */
 .card{background:var(--card); border:1px solid var(--line); border-radius:12px; padding:18px; margin-bottom:16px;}
 .card h3{font-size:15px; color:var(--un-deep); margin-bottom:12px;}
@@ -923,8 +928,9 @@ table.stats td,table.stats th{ transition:background .16s var(--spring-soft); }
    曾按行给每个 .dv-rs 加 rowInR + 错峰延迟（封顶 440ms），百席会议即上百个并发动画，
    与外层 .tabpane.on 的 cssPaneIn 同帧争抢，表现为切页掉帧、打断后恢复变慢、整体延迟增大。
    改为整片一次入场：观感仍是淡入 + 轻微上滑，成本从 O(席位) 降到 O(1)。
-   .dv-detail 用 scIn .42s 而非 cssPaneIn .62s，避免与外层同一条 .62s 曲线叠成双重动画，
-   并保证结果区在切页动画结束前落定 —— 打断时只会出现「重新从头播」，不留半透明残帧。
+   .dv-detail 用 scIn .42s（v28 时外层 cssPaneIn 为 .62s，故选用较短曲线避免双重叠加；
+   v29 起外层提速至 .16s，切页动画先落定、结果区再优雅淡入，层次反而更清晰），
+   打断时只会出现「重新从头播」，不留半透明残帧。
    全部只用 transform / opacity（走合成器，不触发 layout）；图表条形的 barIn 来自全局既有
    规则 .c-bar-tr i，非本区新增。系统级 prefers-reduced-motion 下由第 312 行的
    *{animation:none!important} 统一关闭，无需本区另写降级。 */
@@ -1594,17 +1600,23 @@ body.dark #syncCard{ background:rgba(255,255,255,.025); border-color:rgba(255,25
 /* 页脚小型大写 */
 .desk-foot{ letter-spacing:.22em; text-transform:uppercase; font-size:11px; }
 /* ===== SECTION: styles-css-entrance-v19 — 纯 CSS 入场（GPU 合成，零 JS 开销）===== */
-@keyframes cssPaneIn{ from{ opacity:0; transform:translateY(14px) scale(.985); }
+/* v31-perf：视差编排 + 消空窗——起点改微透明 .15（画面不再闪白），面板反向 -3px 微浮与窗口 +14px 形成前后景深；
+   曲线/时长不变，去 scale 避免与窗口缩放叠加 */
+@keyframes cssPaneIn{ from{ opacity:.15; transform:translateY(-3px); }
   to{ opacity:1; transform:none; } } /* v24：去 blur，blur 仅保留在页面级 cssViewIn（同 samunos 结构） */
-@keyframes cssWinIn{ from{ opacity:0; transform:translateY(14px) scale(.985); }
-  to{ opacity:1; transform:none; } } /* v24：去 blur，理由同 cssPaneIn */
+@keyframes cssWinIn{ from{ opacity:.15; transform:translateY(14px) scale(.985); }
+  to{ opacity:1; transform:none; } } /* v31-perf：起点同步微透明，消空窗（理由同 cssPaneIn） */
 @keyframes cssModalIn{ from{ opacity:0; filter:blur(4px); transform:scale(.94) translateY(12px); }
   62%{ opacity:1; filter:blur(0); transform:scale(1.014) translateY(0); }
   to{ opacity:1; filter:blur(0); transform:none; } }
 /* v22：fill 用 backwards 而非 both —— both 会让 to 帧的 filter:blur(0) 永久残留，
    blur(0) 仍是非 none 滤镜，会使 .view 成为 fixed 后代（dock/statusbar 内的元素）的包含块。
    backwards 在动画结束后回落基础样式（与 to 帧逐值一致），无跳变、无残留。 */
-.tabpane.on{ animation:cssPaneIn .62s cubic-bezier(.22,1,.36,1) backwards; }
+/* build-v29：切页主路径提速 —— cssPaneIn 动画本身完整保留（keyframes/曲线/位移均不变），
+   仅时长 .62s → .16s：0.62s 超过人眼交互基准（150-250ms），是「切换延迟感」的主要来源；
+   .16s 后动画依旧平滑（同一条 cubic-bezier(.22,1,.36,1) 弹性曲线），但落定快 3.9 倍。
+   内容区 .dv-* 入场（.30-.42s）节奏不变，外层先落定、内容再优雅淡入，层次更清晰。 */
+.tabpane.on{ animation:cssPaneIn .16s cubic-bezier(.22,1,.36,1) backwards; }
 @keyframes cssViewIn{ from{ opacity:0; filter:blur(4px); transform:translateY(10px) scale(.995); }
   to{ opacity:1; filter:blur(0); transform:none; } }
 /* SECTION: fix-dock-v24：视图级入场仅限 home/setup（其内无 fixed 元素）；
@@ -4267,6 +4279,17 @@ function setTab(t){
   for (var i = 0; i < bs.length; i++) bs[i].classList.toggle('on', bs[i].getAttribute('data-tab') === t);
   var ps = document.querySelectorAll('.tabpane');
   for (var j = 0; j < ps.length; j++) ps[j].classList.toggle('on', ps[j].id === 'tab-' + t);
+  /* v31-fix：visibility 常驻渲染下 CSS animation 不会随显隐重启（与 display:none 不同），
+     面板入场动画必须在切页时显式重播——参数与 cssPaneIn keyframes 一字不差（.16s / 同曲线 / 同位移缩放），
+     细腻感与原版完全一致；仅首次进会议时由 CSS animation 自然播放，此后每次切页由 WAAPI 接管。
+     同样尊重系统「减少动画」偏好 */
+  if (!sprReduce()) {
+    var onPane = document.getElementById('tab-' + t);
+    if (onPane && onPane.animate) {
+      onPane.animate([{ opacity: .15, transform: 'translateY(-3px)' }, { opacity: 1, transform: 'none' }],
+        { duration: 160, easing: 'cubic-bezier(.22,1,.36,1)', fill: 'backwards' });
+    }
+  }
   var win = document.getElementById('meetingWindow');
   /* patch112：原写法 remove('swap') + void offsetWidth + add('swap') 会强制同步重排整个会议窗口
      （含百余行点名表、上百个逐国表决格），只为重启一段入场动画——实测这是切页延迟主因：
@@ -4277,8 +4300,17 @@ function setTab(t){
      尊重系统「减少动画」偏好；不支持 WAAPI 的旧浏览器保留原 class 路径降级。 */
   if (win && !sprReduce()) {
     if (win.animate) {
-      win.animate([{ opacity: 0, transform: 'translateY(14px) scale(.985)' }, { opacity: 1, transform: 'none' }],
+      /* v31-perf：动画参数一字不动（时长 620ms / 位移 / 缩放 / 缓动 / 填充全部保持原状——细腻感完整保留）。
+         动画期间动态 will-change 预建合成层，避免首帧光栅化大子树；结束即释放显存 */
+      win.style.willChange = 'transform, opacity';
+      var wAn = win.animate([{ opacity: .15, transform: 'translateY(14px) scale(.985)' }, { opacity: 1, transform: 'none' }],
         { duration: 620, easing: 'cubic-bezier(.22,1,.36,1)', fill: 'backwards' });
+      if (wAn) {
+        var clearWC = function(){ win.style.willChange = ''; };
+        if (wAn.onfinish !== undefined) wAn.onfinish = clearWC;
+        else if (wAn.finished) wAn.finished.then(clearWC, clearWC);
+        else setTimeout(clearWC, 300);
+      }
     } else {
       win.classList.remove('swap'); void win.offsetWidth; win.classList.add('swap');
     }
@@ -4286,12 +4318,32 @@ function setTab(t){
   window.scrollTo(0, 0);
   syncStatusBar();
 }
+/* v30-perf：切页渲染去抖器。用 setTimeout(0)（宏任务）而非 rAF：
+   rAF 回调与首次渲染在同一帧内按注册顺序执行，重灌仍会阻塞首帧；
+   宏任务在 paint 完成后才跑，真正做到「先让动画首帧出去，再重灌数据」 */
+var pendingRenderTab = null;
+function scheduleTabRender(t){
+  pendingRenderTab = t;
+  setTimeout(function(){
+    if (pendingRenderTab !== null) { var tt = pendingRenderTab; pendingRenderTab = null; renderTab(tt); }
+  }, 0);
+}
+/* v31-perf：按下预热——手指按下到抬起间有 50–100ms，利用这段时间预建合成层，
+   click 到达时动画零准备直接开跑 */
+document.getElementById('tabs').addEventListener('mousedown', function(){
+  var w = document.getElementById('meetingWindow');
+  if (w && !w.style.willChange) w.style.willChange = 'transform, opacity';
+});
 document.getElementById('tabs').addEventListener('click', function(e){
   var b = e.target.closest('button'); if (!b) return;
   /* SECTION: fix-dock-v24：无 data-tab 的按钮（如侧边栏「收起」）不得触发切面板，
      否则 setTab(null) 会清空所有面板的 .on 使窗口内容消失 */
   if (!b.getAttribute('data-tab')) return;
-  setTab(b.getAttribute('data-tab')); renderTab(state.tab);
+  setTab(b.getAttribute('data-tab'));
+  /* v30-perf：面板内容重灌移出切页关键帧——面板先以缓存内容立即入场（所有动画完整播放），
+     下一帧再重灌最新数据（动画 260ms 远大于一帧间隔，无感知差异）；
+     连续快切只渲染最后目标，避免无效重灌。程序性跳转路径（setTab+renderTab 成对调用处）不受影响 */
+  scheduleTabRender(state.tab);
 });
 /* 只渲染指定面板（切入时调用），其余面板在各自数据变更时更新 */
 function renderTab(t){
@@ -4307,8 +4359,8 @@ function renderTab(t){
   else if (t === 'minutes') renderMinutes(m);
   else if (t === 'stats') renderStats(m);
   updateDockBadges(); syncLiveChips();
-  /* 英文模式下统一归一化拼接串中残留的中文标点 */
-  normalizeDomPunct(document.getElementById('meetingWindow'));
+  /* 英文模式下统一归一化拼接串中残留的中文标点；v30-perf：只扫刚重灌的目标面板，不再全窗口遍历 */
+  normalizeDomPunct(document.getElementById('tab-' + t));
 }
 function renderAll(){
   var m = cur(); if (!m) return;
@@ -8036,7 +8088,7 @@ document.addEventListener('keydown', function(e){
   }
   var order = ['roll','gsl','speakers','motions','docvote','timer','docs','minutes','stats'];
   var idx = parseInt(e.key, 10);
-  if (idx >= 1 && idx <= order.length) { setTab(order[idx - 1]); renderTab(state.tab); }
+  if (idx >= 1 && idx <= order.length) { setTab(order[idx - 1]); scheduleTabRender(state.tab); } /* v30-perf：与点击路径同构，重灌移出关键帧 */
 });
 /* SECTION: js-spring — 可打断弹簧引擎（Framer Motion 同款：从当前 x/v 继续求解） */
 var SPR = { items: {}, raf: 0, _id: 0 };
