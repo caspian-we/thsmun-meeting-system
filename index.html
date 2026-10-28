@@ -402,7 +402,8 @@ table.stats th{background:#eef6fc; color:var(--un-deep);}
 .c-bar-row:nth-child(3){ animation-delay:.28s; } .c-bar-row:nth-child(4){ animation-delay:.36s; }
 .dv-result{ animation:dvRise .34s cubic-bezier(.22,1,.36,1) .42s backwards; }
 .dock button:hover{ background:rgba(26,117,187,.1); }
-.dock button.on{ background:linear-gradient(120deg,var(--un-blue),#2f88c9); color:#fff; box-shadow:0 3px 10px rgba(13,78,126,.24); }
+/* v33：应用户要求移除激活按钮外投影（悬浮阴影观感不适）；按钮层次由渐变底色自明 */
+.dock button.on{ background:linear-gradient(120deg,var(--un-blue),#2f88c9); color:#fff; }
 .dock button.on .dk-ico{ filter:none; }
 .dock .dk-badge{
   margin-left:auto; min-width:18px; height:18px; border-radius:9px; padding:0 5px;
@@ -711,7 +712,8 @@ body{
 .dock button .dk-ico{ transition:transform .24s var(--pop); }
 .dock button:hover .dk-ico{ transform:scale(1.16) translateY(-1px); }
 .dock button:active:not(.on){ transform:scale(.97); }
-.dock button.on{ box-shadow:0 4px 14px rgba(13,78,126,.28), inset 0 1px 0 rgba(255,255,255,.22); }
+/* v33：同上——外投影删除，仅保留顶部内高光（渐变按钮的玻璃质感细节，非阴影） */
+.dock button.on{ box-shadow:inset 0 1px 0 rgba(255,255,255,.22); }
 .dock button.on::after{
   content:""; position:absolute; left:0; top:50%; transform:translateY(-50%);
   width:3px; height:17px; border-radius:0 3px 3px 0; background:#fff; opacity:.92;
