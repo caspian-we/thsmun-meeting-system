@@ -207,7 +207,8 @@ input,select,textarea{font-family:inherit; font-size:14px; color:var(--ink);}
 .motion-card .m-title{font-weight:600; font-size:14px;}
 .vote-grid{display:grid; grid-template-columns:repeat(auto-fill,minmax(210px,1fr)); gap:8px; margin:10px 0;}
 .vote-cell{display:flex; align-items:center; gap:8px; border:1px solid #eef3f8; border-radius:8px; padding:6px 8px; font-size:13px;}
-.vote-cell .vc-name{flex:1; min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;}
+/* v35：逐国点击格国名同样不再省略截断（投屏 21px 下 210px 窄格截断最严重），长名折行完整显示 */
+.vote-cell .vc-name{flex:1; min-width:0; overflow-wrap:anywhere;}
 .tally{font-size:14px; margin:8px 0;}
 .tally b.y{color:var(--ok);} .tally b.n{color:var(--no);} .tally b.a{color:var(--abs);}
 .timer-box{text-align:center; padding:26px 10px;}
@@ -1014,7 +1015,10 @@ body.dark .dv-hist-b.on{ color:#08131d; }
 body.dark .dv-hist-b.on i{ background:#08131d; }
 body.projector .dv-hist-b{ font-size:16px; padding:7px 13px; }
 body.projector .dv-hist-lb{ font-size:15px; }
-.dv-rs-n{ color:var(--ink); min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+/* v35：国名不再省略截断——逐国明细承诺展示国家全称，长名（如「大不列颠及北爱尔兰联合王国」
+   或英文 United Kingdom of Great Britain and Northern Ireland）在窄格内折行完整显示；
+   票值超长（否决行「反对 · 否决权行使」）时国名在自己盒内折行，仍全部可读。title 保留。 */
+.dv-rs-n{ color:var(--ink); min-width:0; overflow-wrap:anywhere; }
 .dv-rs-v{ margin-left:auto; flex:none; font-weight:600; font-variant-numeric:tabular-nums; }
 .dv-rs.y{ border-left-color:var(--ok); }  .dv-rs.y .dv-rs-v{ color:var(--ok); }
 .dv-rs.n{ border-left-color:var(--no); }   .dv-rs.n .dv-rs-v{ color:var(--no); }
@@ -1035,6 +1039,15 @@ body.projector .dv-detail .c-bar-tr{ height:13px; }
 body.projector .dv-detail .c-bar-lb,
 body.projector .dv-detail .c-bar-v{ font-size:16px; }
 body.projector .dv-rs{ font-size:16px; padding:8px 11px; }
+/* v35：门槛达成面板标签按内容自适应——「弃权阻断线」5 字在全局 74px 固定宽内，投屏 16px
+   溢出成「弃权阻断…」（用户 2026-10-29 反馈），英文 Abstention block line 常规字号也放不下；
+   上限 60% 防极端挤压，条形与数字仍占余下空间。统计栏目的紧凑排行仍用全局 74px 版式不受影响。
+   投屏下数字列同步放宽到 40px（16px 字号下三位数 26px 装不下），杜绝结果数字被削。 */
+.dv-detail .c-bar-lb{ width:auto; max-width:60%; }
+body.projector .dv-detail .c-bar-v{ width:40px; }
+/* v35：投屏字号放大后明细格 212px 最小列宽会加剧折行，同步放宽到 300px——
+   15 席会议每行恰好 2-3 格，远处可读且全称不省略。 */
+body.projector .dv-roster{ grid-template-columns:repeat(auto-fill,minmax(300px,1fr)); }
 @media (max-width:720px){
   .dv-roster{ grid-template-columns:1fr; }
   .dv-charts{ grid-template-columns:1fr; }
