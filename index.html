@@ -327,7 +327,7 @@ table.stats th{background:#eef6fc; color:var(--un-deep);}
 /* SECTION: styles-os-shell */
 :root{
   --dock-w:188px; --bar-h:34px;
-  --glass:rgba(255,255,255,.72); --shell-bg:#e8eef5;
+  --glass:rgba(255,255,255,.96); --shell-bg:#e8eef5; /* v34-perf：.72+.blur 改为 .96 实色，视觉几乎一致 */
 }
 /* 开机启动画面 */
 #boot{
@@ -360,7 +360,7 @@ table.stats th{background:#eef6fc; color:var(--un-deep);}
 .statusbar{
   position:fixed; top:0; left:0; right:0; height:var(--bar-h); z-index:40;
   display:flex; align-items:center; gap:14px; padding:0 14px;
-  background:rgba(8,54,90,.88); backdrop-filter:blur(14px); -webkit-backdrop-filter:blur(14px);
+  background:rgba(8,54,90,.97); /* v34-perf：移除 backdrop-filter——下层每次重绘都会触发整条状态栏背景重新模糊，是滚动/交互掉帧的大头；提高不透明度补偿视觉 */
   color:#fff; font-size:12.5px; box-shadow:0 1px 0 rgba(255,255,255,.08), 0 2px 12px rgba(0,0,0,.16);
 }
 .statusbar .sb-brand{ display:flex; align-items:center; gap:8px; font-weight:600; letter-spacing:.5px; flex:none; }
@@ -375,7 +375,7 @@ table.stats th{background:#eef6fc; color:var(--un-deep);}
 /* 侧边 Dock */
 .dock{
   position:fixed; left:0; top:var(--bar-h); bottom:0; width:var(--dock-w); z-index:30;
-  background:var(--glass); backdrop-filter:blur(16px); -webkit-backdrop-filter:blur(16px);
+  background:var(--glass); /* v34-perf：移除 backdrop-filter——dock 为常驻层，下层内容滚动/动画时持续重算模糊 */
   border-right:1px solid rgba(216,227,238,.9); padding:12px 10px; overflow-y:auto;
   display:flex; flex-direction:column; gap:4px;
 }
@@ -723,8 +723,8 @@ body{
 .dock .dk-badge{ box-shadow:0 2px 6px rgba(192,57,43,.35); }
 /* 7) 状态栏：更强的玻璃质感与层次 */
 .statusbar{
-  background:linear-gradient(180deg,rgba(11,62,101,.93),rgba(8,54,90,.87));
-  backdrop-filter:saturate(1.7) blur(18px); -webkit-backdrop-filter:saturate(1.7) blur(18px);
+  background:linear-gradient(180deg,rgba(11,62,101,.98),rgba(8,54,90,.97));
+  /* v34-perf：同上，玻璃重算移除 */
   box-shadow:inset 0 -1px 0 rgba(255,255,255,.09), 0 2px 14px rgba(4,26,44,.22);
 }
 .sb-chip{ box-shadow:inset 0 1px 0 rgba(255,255,255,.14); transition:background .22s var(--spring-soft), transform .22s var(--spring); }
@@ -1219,7 +1219,7 @@ body.dark table.stats tr:hover td{ background:#16232f; }
    刻意保持白色的元素：顶栏 logo、启动进度条、状态栏圆点、#printReport（打印必须白底黑字）。 */
 body.dark{
   --bg:#0f1a26; --card:#182634; --ink:#e6eef6; --muted:#93a7bb; --line:#2b3f53;
-  --glass:rgba(20,33,47,.80); --shell-bg:#0b141e; --un-pale:#1c2f41;
+  --glass:rgba(20,33,47,.97); --shell-bg:#0b141e; --un-pale:#1c2f41; /* v34-perf：同上 */
   --hair:inset 0 1px 0 rgba(255,255,255,.07);
   --e1:0 1px 2px rgba(0,0,0,.34), 0 1px 3px rgba(0,0,0,.30);
   --e2:0 2px 4px rgba(0,0,0,.30), 0 6px 16px rgba(0,0,0,.38);
@@ -1503,7 +1503,7 @@ body.dark .c-bar-row:hover .c-bar-lb{ color:#8ecbf2; }
 .desk-hero{ position:relative; }
 body:not(.dark) .desk-hero::before{ content:''; position:absolute; left:50%; top:26px; transform:translateX(-50%);
   width:min(560px,100%); height:200px; border-radius:50%;
-  background:radial-gradient(ellipse,rgba(26,117,187,.13),transparent 70%); filter:blur(6px); z-index:0; pointer-events:none; }
+  background:radial-gradient(ellipse,rgba(26,117,187,.13),transparent 70%); z-index:0; pointer-events:none; /* v34-perf：同上 */ }
 .desk-hero > *{ position:relative; z-index:1; }
 /* 状态栏品牌区：字距与分隔，更像系统栏 */
 .statusbar .sb-brand span{ letter-spacing:1.2px; font-weight:650; }
@@ -1617,7 +1617,7 @@ body.projector .dv-cell{
      避免在 dock 占据部分视口时溢出 stage 导致文档级横向滚动条。
      100% = stage 自身宽度（position:absolute 相对 position:relative 的 stage）。 */
   width:min(920px,100%); height:460px; border-radius:50%; pointer-events:none;
-  background:radial-gradient(ellipse, rgba(26,117,187,.15), transparent 70%); filter:blur(12px); }
+  background:radial-gradient(ellipse, rgba(26,117,187,.15), transparent 70%); /* v34-perf：渐变已平滑，blur(12px) 属冗余重绘成本，移除 */ }
 body.dark .stage::before{ background:radial-gradient(ellipse, rgba(74,163,224,.13), transparent 70%); }
 .stage .window{ position:relative; z-index:1; }
 /* 首页 hero 缓慢浮动（4.8s 量级，对齐其 stage-float；window 不加，避免与弹簧 inline transform 冲突） */
@@ -1729,7 +1729,7 @@ body.dark #syncCard{ background:rgba(255,255,255,.025); border-color:rgba(255,25
 /* ===== SECTION: styles-statusbar-v29 — 阶段配色与窄屏防溢出 ===== */
 /* 阶段配色：表决类=金（醒目）、发言/磋商=蓝、点名=青、休会=灰、闭幕=暗灰。
    灯过去只有一种金色且文案固定，现在颜色随阶段变，主席一眼看出会议在做什么 */
-.sb-live-dot{ font-style:normal; line-height:1; }
+.sb-live-dot{ font-style:normal; line-height:1; display:inline-block; }
 .sb-chip.live{ background:rgba(201,162,39,.9); color:#231a02; }
 .sb-chip.live.ph-vote{ background:rgba(201,162,39,.92); color:#231a02; }
 /* patch113：仅表决/动议待裁定阶段（ph-vote）有脉动，其余阶段（发言/点名/休会/闭幕）
@@ -1744,8 +1744,31 @@ body.dark #syncCard{ background:rgba(255,255,255,.025); border-color:rgba(255,25
   animation:liveRing 2.4s ease-in-out infinite;
 }
 @keyframes liveRing{ 0%,100%{ transform:scale(1); opacity:.55; } 60%{ transform:scale(1.26); opacity:0; } }
-/* patch113：这四条原有的 animation:none 是死代码——.sb-chip.live 已不再声明 animation，
-   且光环只挂在 ph-vote 的伪元素上，其余阶段本就不会有动画，无需显式关闭。 */
+/* ===== SECTION: styles-detail-v34 — 呼吸灯与胶囊微交互（全合成器工艺，无常驻 JS）===== */
+/* ① 相位灯分层呼吸：发言/磋商/点名进行中=灯点轻呼吸（刻意弱于表决光环，紧急度分层）；
+   表决=liveRing 光环；空闲/休会/闭幕=静默（会议停了灯就停）。prefers-reduced-motion 下由全局禁用清单接管 */
+.sb-chip.live.ph-speak .sb-live-dot, .sb-chip.live.ph-roll .sb-live-dot {
+  animation: dotBreath 2.8s ease-in-out infinite;
+}
+@keyframes dotBreath{ 0%,100%{ opacity:1; transform:scale(1); } 50%{ opacity:.7; transform:scale(.92); } }
+/* ② 状态栏计时芯片警告：剩余≤10s 且运行中——红底 + 1.8s 缓呼吸（与主面板 .9s 脉冲刻意错频） */
+.sb-chip.warn{ background:rgba(192,57,43,.92); color:#fff; animation:chipBreath 1.8s ease-in-out infinite; }
+body.dark .sb-chip.warn{ background:rgba(239,122,108,.85); color:#1a0505; }
+@keyframes chipBreath{ 0%,100%{ opacity:1; } 50%{ opacity:.76; } }
+/* ③ 投屏进行中：投屏按钮轻呼吸提示当前处于投屏态（再次点击即恢复） */
+body.projector #sbProject{ animation:chipBreath 2.2s ease-in-out infinite; }
+/* ⑧ 深浅主题切换：仅切换瞬间临时启用的全局颜色过渡（320ms 后由 JS 移除，不常驻） */
+html.theme-fade, html.theme-fade *, html.theme-fade *::before, html.theme-fade *::after{
+  transition: background-color .3s ease, border-color .3s ease, color .3s ease, box-shadow .3s ease !important;
+}
+/* 用户要求移除（v34）：实质性表决文件/会议纪要/统计与评奖三栏的悬停上移感。
+   保留阴影与边框变色反馈，仅去除 transform 位移。特异性 (1,2,1) 高于原 .card:hover 等的 (0,2,1)，
+   无需 !important；刻意只限定这三个面板，其他栏目的悬停触感一律保留 */
+#tab-docvote .dv-cell:hover, #tab-docvote .card:hover,
+#tab-minutes .card:hover,
+#tab-stats .card:hover, #tab-stats .c-panel:hover{
+  transform:none;
+}
 .sb-chip.live.ph-speak{ background:rgba(26,117,187,.92); color:#fff; }
 .sb-chip.live.ph-roll{ background:rgba(30,142,90,.92); color:#fff; }
 .sb-chip.live.ph-pause{ background:rgba(255,255,255,.20); color:#fff; }
@@ -2423,7 +2446,7 @@ var I18N = {
   '展开侧边栏':'Expand sidebar',
   '收起':'Collapse',
   '投屏模式：点击状态栏「🖥 投屏」放大计时器、发言人、点名国名与三态选项、逐国表决国名与投票键，并提高对比度，供主席台投影使用；放大仅在宽屏生效，手机与平板显示不受影响；投屏下入场动画不做模糊处理，保证投出的文字始终锐利。再次点击即恢复，该偏好会记住，刷新后保持。':'Projector mode: tap “🖥 Projector” in the status bar to enlarge the timer, current speaker, roll-call country names and their three status buttons, and the country names and vote keys of the substantive vote, with higher contrast for the podium projector. Enlargement applies only on wide screens; phones and tablets are unaffected. While projecting, entrance animations skip the blur pass so projected text stays crisp. Tap again to restore; the preference persists across reloads.',
-  '深色模式：点击状态栏「🌙 深色」在深色与浅色主题间切换，偏好会记住，刷新后保持；从未手动切换过时默认深色舞台外观。深浅两套均已按 WCAG AA 校核文字对比度。':'Dark mode: tap “🌙 Dark” in the status bar to switch between dark and light themes. The preference persists across reloads; the dark stage look is the default until you choose otherwise. Text contrast in both themes is checked against WCAG AA.',
+  '深色模式：点击状态栏「🌙 深色」在深色与浅色主题间切换，偏好会记住，刷新后保持；从未手动切换过时跟随系统深浅色偏好。深浅两套均已按 WCAG AA 校核文字对比度。':'Dark mode: tap “🌙 Dark” in the status bar to switch between dark and light themes. The preference persists across reloads; the dark stage look is the default until you choose otherwise. Text contrast in both themes is checked against WCAG AA.',
   '数据可视化：「统计与评奖」栏目底部按当前会议存档实时生成两张环形图（出席构成、动议裁定结果）与三张排行条形图（发言次数、参与表决次数、赞助文件数），全部数值实时计算，无数据时显示空态而非补零。':'Data visualization: the bottom of the “Stats & Awards” panel draws two donut charts (roll-call breakdown, motion outcomes) and three ranking bar charts (speeches, votes cast, sponsored documents) live from the current meeting archive. Every figure is computed on the fly; with no data an empty state is shown instead of zeros.',
   '天中模联会议系统':'THSMUN Meeting System', '会议控制台':'Meeting Console',
   '点名':'Roll Call', '主发言名单':'GSL', '动议与表决':'Motions & Voting',
@@ -2466,7 +2489,7 @@ var I18N = {
   '安理会实质性表决文件通过门槛':'Security Council substantive voting threshold',
   '宪章第 27 条：需至少 9 票赞成':'Article 27: at least 9 affirmative votes',
   '有表决权国家的三分之二多数':'Two-thirds majority of the members holding a vote',
-  '两种门槛的赞成票都以「有表决权席数」为基数（不是出席数），系统会按点名结果实时算出所需票数并显示在表决面板上。此外都另需：五个常任理事国（★）均未行使否决权，且弃权票未达简单多数（同样按有表决权席数计）。表决权归属随门槛不同：选「宪章第 27 条」时所有出席理事国都有文件表决权，点名无需特意区分；选「有表决权国家的三分之二多数」时非常任理事国须点名选「出席并投票」才有文件表决权，而五个常任理事国默认拥有表决权。若有表决权不足 9 席，固定 9 票门槛在数学上不可达，系统会自动改用三分之二多数。':'Under both thresholds the affirmative votes are counted on the seats holding a vote (not on attendance); the system computes the required number from the roll call and shows it on the voting panel. Both additionally require that no permanent member (★) has cast a veto, and that abstentions fall short of a simple majority (also counted on seats holding voting rights). Who holds a document vote depends on the threshold: under "Article 27" every present Security Council member does, so roll call need not distinguish them; under “two-thirds of the members present” elected (non-permanent) members must be marked “Present and voting” to vote, while the five permanent members hold a vote by default. If fewer than 9 seats hold voting rights, the fixed 9-vote threshold is mathematically unreachable and the two-thirds majority applies automatically.',
+  '两种门槛的赞成票都以「有表决权席数」为基数（不是出席数），系统会按点名结果实时算出所需票数并显示在表决面板上。此外都另需：五个常任理事国（★）均未行使否决权，且弃权票未达简单多数（同样按有表决权席数计）。表决权归属随门槛不同：选「宪章第 27 条」时所有出席理事国都有文件表决权，点名无需特意区分；选「有表决权国家的三分之二多数」时非常任理事国须点名选「出席并投票」才有文件表决权，而五个常任理事国默认拥有表决权。若有表决权不足 9 席，固定 9 票门槛在数学上不可达，系统会自动改用三分之二多数。':'Under both thresholds the affirmative votes are counted on the seats holding a vote (not on attendance); the system computes the required number from the roll call and shows it on the voting panel. Both additionally require that no permanent member (★) has cast a veto, and that abstentions fall short of a simple majority (also counted on seats holding voting rights). Who holds a document vote depends on the threshold: under "Article 27" every present Security Council member does, so roll call need not distinguish them; under “a two-thirds majority of the members holding a vote” elected (non-permanent) members must be marked “Present and voting” to vote, while the five permanent members hold a vote by default. If fewer than 9 seats hold voting rights, the fixed 9-vote threshold is mathematically unreachable and the two-thirds majority applies automatically.',
   '有表决权且出席':'present and voting',
   '席为基数，弃权与未表态计入分母':'seats as the base; abstentions and non-votes count in the denominator',
   '席为基数':'seats as the base',
@@ -2623,7 +2646,7 @@ Object.assign(I18N, {
   '请选择':'Select…','— 选择提出国 —':'— Select proposer —','— 选择演讲国 —':'— Select speaker —',
   '（暂无可表决文件，请先在「文件」页提交）':'(No votable document — submit one in the Documents panel first)',
   '结束辩论须以三分之二多数通过，规则已锁定。':'Closing debate requires a two-thirds majority; the rule is locked.',
-  '本动议通过后需重新点名，点名完成将自动进入「实质性表决文件」栏目。所有委员会（含安理会）均为两轮表决：第一轮投赞成 / 反对 / 弃权者直接计入计票，仅投「过」者进入第二轮。安理会通过门槛在新建会议时二选一：宪章第 27 条的至少 9 票赞成，或有表决权国家的三分之二多数；两种口径均须无常任理事国否决，且弃权未达简单多数（按有表决权席数计）。安理会门槛选「宪章第 27 条」时所有出席理事国都默认拥有决议草案表决权；选「有表决权国家的三分之二多数」时非常任理事国须点名选「出席并投票」才拥有表决权，五个常任理事国默认拥有表决权，其否决权在两种门槛下都保留。其他委员会一律为三分之二多数，且仅点名选「出席并投票」者拥有表决权。':'After this motion passes, a fresh roll call is required; once completed the "Substantive Vote" panel opens automatically. All committees (including the Security Council) vote in two rounds: Yes / No / Abstain in Round 1 count directly, and only those voting "Pass" proceed to Round 2. The Security Council threshold is chosen when the meeting is created: either Article 27 of the Charter with at least 9 affirmative votes, or a two-thirds majority of the members holding a vote. Under either rule no permanent member may veto, and abstentions must not reach a simple majority (counted on seats holding voting rights). In the Security Council, when the threshold is "Article 27" every present member holds a vote on draft resolutions by default; when it is “two-thirds of the members present” elected (non-permanent) members must be marked “Present and voting” to vote, while the five permanent members hold a vote by default — though the permanent members’ veto still applies under either threshold. All other committees always use a two-thirds majority, where only delegations marked "Present and voting" may vote.',
+  '本动议通过后需重新点名，点名完成将自动进入「实质性表决文件」栏目。所有委员会（含安理会）均为两轮表决：第一轮投赞成 / 反对 / 弃权者直接计入计票，仅投「过」者进入第二轮。安理会通过门槛在新建会议时二选一：宪章第 27 条的至少 9 票赞成，或有表决权国家的三分之二多数；两种口径均须无常任理事国否决，且弃权未达简单多数（按有表决权席数计）。安理会门槛选「宪章第 27 条」时所有出席理事国都默认拥有决议草案表决权；选「有表决权国家的三分之二多数」时非常任理事国须点名选「出席并投票」才拥有表决权，五个常任理事国默认拥有表决权，其否决权在两种门槛下都保留。其他委员会一律为三分之二多数，且仅点名选「出席并投票」者拥有表决权。':'After this motion passes, a fresh roll call is required; once completed the "Substantive Vote" panel opens automatically. All committees (including the Security Council) vote in two rounds: Yes / No / Abstain in Round 1 count directly, and only those voting "Pass" proceed to Round 2. The Security Council threshold is chosen when the meeting is created: either Article 27 of the Charter with at least 9 affirmative votes, or a two-thirds majority of the members holding a vote. Under either rule no permanent member may veto, and abstentions must not reach a simple majority (counted on seats holding voting rights). In the Security Council, when the threshold is "Article 27" every present member holds a vote on draft resolutions by default; when it is “a two-thirds majority of the members holding a vote” elected (non-permanent) members must be marked “Present and voting” to vote, while the five permanent members hold a vote by default — though the permanent members’ veto still applies under either threshold. All other committees always use a two-thirds majority, where only delegations marked "Present and voting" may vote.',
   '本动议通过后将开启主发言名单并自动跳转至该栏目（按加入顺序依序发言，不分轮次）。':'Once passed, the GSL opens and the view switches to it (delegations speak in the order added, with no rounds).',
   '个人演讲仅允许 1 个国家参与，请在上方选择演讲国。':'An individual speech allows only 1 delegation; select the speaker above.',
   '自由辩论不规定参与国家，通过后按设定时长自由发言。':'Open debate does not restrict participating delegations; after it passes, anyone may speak within the set time.',
@@ -2645,7 +2668,7 @@ Object.assign(I18N, {
   '会议流程':'Meeting Flow',
   '新建会议：填写会议信息（含会期区间）、载入或手填代表名单（国家全称按联合国官方国名自动填充）。':'New Meeting: fill in meeting info (with a date range), then load the sample list or enter delegations manually (full names are filled automatically using official UN country names).',
   '点名：每国有三个按钮，顺序为「出席并投票」（绿色，居首）→「出席」（蓝色）→「缺席」。「出席并投票」与「出席」都计入出席数并拥有程序性动议的投票权，但只有前者拥有决议草案表决权（安理会的例外见下面两条）。汇总栏并列显示两套基数：法定出席数、20% 多数、简单多数、三分之二多数按出席数计，用于程序性动议；「有表决权 2/3 多数」与「有表决权简单多数」按有表决权国家数计，用于决议草案表决；这两项随点名逐次实时更新，未点名时为 0。':'Roll call: each delegation has three buttons, ordered "Present and voting" (green, first), then "Present" (blue), then "Absent". Both "Present and voting" and "Present" count toward attendance and hold the vote on procedural motions, but only the former holds the vote on draft resolutions (see the Security Council exceptions below). The summary strip shows two bases side by side: quorum, the 20% threshold, simple majority and two-thirds majority are counted on attendance and serve procedural motions, while "Two-thirds of voters" and "Simple majority of voters" are counted on the members holding a vote and serve the draft-resolution vote, updating live with every roll-call mark and reading 0 until the roll is taken.',
-  '实质性表决文件：单独栏目、使用国家全称。动议通过后须重新点名，点名完成自动进入本栏目；第一轮可投赞成 / 反对 / 弃权 / 过，选「过」者进入第二轮，第二轮仅可赞成或反对。所有委员会（含安理会）均为两轮制。安理会通过门槛在新建会议时二选一：宪章第 27 条的至少 9 票赞成，或有表决权国家的三分之二多数；两种口径均须无常任理事国（★）否决，且弃权未达简单多数（按有表决权席数计）。安理会门槛选「宪章第 27 条」时所有出席理事国均默认拥有决议草案表决权，点名时无需区分「出席」与「出席并投票」；门槛选「有表决权国家的三分之二多数」时非常任理事国须点名选「出席并投票」才拥有表决权，五个常任理事国默认拥有表决权，其一票否决权在两种门槛下都保留。其他委员会一律为三分之二多数，且仅点名选「出席并投票」者拥有表决权。':'Substantive votes on documents: a dedicated panel using full country names. After the motion passes, a fresh roll call is required; once completed the panel opens automatically. Round 1 allows Yes / No / Abstain / Pass; those choosing "Pass" proceed to Round 2, where only Yes or No is allowed. All committees (including the Security Council) use two rounds. The Security Council threshold is chosen when the meeting is created: either Article 27 of the Charter with at least 9 affirmative votes, or a two-thirds majority of the members holding a vote. Under either rule no permanent member (★) may veto, and abstentions must not reach a simple majority (counted on seats holding voting rights). In the Security Council, when the threshold is "Article 27" every present member holds a vote on draft resolutions by default; when it is “two-thirds of the members present” elected (non-permanent) members must be marked “Present and voting” to vote, while the five permanent members hold a vote by default — though the permanent members’ veto still applies under either threshold. All other committees always use a two-thirds majority, where only delegations marked "Present and voting" may vote.',
+  '实质性表决文件：单独栏目、使用国家全称。动议通过后须重新点名，点名完成自动进入本栏目；第一轮可投赞成 / 反对 / 弃权 / 过，选「过」者进入第二轮，第二轮仅可赞成或反对。所有委员会（含安理会）均为两轮制。安理会通过门槛在新建会议时二选一：宪章第 27 条的至少 9 票赞成，或有表决权国家的三分之二多数；两种口径均须无常任理事国（★）否决，且弃权未达简单多数（按有表决权席数计）。安理会门槛选「宪章第 27 条」时所有出席理事国均默认拥有决议草案表决权，点名时无需区分「出席」与「出席并投票」；门槛选「有表决权国家的三分之二多数」时非常任理事国须点名选「出席并投票」才拥有表决权，五个常任理事国默认拥有表决权，其一票否决权在两种门槛下都保留。其他委员会一律为三分之二多数，且仅点名选「出席并投票」者拥有表决权。':'Substantive votes on documents: a dedicated panel using full country names. After the motion passes, a fresh roll call is required; once completed the panel opens automatically. Round 1 allows Yes / No / Abstain / Pass; those choosing "Pass" proceed to Round 2, where only Yes or No is allowed. All committees (including the Security Council) use two rounds. The Security Council threshold is chosen when the meeting is created: either Article 27 of the Charter with at least 9 affirmative votes, or a two-thirds majority of the members holding a vote. Under either rule no permanent member (★) may veto, and abstentions must not reach a simple majority (counted on seats holding voting rights). In the Security Council, when the threshold is "Article 27" every present member holds a vote on draft resolutions by default; when it is “a two-thirds majority of the members holding a vote” elected (non-permanent) members must be marked “Present and voting” to vote, while the five permanent members hold a vote by default — though the permanent members’ veto still applies under either threshold. All other committees always use a two-thirds majority, where only delegations marked "Present and voting" may vote.',
   '回退：误点后按状态栏「回退」或 Ctrl+Z 可撤销上一步，该操作产生的纪要条目一并移除。':'Undo: after a mis-click, press Undo in the status bar or Ctrl+Z to revert the last step; any minutes entry it produced is removed too.',
   '暂时休会不计时，由主席决定复会；复会后须重新点名，点名完成后自动进入「主发言名单」栏目（新建会议首次点名完成后同样自动进入）。':'A recess does not run the timer; the Chair decides when to resume. Roll call repeats afterwards and the GSL panel opens automatically once it finishes (the same applies after the first roll call of a new meeting).',
   '永久休会后会议正式结束，首页显示「会议结束」，不再提供继续入口，但仍可查看全部内容与导出数据。':'After adjournment the meeting formally ends: the home page shows "Meeting Ended" with no continue button, though all content remains viewable and exportable.',
@@ -2827,7 +2850,7 @@ Object.assign(I18N, {
   '已直接计入计票':'already counted directly',
   /* —— 新建会议表单：删除主席团与否决权勾选 —— */
   '常任理事国（安理会拥有否决权）':'Permanent member (holds the veto in the Security Council)',
-  '勾选后：下方代表名单中的五个常任理事国（中华人民共和国、法兰西共和国、俄罗斯联邦、大不列颠及北爱尔兰联合王国、美利坚合众国）会自动获得否决权并标记 ★，其余代表团无否决权；未勾选时任何代表团都没有否决权。安理会中若通过门槛选「宪章第 27 条」，所有出席理事国都拥有实质性表决文件的投票权，点名时无需区分「出席」与「出席并投票」；若选「有表决权国家的三分之二多数」，则非常任理事国须点名选「出席并投票」才计入文件表决池，而五个常任理事国默认拥有表决权、点名时无需特意区分，且其一票否决权在两种门槛下都保留。非安理会委员会须在点名时选「出席并投票」才计入文件表决池。':'When checked, the five permanent members in the delegation list below (China, France, the Russian Federation, the United Kingdom and the United States) automatically receive the veto and are marked ★; other delegations have none. When unchecked, no delegation has a veto. In the Security Council, if the threshold is "Article 27" every present member holds voting rights on substantive documents and roll call need not distinguish “Present” from “Present and voting”; if it is “two-thirds of the members present” elected (non-permanent) members must be marked “Present and voting” to enter the document voting pool, while the five permanent members hold a vote by default — and the permanent members’ veto applies under either threshold. Other committees must always mark “Present and voting” to be included in the document voting pool.',
+  '勾选后：下方代表名单中的五个常任理事国（中华人民共和国、法兰西共和国、俄罗斯联邦、大不列颠及北爱尔兰联合王国、美利坚合众国）会自动获得否决权并标记 ★，其余代表团无否决权；未勾选时任何代表团都没有否决权。安理会中若通过门槛选「宪章第 27 条」，所有出席理事国都拥有实质性表决文件的投票权，点名时无需区分「出席」与「出席并投票」；若选「有表决权国家的三分之二多数」，则非常任理事国须点名选「出席并投票」才计入文件表决池，而五个常任理事国默认拥有表决权、点名时无需特意区分，且其一票否决权在两种门槛下都保留。非安理会委员会须在点名时选「出席并投票」才计入文件表决池。':'When checked, the five permanent members in the delegation list below (China, France, the Russian Federation, the United Kingdom and the United States) automatically receive the veto and are marked ★; other delegations have none. When unchecked, no delegation has a veto. In the Security Council, if the threshold is "Article 27" every present member holds voting rights on substantive documents and roll call need not distinguish “Present” from “Present and voting”; if it is “a two-thirds majority of the members holding a vote” elected (non-permanent) members must be marked “Present and voting” to enter the document voting pool, while the five permanent members hold a vote by default — and the permanent members’ veto applies under either threshold. Other committees must always mark “Present and voting” to be included in the document voting pool.',
   '输入国家简称后，「全称」会按联合国官方公布的国名自动填充（如「荷兰」→「荷兰王国」）；也可自行修改，留空则在保存时自动填充，无对照则沿用简称。否决权无需手动勾选：仅当上方勾选「联合国安全理事会」时，五个常任理事国自动拥有否决权并显示 ★。':'After you type a short name, the "Full name" field is filled automatically using the official country names published by the United Nations. You may edit it; if left blank it is filled on save, and unknown names are kept as typed. The veto needs no manual ticking: only when "UN Security Council" is checked above do the five permanent members hold it, shown as ★.',
   '非安理会，无否决权':'not the Security Council — no veto',
   '席':'seat(s)',
@@ -2849,7 +2872,7 @@ Object.assign(I18N, {
   '评定奖项':'Award granted','导出时间':'Exported at',
   '天中模联 · THSMUN':'THSMUN',
   '立足天台 · 放眼世界。':'Rooted in Tiantai, facing the world.',
-  '本系统（THSMUN OS）为社团会议量身打造，覆盖点名、主发言名单、动议裁定、实质性表决文件两轮投票（安理会门槛在新建会议时选定：宪章 9 票制或出席国家三分之二多数，并含否决权）、计时、文件流转、表决结果图表化呈现与历次表决回看、纪要导出、统计评奖与中英双语的完整流程，参照安理会等委员会的真实议事规则设计，供主席团与代表在会议中直接使用。':'Built for THSMUN, this system (THSMUN OS) covers the complete workflow: roll call, the general speaker list, motion rulings, two-round substantive votes on documents (the Security Council threshold — either the Charter 9-vote rule or a two-thirds majority of the members holding a vote — is chosen when the meeting is created, and the veto applies), timing, document handling, charted vote results with vote-history review, minutes export, statistics and awards, and full Chinese/English bilingual support. It follows the real rules of procedure of committees such as the Security Council, for direct use by chairs and delegates.',
+  '本系统（THSMUN OS）为社团会议量身打造，覆盖点名、主发言名单、动议裁定、实质性表决文件两轮投票（安理会门槛在新建会议时选定：宪章 9 票制或有表决权国家的三分之二多数，并含否决权）、计时、文件流转、表决结果图表化呈现与历次表决回看、纪要导出、统计评奖与中英双语的完整流程，参照安理会等委员会的真实议事规则设计，供主席团与代表在会议中直接使用。':'Built for THSMUN, this system (THSMUN OS) covers the complete workflow: roll call, the general speaker list, motion rulings, two-round substantive votes on documents (the Security Council threshold — either the Charter 9-vote rule or a two-thirds majority of the members holding a vote — is chosen when the meeting is created, and the veto applies), timing, document handling, charted vote results with vote-history review, minutes export, statistics and awards, and full Chinese/English bilingual support. It follows the real rules of procedure of committees such as the Security Council, for direct use by chairs and delegates.',
   '纪要为历史记录，按写入时的界面语言定稿，不随语言切换而重译；导出的纪要同样保留当时的语言。':'Minutes are historical records: each entry is finalised in the interface language at the time it was written and is not re-translated when the language changes. Exported minutes likewise keep their original language.',
   '确认操作':'Confirm Action',
   /* —— 发言名单「结束名单」 —— */
@@ -3108,7 +3131,10 @@ function syncUndoBtn(){
   var m = cur();
   var n = (m && m.undo) ? m.undo.length : 0;
   var show2 = viewActive('meeting') && n > 0;
+  var sbWasHidden = b.style.display === 'none';
   b.style.display = show2 ? '' : 'none';
+  /* v34：撤销按钮出现时淡入 */
+  if (show2 && sbWasHidden && !sprReduce() && b.animate) b.animate([{ opacity: 0, transform: 'scale(.92)' }, { opacity: 1, transform: 'none' }], { duration: 180, easing: 'ease-out' });
   var last = (show2 && m.undo.length) ? m.undo[m.undo.length - 1] : null;
   /* 英文模式用半角括号，避免中英标点混排 */
   /* 标签走 undoLabel：英文为名词短语，缺失时回落中文而非留空 */
@@ -3213,19 +3239,25 @@ function paintDockLabels(){
   }
 }
 function viewActive(v){ var el = document.getElementById('view-' + v); return !!el && el.classList.contains('active'); }
+/* v34：标题变化轻淡入（切换面板/视图时避免生硬跳变；值未变则完全不动） */
+function sbTitleSet(txt){
+  var el = document.getElementById('sbTitle'); if (!el || el.textContent === txt) return;
+  el.textContent = txt;
+  if (!sprReduce() && el.animate) el.animate([{ opacity: .3 }, { opacity: 1 }], { duration: 180, easing: 'ease-out' });
+}
 function syncStatusBar(){
   var sbTitle = document.getElementById('sbTitle'), sbExit = document.getElementById('sbExit');
   var m = cur();
   if (viewActive('meeting') && m) {
-    sbTitle.textContent = m.name + (TAB_NAMES[state.tab] ? ' · ' + tabName(state.tab) : '');
+    sbTitleSet(m.name + (TAB_NAMES[state.tab] ? ' · ' + tabName(state.tab) : ''));
     setSbTxt('sbExit', t('退出会议'));
     sbExit.style.display = '';
   } else if (viewActive('setup')) {
-    sbTitle.textContent = t('新建会议');
+    sbTitleSet(t('新建会议'));
     setSbTxt('sbExit', t('返回首页'));
     sbExit.style.display = '';
   } else {
-    sbTitle.textContent = t('天中模联会议系统');
+    sbTitleSet(t('天中模联会议系统'));
     sbExit.style.display = 'none';
   }
   syncLiveChips(); syncUndoBtn();
@@ -3290,17 +3322,31 @@ function syncLiveChips(){
   /* v29：文案与颜色全部由 meetingPhase 派生，不再各算一套、不再只看对象是否存在 */
   var ph = meetingPhase(m), spec = PHASES[ph] || PHASES.idle;
   live.className = 'sb-chip live ' + spec.cls;
-  setSbTxt('sbLive', t(spec.txt));
+  var liveSp = live.querySelector('.sb-txt');
+  var liveTxt = t(spec.txt);
+  if (liveSp && liveSp.textContent !== liveTxt) {
+    liveSp.textContent = liveTxt;
+    /* v34：会议阶段切换时文字上滑淡入（背景色过渡由 .sb-chip 既有 transition 承担） */
+    if (!sprReduce() && liveSp.animate) liveSp.animate([{ opacity: 0, transform: 'translateY(4px)' }, { opacity: 1, transform: 'none' }], { duration: 160, easing: 'ease-out' });
+  } else if (liveSp) liveSp.textContent = liveTxt;
   live.title = t(spec.txt);
   live.style.display = spec.live ? '' : 'none';
   quorum.style.display = '';
-  qv.textContent = presentCount(m) + '/' + m.delegates.length;
+  var qvTxt = presentCount(m) + '/' + m.delegates.length;
+  if (qv.textContent !== qvTxt) {
+    qv.textContent = qvTxt;
+    /* v34：法定数字变化轻弹一次（合成器；值未变则完全不动，高频点名零成本） */
+    if (!sprReduce() && qv.animate) qv.animate([{ transform: 'scale(1)' }, { transform: 'scale(1.2)' }, { transform: 'scale(1)' }], { duration: 200, easing: 'cubic-bezier(.34,1.56,.64,1)' });
+  }
   quorum.childNodes[0].nodeValue = t('法定') + ' ';
 }
 function updateDockBadges(){
   var m = cur();
   /* v33：badge 数字变化时轻弹一次（scale 回弹曲线，合成器动画；值未变则完全不动） */
-  function setB(id, n){ var el = document.getElementById(id); if (!el) return; var vs = n > 99 ? '99+' : String(n); if (el.textContent !== vs) { el.textContent = vs; if (!sprReduce() && el.animate) el.animate([{ transform: 'scale(1)' }, { transform: 'scale(1.22)' }, { transform: 'scale(1)' }], { duration: 200, easing: 'cubic-bezier(.34,1.56,.64,1)' }); } el.classList.toggle('on', n > 0); }
+  function setB(id, n){ var el = document.getElementById(id); if (!el) return; var vs = n > 99 ? '99+' : String(n); if (el.textContent !== vs) { el.textContent = vs; if (!sprReduce() && el.animate) el.animate([{ transform: 'scale(1)' }, { transform: 'scale(1.22)' }, { transform: 'scale(1)' }], { duration: 200, easing: 'cubic-bezier(.34,1.56,.64,1)' }); }
+  var wasOn = el.classList.contains('on'); el.classList.toggle('on', n > 0);
+  /* v34：徽标从无到有弹入（熄灭保持瞬时——.on 移除即 display:none，缩出动画不可见） */
+  if (n > 0 && !wasOn && !sprReduce() && el.animate) el.animate([{ opacity: 0, transform: 'scale(.4)' }, { opacity: 1, transform: 'scale(1)' }], { duration: 200, easing: 'cubic-bezier(.34,1.56,.64,1)' }); }
   if (!m) { setB('badge-roll', 0); setB('badge-gsl', 0); setB('badge-speakers', 0); setB('badge-motions', 0); setB('badge-docvote', 0); setB('badge-docs', 0); return; }
   var pendingRoll = 0;
   for (var i = 0; i < m.delegates.length; i++) if (!m.delegates[i].roll) pendingRoll++;
@@ -3323,6 +3369,7 @@ function updateDockBadges(){
    无网络请求、无签名时效，部署到任何环境都不会过期或图裂 */
 function bindLogos(){ var imgs = document.querySelectorAll('img.js-logo'); for (var i = 0; i < imgs.length; i++) if (!imgs[i].src) imgs[i].src = BADGE_DATA_URI; }
 function askConfirm(title, msg, cb, okText){
+  modalCloseSeq++;   /* v34：新弹窗打开即作废进行中的关闭动画，防止其 onfinish 把本弹窗藏掉 */
   modalCb = cb;
   document.getElementById('modalTitle').textContent = normalizePunct(title);
   document.getElementById('modalMsg').textContent = normalizePunct(msg);
@@ -3334,6 +3381,7 @@ function askConfirm(title, msg, cb, okText){
   document.getElementById('modalMask').classList.add('on');
 }
 function askInfo(title, bodyHtml){
+  modalCloseSeq++;   /* v34：同上，链式打开保护 */
   modalCb = null;
   document.getElementById('modalTitle').textContent = normalizePunct(title);
   document.getElementById('modalMsg').innerHTML = bodyHtml;
@@ -3357,15 +3405,28 @@ function showPreviewModal(title, bodyHtml){
 }
 /* 预览会话令牌：关闭弹窗即自增，使进行中的异步解析结果失效 */
 var previewSeq = 0;
+/* v34：关闭序列号——任何新弹窗打开（askConfirm/askInfo 设 on）即自增作废进行中的关闭动画，
+   防止旧关闭回调把刚打开的弹窗藏掉；动画被取消时走 oncancel 兜底 */
+var modalCloseSeq = 0;
 function closeModal(){
-  document.getElementById('modalMask').classList.remove('on');
+  var mask = document.getElementById('modalMask');
+  var box = mask ? mask.querySelector('.modal') : null;
   previewSeq++;
   modalCb = null;
-  /* 复位为默认文案，避免残留上一次弹窗的标题与按钮文字 */
-  document.getElementById('modalTitle').textContent = t('确认操作');
-  document.getElementById('modalMsg').textContent = '';
-  document.getElementById('modalOk').textContent = t('确认删除');
-  document.getElementById('modalCancel').textContent = t('取消');
+  var finishClose = function(){
+    mask.classList.remove('on');
+    /* 复位为默认文案，避免残留上一次弹窗的标题与按钮文字 */
+    document.getElementById('modalTitle').textContent = t('确认操作');
+    document.getElementById('modalMsg').textContent = '';
+    document.getElementById('modalOk').textContent = t('确认删除');
+    document.getElementById('modalCancel').textContent = t('取消');
+  };
+  if (mask.classList.contains('on') && !sprReduce() && box && box.animate) {
+    var mySeq = ++modalCloseSeq;
+    var closeAnim = box.animate([{ opacity: 1, transform: 'none' }, { opacity: 0, transform: 'scale(.96) translateY(6px)' }], { duration: 140, easing: 'ease-in' });
+    closeAnim.onfinish = function(){ if (mySeq === modalCloseSeq) finishClose(); };
+    closeAnim.oncancel = function(){ if (mySeq === modalCloseSeq) finishClose(); };
+  } else finishClose();
 }
 document.getElementById('modalCancel').onclick = closeModal;
 document.getElementById('modalOk').onclick = function(){ var cb = modalCb; closeModal(); if (cb) cb(); };
@@ -3455,12 +3516,12 @@ Object.assign(I18N, {
   '表决结果呈现：宣布结果后，结论条下方给出「表决结果详情」——票型构成环形图（赞成 / 反对 / 弃权及占比）、门槛达成条形（赞成对比通过门槛、弃权对比弃权阻断线，同基线并列，可直接看出差几票或弃权是否踩线）、以及逐国投票明细（国家全称、★ 常任理事国标记，行使否决权者红色高亮并标注「否决权行使」）。全部数字取自宣布结果当时留存的快照，此后点名状态变化不会改写已宣布的结果。':'Vote result display: once the result is announced, a "Vote result detail" block appears below the verdict bar — a donut chart of the breakdown (in favour / against / abstention, with percentages), threshold bars (affirmative votes against the passing threshold, abstentions against the abstention block line, drawn on the same baseline so you can see at a glance how many votes short it fell or whether abstentions crossed the line), and a roll-call detail list (full country names, ★ for permanent members, and any permanent member casting a veto highlighted in red and labelled "Veto exercised"). Every figure comes from the snapshot taken when the result was announced, so later roll-call changes never rewrite an announced result.',
   '历次表决回看：一场会议往往要表决多份决议草案，而表决面板一次只承载当前这一份。因此每次宣布结果都会固化为一条历史记录（票数、门槛口径、否决情况、逐国票与宣布时间），随会议存档一并保存，最多留存 50 条。结果卡片上方的「历次表决」胶囊条列出全部记录，最近的排在最前，绿点为通过、红点为未通过或被否决，点击即可回看任意一份文件的表决情况；开始新表决、取消表决或切换会议时自动回到最近一次。回看是只读的，不会改动任何会议数据。':'Vote history: one meeting usually votes on several draft resolutions while the voting panel carries only the current one, so each announced result is frozen into a history record (tally, threshold basis, vetoes, roll-call votes and announcement time), saved with the meeting archive, up to 50 records. The "Vote history" pill strip above the result card lists them all — most recent first, green dot for adopted, red dot for not adopted or vetoed — and clicking one shows the result of that document again. Starting a new vote, cancelling a vote or switching meetings returns the view to the most recent record. Reviewing is read-only and never changes meeting data.',
   '所有会议与上传文件默认仅保存在当前浏览器本地，不会自动上传到任何外部服务；只有当你主动点击「导出全部存档」时，才会生成一个文件由你自行保管或传输。历次表决记录属于会议数据，会随存档保存并一同导出；撤销记录不写入存档，以节省本地空间。':'All meetings and uploaded files are stored in this browser only by default and are never uploaded automatically. A file is produced only when you click "Export All Archives", for you to keep or transfer yourself. Vote history records are part of the meeting data and are saved and exported with the archive. Undo history is not written into archives, saving local space.',
-  '本系统（THSMUN OS）为社团会议量身打造，覆盖点名、主发言名单、动议裁定、实质性表决文件两轮投票（安理会门槛在新建会议时选定：宪章 9 票制或出席国家三分之二多数，并含否决权）、计时、文件流转、表决结果图表化呈现与历次表决回看、纪要导出、打印存档、统计评奖、投屏模式、多设备存档同步与中英双语的完整流程，参照安理会等委员会的真实议事规则设计，供主席团与代表在会议中直接使用。':'Built for THSMUN, this system (THSMUN OS) covers the complete workflow: roll call, the general speaker list, motion rulings, two-round substantive votes on documents (the Security Council threshold — either the Charter 9-vote rule or a two-thirds majority of the members holding a vote — is chosen when the meeting is created, and the veto applies), timing, document handling, charted vote results with vote-history review, minutes export, printable archives, statistics and awards, projection mode, multi-device archive sync, and full Chinese/English bilingual support. It follows the real rules of procedure of committees such as the Security Council, for direct use by chairs and delegates.'
+  '本系统（THSMUN OS）为社团会议量身打造，覆盖点名、主发言名单、动议裁定、实质性表决文件两轮投票（安理会门槛在新建会议时选定：宪章 9 票制或有表决权国家的三分之二多数，并含否决权）、计时、文件流转、表决结果图表化呈现与历次表决回看、纪要导出、打印存档、统计评奖、投屏模式、多设备存档同步与中英双语的完整流程，参照安理会等委员会的真实议事规则设计，供主席团与代表在会议中直接使用。':'Built for THSMUN, this system (THSMUN OS) covers the complete workflow: roll call, the general speaker list, motion rulings, two-round substantive votes on documents (the Security Council threshold — either the Charter 9-vote rule or a two-thirds majority of the members holding a vote — is chosen when the meeting is created, and the veto applies), timing, document handling, charted vote results with vote-history review, minutes export, printable archives, statistics and awards, projection mode, multi-device archive sync, and full Chinese/English bilingual support. It follows the real rules of procedure of committees such as the Security Council, for direct use by chairs and delegates.'
 });
 /* 词典补充（十二）：安理会表决权随门槛口径变化（patch101/102 配套） */
 Object.assign(I18N, {
   '决议草案表决规则：以「有决议草案表决权国家」为基数，赞成须达其三分之二多数，且弃权票不得超过其简单多数，方可通过（安理会宪章 9 票制的弃权简单多数同样按实际有表决权席数计算，不按 15 国固定）；安理会采用三分之二口径时，五个常任理事国另有一票否决权。安理会采用宪章第 27 条口径时：赞成须达 9 票、无常任理事国否决，且弃权票不得达到有表决权国家席数的简单多数（满席 15 国时为 8 票，不满席时按实际有表决权席数计算）。点名栏目的汇总条同时列出两种基数：「三分之二多数」按出席数计（用于程序性动议），「有表决权 2/3 多数」与「有表决权简单多数」按有表决权国家计（用于决议草案），两者都随点名逐次实时更新，与表决面板显示的门槛同源。':'Draft resolution voting: counted on the members holding a vote on documents. It passes only with affirmative votes reaching a two-thirds majority of them and abstentions below a simple majority of them (the Article 27 threshold of the Security Council also counts the abstention simple majority on the seats actually holding a vote, not on a fixed 15); under the Security Council\'s two-thirds threshold the five permanent members also hold a veto. Under the Security Council\'s Article 27 threshold the rule is unchanged: at least 9 affirmative votes, no permanent-member veto, and abstentions below a simple majority of the seats holding a vote (8 when all 15 Council members are present, otherwise counted on the actual number). The roll call summary strip lists both bases: "Two-thirds Majority" counts attendance (for procedural motions), while "Two-thirds of voters" and "Simple majority of voters" count the members holding a vote (for draft resolutions); both update live with every roll-call mark and share the same basis as the threshold shown in the voting panel.',
-  '安理会表决权随门槛口径变化：门槛选「宪章第 27 条」时，所有出席理事国都有实质性文件表决权，点名无需区分「出席」与「出席并投票」；门槛选「有表决权国家的三分之二多数」时，非常任理事国须点名选「出席并投票」才有文件表决权（点名须区分），而五个常任理事国默认拥有表决权；两种门槛下五个常任理事国的一票否决权都保留。':'Security Council voting rights follow the threshold: with "Article 27" every present member holds a vote on substantive documents and roll call need not distinguish "Present" from "Present and voting"; with “two-thirds of the members present” elected (non-permanent) members must be marked “Present and voting” to vote (so roll call must distinguish them), while the five permanent members hold a vote by default. Under either threshold the five permanent members keep their veto.'
+  '安理会表决权随门槛口径变化：门槛选「宪章第 27 条」时，所有出席理事国都有实质性文件表决权，点名无需区分「出席」与「出席并投票」；门槛选「有表决权国家的三分之二多数」时，非常任理事国须点名选「出席并投票」才有文件表决权（点名须区分），而五个常任理事国默认拥有表决权；两种门槛下五个常任理事国的一票否决权都保留。':'Security Council voting rights follow the threshold: with "Article 27" every present member holds a vote on substantive documents and roll call need not distinguish "Present" from "Present and voting"; with “a two-thirds majority of the members holding a vote” elected (non-permanent) members must be marked “Present and voting” to vote (so roll call must distinguish them), while the five permanent members hold a vote by default. Under either threshold the five permanent members keep their veto.'
 });
 /* 词典补充（十三）：门槛名称与计算基数对齐（patch105）。
    注：门槛名「有表决权国家的三分之二多数」的英文由 patch105 全量改名时同步落在原词典条目上，
@@ -3476,7 +3537,7 @@ Object.assign(I18N, {
      拆为「前缀 + 席数 + 后缀」三段，英文语序为
      and abstentions below a simple majority of the <N> members holding a vote */
   '且弃权未达有表决权国家':'and abstentions below a simple majority of the',
-  '席的简单多数':'members holding a vote'
+  '席的简单多数':'members holding a vote, i.e.',
 });
 /* SECTION: js-home */
 function renderHome(){
@@ -4519,7 +4580,6 @@ function delName(m, delId){
   for (var i = 0; i < m.delegates.length; i++) if (m.delegates[i].id === delId) return cnShort(m.delegates[i].country) + (m.delegates[i].veto ? ' ★' : '');
   return t('未知代表团');
 }
-function isSubstantive(mo){ return mo.type === 'vote'; }
 /* 休会/闭幕期间拦截会议推进操作；返回 true 表示已被拦截 */
 function guardSuspended(m){
   if (!m || m.status === 'active' || !m.status) return false;
@@ -4568,16 +4628,6 @@ function abortPendingAgenda(m, queuedMsg, voteMsg){
 function bumpStat(m, delId, key){
   if (!m.stats[delId]) m.stats[delId] = { speeches: 0, votes: 0 };
   m.stats[delId][key] = (m.stats[delId][key] || 0) + 1;
-}
-/* 是否已发生过至少一次表决（任一已裁定的动议，或已完成过实质性表决文件） */
-function hasAnyVote(m){
-  if (!m) return false;
-  if (m.hasVotedOnce) return true;
-  for (var i = 0; i < (m.motions || []).length; i++) {
-    var s = m.motions[i].status;
-    if (s === 'passed' || s === 'failed') return true;
-  }
-  return false;
 }
 /* SECTION: js-banner */
 /* perf-banner-guard-v28 —— renderMeetingBanner 是 renderTab 每次都调用的函数，此前无任何守卫：
@@ -5061,7 +5111,7 @@ document.getElementById('btnGslAdd').onclick = function(){
   if (guardSuspended(m)) return;
   var delId = document.getElementById('gslSelect').value;
   var sec = Math.max(30, parseInt(document.getElementById('gslSeconds').value, 10) || m.gslSec || 120);
-  if (!delId) { toast(t('请先添加代表团')); return; }
+  if (!delId) { shakeEl(document.getElementById('gslSelect')); toast(t('请先添加代表团')); return; }
   migrateGsl(m);
   snapshot(m, '加入主发言名单');
   m.gsl.push({ delId: delId, seconds: sec, done: false });
@@ -5209,10 +5259,6 @@ function endCaucus(m, reason){
   m.modCaucus.active = false;
   log(m, t('有主持核心磋商结束') + (reason ? '（' + reason + '）' : ''));
 }
-function caucusRemaining(m){
-  var c = m && m.modCaucus;
-  return (c && c.active) ? Math.max(0, c.remainingSec | 0) : 0;
-}
 /* 每秒定点刷新磋商剩余时长的各处显示：只改文本、class 与进度条宽度，不重建 DOM。
    刻意不调用 renderSpeakers —— 那会重建 innerHTML、重绑 onclick、丢失焦点并造成闪烁。 */
 /* 发言队列（GSL 待发言队列 / 磋商发言队列）的定点渲染。
@@ -5295,10 +5341,25 @@ function paintQueue(container, items, emptyText){
         if (!paintQueueItem(old[i], items[i], i)) { prefixOk = false; break; }
       }
       if (prefixOk) {
-        /* 2) 追加新增条目（加入国家的主路径） */
-        for (i = common; i < items.length; i++) wrap.appendChild(buildQueueItem(items[i], i));
-        /* 3) 截断尾部多余条目（发言完毕自动移出队列） */
-        while (wrap.children.length > items.length) wrap.removeChild(wrap.children[wrap.children.length - 1]);
+        /* 2) 追加新增条目（加入国家的主路径）——v34：新行弹入 */
+        for (i = common; i < items.length; i++) {
+          var qNew = buildQueueItem(items[i], i);
+          wrap.appendChild(qNew);
+          if (!sprReduce() && qNew.animate) qNew.animate([{ opacity: 0, transform: 'translateY(6px) scale(.97)' }, { opacity: 1, transform: 'none' }], { duration: 220, easing: 'cubic-bezier(.22,1,.36,1)' });
+        }
+        /* 3) 截断尾部多余条目（发言完毕自动移出队列）——v34：留在原位淡出，动画完再真删；
+           data-leaving 防止高频重入对同一行重复播动画；每次只处理最尾一行，多行移除自然级联 */
+        while (wrap.children.length > items.length) {
+          var qDel = wrap.children[wrap.children.length - 1];
+          if (qDel.getAttribute('data-leaving')) break;
+          qDel.setAttribute('data-leaving', '1');
+          if (sprReduce() || !qDel.animate) { wrap.removeChild(qDel); continue; }
+          (function(qEl){
+            var qAnim = qEl.animate([{ opacity: 1 }, { opacity: 0, transform: 'translateY(-4px)' }], { duration: 150, easing: 'ease-in' });
+            qAnim.onfinish = function(){ if (qEl.parentNode) qEl.parentNode.removeChild(qEl); };
+          })(qDel);
+          break;
+        }
         return;
       }
     }
@@ -5496,7 +5557,7 @@ document.getElementById('btnSpkAdd').onclick = function(){
   var m = cur(); if (!m) return;
   if (guardSuspended(m)) return;
   var delId = document.getElementById('spkSelect').value;
-  if (!delId) { toast(t('请先添加代表团')); return; }
+  if (!delId) { shakeEl(document.getElementById('spkSelect')); toast(t('请先添加代表团')); return; }
   var cc = m.modCaucus;
   /* 磋商进行中：时长取自动议设定的「每位代表发言时长」，不受本栏目输入框影响 */
   var sec = (cc && cc.active)
@@ -6261,22 +6322,25 @@ function docVoteRuleText(m, fv){
      旧存档无 simpleBase 字段时回落为 voting（池规模），语义相同 */
   var simpleBase = (fv && typeof fv.simpleBase === 'number') ? fv.simpleBase : poolN;
   var sc = isSecurityCouncil(m), txt;
+  /* v34：拼接标点随语言切换（英文模式输出半角括号/逗号/分号，避免中英标点混排） */
+  var LP = (LANG === 'en') ? ' (' : '（', RP = (LANG === 'en') ? ')' : '）';
+  var COMMA = (LANG === 'en') ? ', ' : '，', SEMI = (LANG === 'en') ? '; ' : '；';
   if (!sc) {
     txt = t('三分之二多数需') + ' ' + need + ' ' + t('票')
-      + '（' + t('有表决权且出席') + ' ' + poolN + ' ' + t('席为基数，弃权与未表态计入分母') + '）';
+      + LP + t('有表决权且出席') + ' ' + poolN + ' ' + t('席为基数，弃权与未表态计入分母') + RP;
   } else if (nine) {
-    txt = t('安理会需至少') + ' ' + need + ' ' + t('票赞成') + '（' + t('宪章第 27 条') + '）';
+    txt = t('安理会需至少') + ' ' + need + ' ' + t('票赞成') + LP + t('宪章第 27 条') + RP;
   } else {
     txt = t('安理会按三分之二多数需') + ' ' + need + ' ' + t('票')
-      + '（' + t('有表决权且出席') + ' ' + poolN + ' ' + t('席为基数') + '）';
+      + LP + t('有表决权且出席') + ' ' + poolN + ' ' + t('席为基数') + RP;
     /* 主席选了 9 票制但池不足 9 席：说明为何自动回落，避免主席困惑 */
     if (scRuleOf(m) === 'nine') {
-      txt += '；' + t('因有表决权不足') + ' ' + SC_PASS_VOTES + ' ' + t('席，固定') + ' ' + SC_PASS_VOTES
+      txt += SEMI + t('因有表决权不足') + ' ' + SC_PASS_VOTES + ' ' + t('席，固定') + ' ' + SC_PASS_VOTES
         + ' ' + t('票门槛不可达，自动改用三分之二多数');
     }
   }
   /* 弃权阻断表述（patch109）：两种口径一致，基数都是有表决权国家数 */
-  txt += '，' + (sc ? t('且无常任理事国否决') + '，' : '')
+  txt += COMMA + (sc ? t('且无常任理事国否决') + COMMA : '')
     + t('且弃权未达有表决权国家') + ' ' + simpleBase + ' ' + t('席的简单多数')
     + ' ' + simple + ' ' + t('票');
   return txt;
@@ -6446,7 +6510,7 @@ document.getElementById('btnMotionCreate').onclick = function(){
   if (guardSuspended(m)) return;
   var type = document.getElementById('motionType').value;
   var proposer = document.getElementById('motionProposer').value;
-  if (!proposer) { toast(t('请选择提出国')); return; }
+  if (!proposer) { shakeEl(document.getElementById('motionProposer')); toast(t('请选择提出国')); return; }
   /* 标题仍由类型自动生成（test2/test4 锁定该存储格式）；
      自定义内容另存 note 字段，只在显示端追加，避免与类型名重复拼接 */
   var title = motionName(type);
@@ -6462,13 +6526,13 @@ document.getElementById('btnMotionCreate').onclick = function(){
     title = cname;
   }
   var docId = type === 'vote' ? document.getElementById('motionDoc').value : '';
-  if (type === 'vote' && !docId) { toast(t('请先在「文件」页提交需表决的文件')); return; }
+  if (type === 'vote' && !docId) { shakeEl(document.getElementById('motionType')); toast(t('请先在「文件」页提交需表决的文件')); return; }
   if (type === 'vote') {
     var vdoc = findDoc(m, docId);
     if (vdoc) title = motionName(type) + '：' + vdoc.type + '《' + vdoc.title + '》';
   }
   var speechDel = type === 'speech' ? document.getElementById('motionSpeechDel').value : '';
-  if (type === 'speech' && !speechDel) { toast(t('请选择演讲国')); return; }
+  if (type === 'speech' && !speechDel) { shakeEl(document.getElementById('motionSpeechDel')); toast(t('请选择演讲国')); return; }
   if (type === 'speech') title = motionName(type) + '：' + delName(m, speechDel);
   var timed = isTimedMotion(type);
   /* 有主持核心磋商：议题 + 总时长 + 每位代表发言时长 */
@@ -6485,7 +6549,7 @@ document.getElementById('btnMotionCreate').onclick = function(){
   var targetDocId = '';
   if (type === 'postpone' || type === 'resumeDr') {
     targetDocId = document.getElementById('motionTargetDoc').value;
-    if (!targetDocId) { toast(t('请选择目标决议草案')); return; }
+    if (!targetDocId) { shakeEl(document.getElementById('motionTargetDoc')); toast(t('请选择目标决议草案')); return; }
     var tdoc = findDoc(m, targetDocId);
     if (!tdoc) { toast(t('未找到目标决议草案')); return; }
     if (type === 'postpone' && isPostponed(tdoc)) { toast(t('该决议草案已处于延置状态')); return; }
@@ -6934,7 +6998,6 @@ var timers = {
             disp:'spkTimerDisplay', start:'btnSpkTimerStart', pause:'btnSpkTimerPause', resume:'btnSpkTimerResume', src:'mod' }
 };
 var timer = timers.global;
-function timerAt(key){ return timers[key]; }
 /* 当前正在计时的实例（优先发言栏目），供状态栏胶囊显示 */
 function activeTimer(){
   if (timers.spk.running) return timers.spk;
@@ -6992,12 +7055,16 @@ function paintTimerChrome(){
     var sbTxt = fmtSec(T.remaining);
     if (sbV.textContent !== sbTxt) sbV.textContent = sbTxt;
     var sbDisp = (!paused && T.running) ? '' : 'none';
-    if (sbT.style.display !== sbDisp) sbT.style.display = sbDisp;
+    if (sbT.style.display !== sbDisp) {
+      sbT.style.display = sbDisp;
+      /* v34：芯片出现时淡入（消失保持瞬时，避免布局占位问题） */
+      if (sbDisp === '' && !sprReduce() && sbT.animate) sbT.animate([{ opacity: 0, transform: 'scale(.92)' }, { opacity: 1, transform: 'none' }], { duration: 180, easing: 'ease-out' });
+    }
+    /* v34：剩余≤10s 且运行中——状态栏芯片联动主面板警告（红底缓呼吸见 CSS chipBreath） */
+    sbT.classList.toggle('warn', !paused && T.running && T.remaining <= 10);
   }
   paintDockLabels();
 }
-/* 兼容既有调用：以下四个函数默认操作全局计时器实例 */
-function syncTimerUI(){ paintTimerAt(timers.global); paintTimerAt(timers.gsl); paintTimerAt(timers.spk); }
 function paintTimer(){ paintTimerAt(timers.global); }
 function setTimer(sec, remaining){ setTimerAt(timers.global, sec, remaining); }
 function stopTimer(writeLog){ stopTimerAt(timers.global, writeLog); }
@@ -7149,7 +7216,7 @@ document.getElementById('docFile').addEventListener('change', function(){ accept
 document.getElementById('btnDocAdd').onclick = function(){
   var m = cur(); if (!m) return;
   if (guardAdjourned(m)) return;
-  if (!pickedFile) { toast(t('请先选择要上传的 Word 或 PDF 文件')); return; }
+  if (!pickedFile) { shakeEl(document.getElementById('fileDrop')); toast(t('请先选择要上传的 Word 或 PDF 文件')); return; }
   var title = document.getElementById('docTitle').value.trim() || pickedFile.name.replace(/\.[^.]+$/, '');
   var ext = extOf(pickedFile.name);
   var docId = uid();
@@ -7906,6 +7973,17 @@ function renderCharts(m){
   html += panelHtml('参与表决次数', t('前 {n} 位').replace('{n}', 8), barsHtml(topByValue(vo, 8), 'var(--ok)'));
   html += panelHtml('赞助文件数', t('前 {n} 位').replace('{n}', 8), barsHtml(topByValue(dc, 8), 'var(--gold)'));
   box.innerHTML = html;
+  /* v34：环形图生长——条形有 barIn 从零长出，环图补上同语言（沿自身角度扫入一圈）。
+     仅在 renderCharts 真正重建时播放（renderStats 签名守卫保证不闹屏） */
+  var dCircles = box.querySelectorAll('.c-donut circle[stroke-dashoffset]');
+  for (var dc2 = 0; dc2 < dCircles.length; dc2++) {
+    (function(dEl){
+      if (sprReduce() || !dEl.animate) return;
+      var endOff = parseFloat(dEl.getAttribute('stroke-dashoffset')) || 0;
+      var circ = 2 * Math.PI * (parseFloat(dEl.getAttribute('r')) || 48);
+      dEl.animate([{ strokeDashoffset: (endOff - circ * 1.05) + 'px' }, { strokeDashoffset: endOff + 'px' }], { duration: 700, easing: 'cubic-bezier(.22,1,.36,1)' });
+    })(dCircles[dc2]);
+  }
 }
 /* SECTION: js-theme — 深浅主题切换（写法沿用既有 applyProjector/toggleProjector） */
 var THEME_KEY = LS_KEY + '.theme';
@@ -7921,7 +7999,11 @@ function applyTheme(dark){
 }
 function toggleTheme(){
   var dark = !document.body.classList.contains('dark');
+  /* v34：切换瞬间临时启用全局颜色过渡（320ms 后移除，不常驻、零持续开销） */
+  var themeRoot = document.documentElement;
+  themeRoot.classList.add('theme-fade');
   applyTheme(dark);
+  setTimeout(function(){ themeRoot.classList.remove('theme-fade'); }, 320);
   try { localStorage.setItem(THEME_KEY, dark ? '1' : '0'); } catch (e) {}
   toast(dark ? t('已切换深色模式') : t('已切换浅色模式'));
 }
@@ -8251,7 +8333,7 @@ document.getElementById('btnGuide').onclick = function(){
     + '<li>' + t('打印存档：在「会议纪要」栏目点击「打印存档（PDF）」，生成含会议信息、点名统计、动议记录、文件与表决结果、代表参与统计、奖项与完整纪要的报告，再用浏览器「另存为 PDF」即可存档。') + '</li>'
     + '<li>' + t('多设备同步：在首页「多设备同步」导出存档文件，通过网盘或 U 盘拷到另一台设备导入，即可继续同一批会议。导入按每场会议的最后修改时间自动保留较新版本，已删除的会议不会复活，导入前会自动备份本机存档。') + '</li>'
     + '<li>' + t('回退仅在当前页面内有效：刷新或关闭页面后撤销记录清空，会议数据本身不受影响。') + '</li>'
-    + '<li>' + t('深色模式：点击状态栏「🌙 深色」在深色与浅色主题间切换，偏好会记住，刷新后保持；从未手动切换过时默认深色舞台外观。深浅两套均已按 WCAG AA 校核文字对比度。') + '</li>'
+    + '<li>' + t('深色模式：点击状态栏「🌙 深色」在深色与浅色主题间切换，偏好会记住，刷新后保持；从未手动切换过时跟随系统深浅色偏好。深浅两套均已按 WCAG AA 校核文字对比度。') + '</li>'
     + '<li>' + t('数据可视化：「统计与评奖」栏目底部按当前会议存档实时生成两张环形图（出席构成、动议裁定结果）与三张排行条形图（发言次数、参与表决次数、赞助文件数），全部数值实时计算，无数据时显示空态而非补零。') + '</li>'
     + '<li>' + t('侧边栏收起：宽屏下点击左侧面板底部「收起」可隐藏面板获得更大工作区，点击左上角悬浮按钮「»」展开；该偏好会记住。') + '</li>'
     + '<li>' + t('中英双语：点击状态栏 EN / 中文 即时切换。') + '</li></ul>'
@@ -8261,9 +8343,9 @@ document.getElementById('btnGuide').onclick = function(){
 document.getElementById('btnAbout').onclick = function(){
   askInfo(t('关于社团'), '<b>' + t('浙江省天台中学模拟联合国社团') + '</b><br>' + t('天中模联 · THSMUN') + '<br><br>'
     + t('立足天台 · 放眼世界。') + '<br><br>'
-    + t('本系统（THSMUN OS）为社团会议量身打造，覆盖点名、主发言名单、动议裁定、实质性表决文件两轮投票（安理会门槛在新建会议时选定：宪章 9 票制或出席国家三分之二多数，并含否决权）、计时、文件流转、表决结果图表化呈现与历次表决回看、纪要导出、打印存档、统计评奖、投屏模式、多设备存档同步与中英双语的完整流程，参照安理会等委员会的真实议事规则设计，供主席团与代表在会议中直接使用。'));
+    + t('本系统（THSMUN OS）为社团会议量身打造，覆盖点名、主发言名单、动议裁定、实质性表决文件两轮投票（安理会门槛在新建会议时选定：宪章 9 票制或有表决权国家的三分之二多数，并含否决权）、计时、文件流转、表决结果图表化呈现与历次表决回看、纪要导出、打印存档、统计评奖、投屏模式、多设备存档同步与中英双语的完整流程，参照安理会等委员会的真实议事规则设计，供主席团与代表在会议中直接使用。'));
 };
-/* 面板快捷键：数字 1-8 切换，空格控制计时，Ctrl+Z 回退 */
+/* 面板快捷键：数字 1-9 切换，空格控制计时，Ctrl+Z 回退 */
 document.addEventListener('keydown', function(e){
   if (document.getElementById('modalMask').classList.contains('on')) {
     if (e.key === 'Escape') closeModal();
@@ -8333,11 +8415,6 @@ function sprAnimate(el, tag, target, apply, opts){
   it.t = now;
   sprWake();
 }
-function sprCancel(el, tag){
-  var k = sprKey(el, tag), it = SPR.items[k];
-  if (it) { delete SPR.items[k]; }
-  if (el && el.style) { el.style.opacity = ''; el.style.transform = ''; }
-}
 function sprWake(){ if (!SPR.raf) SPR.raf = requestAnimationFrame(sprStep); }
 function sprStep(now){
   SPR.raf = 0;
@@ -8365,41 +8442,16 @@ function sprClamp01(x){ return x < 0 ? 0 : (x > 1 ? 1 : x); }
 /* 入场模糊量：投屏模式下为 0——亮底叠加 6px 模糊会糊成白雾，投影幕上文字必须锐利。
    SECTION: js-spring-noblur-v15 */
 function sprBlurAmt(c, max){ return document.body.classList.contains('projector') ? 0 : (1 - c) * max; }
-function sprApplyPane(el, x, done){
-  if (done) { el.style.opacity = ''; el.style.transform = ''; el.style.filter = ''; return; }
-  var c = sprClamp01(x);
-  el.style.opacity = String(c);
-  el.style.transform = 'translateY(' + ((1 - c) * 14).toFixed(2) + 'px) scale(' + (0.985 + 0.015 * c).toFixed(4) + ')';
-  el.style.filter = sprBlurAmt(c, 6) ? 'blur(' + sprBlurAmt(c, 6).toFixed(2) + 'px)' : '';
-}
-function sprApplyWin(el, x, done){
-  if (done) { el.style.opacity = ''; el.style.transform = ''; el.style.filter = ''; return; }
-  var c = sprClamp01(x);
-  el.style.opacity = String(c);
-  el.style.transform = 'scale(' + (0.985 + 0.015 * c).toFixed(4) + ') translateY(' + ((1 - c) * 14).toFixed(2) + 'px)';
-  el.style.filter = sprBlurAmt(c, 5) ? 'blur(' + sprBlurAmt(c, 5).toFixed(2) + 'px)' : '';
-}
-function sprApplyModal(el, x, done){
-  if (done) { el.style.opacity = ''; el.style.transform = ''; el.style.filter = ''; return; }
-  var c = sprClamp01(x);
-  el.style.opacity = String(c);
-  el.style.transform = 'scale(' + (0.94 + 0.06 * c).toFixed(4) + ') translateY(' + ((1 - c) * 12).toFixed(2) + 'px)';
-  el.style.filter = sprBlurAmt(c, 4) ? 'blur(' + sprBlurAmt(c, 4).toFixed(2) + 'px)' : '';
-}
 function sprApplyBump(el, x, done){
   if (done) { el.style.transform = ''; return; }
   var sc = x < 0.85 ? 0.85 : (x > 1.32 ? 1.32 : x);   /* clamp，防脉冲叠加过大 */
   el.style.transform = 'scale(' + sc.toFixed(4) + ')';
 }
-/* --- 对外入口 --- */
-function sprPaneIn(el){ if (!sprActive() || sprReduce() || !el) return; sprAnimate(el, 'pane', 1, sprApplyPane, { from: 0, stiffness: 170, damping: 20, replay: true }); }
-function sprWinIn(el){ if (!sprActive() || sprReduce() || !el) return; sprAnimate(el, 'win', 1, sprApplyWin, { from: 0, stiffness: 190, damping: 22, replay: true }); }
-function sprModalIn(){
-  if (!sprActive() || sprReduce()) return;
-  var el = document.querySelector('#modalMask .modal'); if (!el) return;
-  sprAnimate(el, 'modal', 1, sprApplyModal, { from: 0, stiffness: 210, damping: 23, replay: true });
+/* v34：表单校验失败的横向抖动反馈（一次性合成器动画，把视线引到出错控件） */
+function shakeEl(el){
+  if (!el || sprReduce() || !el.animate) return;
+  el.animate([{ transform: 'none' }, { transform: 'translateX(-5px)' }, { transform: 'translateX(4px)' }, { transform: 'translateX(-3px)' }, { transform: 'translateX(2px)' }, { transform: 'none' }], { duration: 300, easing: 'ease-out' });
 }
-function sprModalCancel(){ var el = document.querySelector('#modalMask .modal'); if (el) sprCancel(el, 'modal'); }
 /* 数字 bump：速度脉冲叠加。首次从静止给正速度冲向 >1 再弹回；连续变化时叠加速度，
    保持持续弹跳而非每次重播 —— 这正是可打断，修掉原 CSS popNum 的"被打断重启、数字跳闪"。 */
 function sprBump(el){
