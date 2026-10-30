@@ -344,7 +344,7 @@ table.stats th{background:#eef6fc; color:var(--un-deep);}
 .statusbar{
   position:fixed; top:0; left:0; right:0; height:var(--bar-h); z-index:40;
   display:flex; align-items:center; gap:14px; padding:0 14px;
-  background:rgba(8,54,90,.97); /* v34-perf：移除 backdrop-filter——下层每次重绘都会触发整条状态栏背景重新模糊，是滚动/交互掉帧的大头；提高不透明度补偿视觉 */
+  background:#08365a; /* v34-perf：移除 backdrop-filter——下层每次重绘都会触发整条状态栏背景重新模糊，是滚动/交互掉帧的大头；v54（用户选定）：实体不透明，彻底盖住下层文字 */
   color:#fff; font-size:12.5px; box-shadow:0 1px 0 rgba(255,255,255,.08), 0 2px 12px rgba(0,0,0,.16);
 }
 .statusbar .sb-brand{ display:flex; align-items:center; gap:8px; font-weight:600; letter-spacing:.5px; flex:none; }
@@ -1343,7 +1343,7 @@ body:not(.dark){
 }
 /* 状态栏：竖向渐变 + 底部高光，金属质感 */
 body:not(.dark) .statusbar{
-  background:linear-gradient(180deg,rgba(16,86,138,.95),rgba(8,54,90,.90));
+  background:linear-gradient(180deg,#10568a,#08365a); /* v54（用户选定「同色实体」）：16,86,138 与 8,54,90 的 100% 版——金属渐变/高光/投影全保留，彻底盖住滚过的栏目文字（v34 移除背景模糊后半透明补偿不足的遗留） */
   box-shadow:inset 0 -1px 0 rgba(255,255,255,.14), 0 2px 14px rgba(8,54,90,.20);
 }
 /* 窗口：更强立体阴影 + 顶部内高光 */
@@ -1617,8 +1617,8 @@ body.dark #syncCard{ background:rgba(255,255,255,.025); border-color:rgba(255,25
 /* ===== SECTION: styles-css-entrance-v19 — 纯 CSS 入场（GPU 合成，零 JS 开销）===== */
 /* v31-perf：视差编排 + 消空窗——起点改微透明 .15（画面不再闪白），面板反向 -3px 微浮与窗口 +14px 形成前后景深；
    曲线/时长不变，去 scale 避免与窗口缩放叠加 */
-@keyframes cssPaneIn{ from{ transform:translateY(-3px); }
-  to{ transform:none; } } /* v49f（用户要求）：轻触切栏保留微微浮动、移除透明度渐变——文字全程不闪（不透明度恒 1） */
+@keyframes cssPaneIn{ from{ transform:translateY(6px); }
+  to{ transform:none; } } /* v50e（用户要求细腻舒适）：回归「微微浮动」本意——6px 小位移替代 (56) 的 14px 大动作；v49f 零透明度红线不变——不透明度恒 1，文字全程不闪 */
 @keyframes cssWinIn{ from{ transform:translateY(14px) scale(.985); }
   to{ transform:none; } } /* v31-perf：起点同步微透明，消空窗（理由同 cssPaneIn） */
 @keyframes cssModalIn{ from{ filter:blur(4px); transform:scale(.94) translateY(12px); }
@@ -1631,13 +1631,20 @@ body.dark #syncCard{ background:rgba(255,255,255,.025); border-color:rgba(255,25
    仅时长 .62s → .16s：0.62s 超过人眼交互基准（150-250ms），是「切换延迟感」的主要来源；
    .16s 后动画依旧平滑（同一条 cubic-bezier(.22,1,.36,1) 弹性曲线），但落定快 3.9 倍。
    内容区 .dv-* 入场（.30-.42s）节奏不变，外层先落定、内容再优雅淡入，层次更清晰。 */
-.tabpane.on{ animation:cssPaneIn .26s cubic-bezier(.22,1,.36,1) backwards; } /* v49d（用户要求打断更细腻）：160→260ms 回归 v30-perf 确立的节奏，与窗口 620ms 形成从容层次；全面板统一原则不变 */
+.tabpane.on{ animation:cssPaneIn .45s cubic-bezier(.16,1,.3,1) backwards; } /* v50e（用户要求细腻舒适）：.62s→.45s（(56) 的 620ms 用户也不喜欢——过拖）；长尾缓出曲线（起步轻收尾极柔，丝绸感核心）；6px 微浮；零透明度红线不变 */
 @keyframes cssViewIn{ from{ filter:blur(4px); transform:translateY(10px) scale(.995); }
   to{ filter:blur(0); transform:none; } }
 /* SECTION: fix-dock-v24：视图级入场仅限 home/setup（其内无 fixed 元素）；
    会议视图不参与——dock(position:fixed) 在 #view-meeting 内，祖先带 transform/filter
    会劫持 fixed 定位，导致快捷键与 dock 在入场期间错位、延后显示（v22 漏改的祖先层）。 */
-#view-home.active, #view-setup.active{ animation:cssViewIn .92s cubic-bezier(.22,1,.36,1) backwards; }
+/* v57（用户反馈"退出会议/返回首页动画特别慢，要与其他动画一致"）：.92s→.62s 对齐家族节奏——
+   窗口 cssWinIn、弹窗 cssModalIn 均为 .62s cubic-bezier(.22,1,.36,1)，视图入场是全系统唯一 0.92s
+   的异类（v23 古老参数，从未被拍板认可）；曲线/blur 质感与弹窗家族保持一致，仅时长归队 */
+/* v58（用户反馈"退出会议/返回首页动画特别特别慢，要与其他动画一致"）：.62s→.45s 归队
+   面板动画节奏（.45s cubic-bezier(.16,1,.3,1) 家族）——视图入场是全屏大转场，0.62s 的
+   blur 浮入体感拖沓（v57 只归队过窗口/弹窗家族的 .62s，从未对齐 450ms 面板家族）；
+   曲线同步换用面板同款长尾缓出，退出/返回首页与切栏节奏完全一致 */
+#view-home.active, #view-setup.active{ animation:cssViewIn .45s cubic-bezier(.16,1,.3,1) backwards; }
 .window.swap{ animation:cssWinIn .62s cubic-bezier(.22,1,.36,1) backwards; }
 .modal-mask.on .modal{ animation:cssModalIn .62s cubic-bezier(.22,1,.36,1) backwards; }
 /* ===== SECTION: motion-parity-v20 — 交互内核对标（参数来自 samunos 实测计算值）===== */
@@ -2569,7 +2576,7 @@ var I18N = {
   '提交文件':'Submit Document', '文件类型':'Document Type', '文件标题（留空则自动取文件名）':'Title (auto from filename)',
   '起草国（用顿号或逗号分隔）':'Drafters (comma separated)', '附议国（用顿号或逗号分隔）':'Signatories (comma separated)',
   '上传文件（Word / PDF）':'Upload (Word / PDF)', '下载文件':'Download', '预览':'Preview',
-  '删除':'Delete', '引入文件':'Introduce', '开始讨论':'Start Discussion',
+  '删除':'Delete', '引入文件':'Introduce',
   '导出纪要（.txt）':'Export Minutes (.txt)', '按时间顺序记录全部会议动作':'All actions logged in order',
   '代表参与统计':'Participation Stats', '奖项评定':'Awards', '记录奖项':'Record Award',
   '代表团':'Delegation', '点名状态':'Roll Status', '发言次数':'Speeches',
@@ -2784,7 +2791,7 @@ var I18N = {
   '已清空发言队列':'Speech queue cleared',
   '已直接计入计票':'counted directly into the tally',
   '已自动移出发言队列':'Automatically removed from the speech queue',
-  '已被延置，不得引入或开始讨论':'Tabled; it cannot be introduced or opened for debate',
+  '已被延置，不得引入':'Tabled; it cannot be introduced',
   '已追加':'Appended',
   '已选择：':'Selected: ',
   '已通过':'Passed',
@@ -3020,7 +3027,7 @@ var I18N = {
   '该代表团第一轮已定案，不进入第二轮投票':'This delegation settled in round one and does not enter round two',
   '该决议草案已处于延置状态':'This draft resolution is already tabled',
   '该决议草案已被延置，不得发起针对它的讨论动议':'This draft resolution is tabled: debate motions targeting it are disallowed',
-  '该决议草案已被延置，不得引入或开始讨论':'This draft resolution is tabled: it cannot be introduced or opened for debate',
+  '该决议草案已被延置，不得引入':'This draft resolution is tabled: it cannot be introduced',
   '该决议草案已被延置，不得进行表决':'This draft resolution is tabled: it cannot be voted on',
   '该决议草案已被延置，不能对其提出修正案':'This draft resolution is tabled: it cannot be amended',
   '该决议草案未被延置':'This draft resolution is not tabled',
@@ -3056,7 +3063,6 @@ var I18N = {
   '返回主发言名单动议通过，已自动返回主发言名单栏目':'Return to GSL motion passed; switched to the GSL tab automatically',
   '还有 ':'Still ',
   '进入第二轮投票':'Proceed to the second round',
-  '进入讨论':'Open for debate',
   '进行个人演讲':'Individual speech',
   '进行中':'In progress',
   '进行中的实质性表决文件因该决议草案被延置而中止':'The substantive vote in progress was halted because this draft resolution was tabled',
@@ -3231,7 +3237,7 @@ Object.assign(I18N, {
   '自定义秒数':'Custom seconds','提交文件':'Submit Document','文件类型':'Document Type',
   '文件标题（留空则自动取文件名）':'Title (auto from filename)','起草国（用顿号或逗号分隔）':'Drafters (comma separated)',
   '附议国（用顿号或逗号分隔）':'Signatories (comma separated)','上传文件（Word / PDF）':'Upload (Word / PDF)',
-  '下载文件':'Download','预览':'Preview','引入文件':'Introduce','开始讨论':'Start Discussion',
+  '下载文件':'Download','预览':'Preview','引入文件':'Introduce',
   '导出纪要（.txt）':'Export Minutes (.txt)','按时间顺序记录全部会议动作':'All actions logged in order',
   '代表参与统计':'Participation Stats','奖项评定':'Awards','记录奖项':'Record Award',
   '代表团':'Delegation','点名状态':'Roll Status','发言次数':'Speeches','参与表决':'Votes Cast',
@@ -3406,7 +3412,6 @@ Object.assign(I18N, {
   '吗？该会议已上传的文件也会一并从本机浏览器存储中移除，操作不可恢复。':'? Its uploaded files will also be removed from this browser. This cannot be undone.',
   '重复，请检查名单':'is duplicated — please check the list',
   '会议':'Meeting','创建，共':'created with','个代表团':'delegation(s)','会期':'Session','至':'to',
-  '进入讨论':'opened for discussion',
   '评定奖项':'Award granted','导出时间':'Exported at',
   '天中模联 · THSMUN':'THSMUN',
   '立足天台 · 放眼世界。':'Rooted in Tiantai, facing the world.',
@@ -3452,8 +3457,8 @@ Object.assign(I18N, {
   '实质性表决文件动议未执行：目标决议草案已被延置':'Substantive vote motion not executed: the target draft resolution is postponed',
   '已延置':'Postponed','针对：':'targets: ','当前投票顺序':'Current Voting Order',
   '此决议草案已被延置，不得发起讨论、提出修正案或进行表决，直至取消延置动议通过':'This draft resolution is postponed: no discussion motion, amendment or vote on it is allowed until a motion to resume it passes.',
-  '该决议草案已被延置，不得引入或开始讨论':'This draft resolution is postponed; it cannot be introduced or opened for discussion',
-  '已被延置，不得引入或开始讨论':'is postponed and cannot be introduced or opened for discussion',
+  '该决议草案已被延置，不得引入':'This draft resolution is postponed; it cannot be introduced',
+  '已被延置，不得引入':'is postponed and cannot be introduced',
   '文件状态未变更':'Document status unchanged',
   '须待取消延置决议草案动议通过后方可继续':'a motion to resume it must pass before it can proceed',
   '当前已延置的决议草案':'Currently postponed draft resolutions',
@@ -3641,7 +3646,6 @@ var UNDO_LABELS = {
   '评定奖项':'Grant an award',
   '删除奖项':'Remove an award',
   '引入文件':'Introduce document',
-  '开始讨论':'Start discussion'
 };
 /* 整句词条 + {占位符} 填充：跨语言组合一律走此函数，避免片段拼接导致英文语序错乱 */
 function tfmt(key, vars){
@@ -4070,6 +4074,10 @@ Object.assign(I18N, {
    此处不再重复定义，避免同键两处定义 */
 Object.assign(I18N, {
   '宪章第 27 条：需至少 9 票赞成（固定票数，所有出席理事国都有表决权）':'Article 27: at least 9 affirmative votes (a fixed number; every present member holds a vote)'
+});
+/* 词典补充（十四）：使用指引文件流转（v52 配套） */
+Object.assign(I18N, {
+  '文件流转：在「文件」栏目提交决议草案（须上传 Word 或 PDF 文件，标题与起草国、附议国一并登记）；主席确认无误后点击「引入文件」，引入后即可在「动议与表决」栏目对其发起表决，文件卡片上会给出表决入口提示。被延置的决议草案不得引入或表决，须待「取消延置决议草案」动议通过。':'Document flow: submit a draft resolution in the Documents panel (a Word or PDF file must be uploaded, with the title, drafters and signatories registered together). After the chair verifies it, click "Introduce" — once introduced, a vote can be started for it under "Motions & Voting", and the document card shows a hint to that entrance. A tabled draft resolution cannot be introduced or voted on until a "Remove from table" motion passes.'
 });
 /* 词典补充（十四）：汇总栏有表决权门槛 chip 与弃权基数表述（patch108） */
 Object.assign(I18N, {
@@ -4985,7 +4993,7 @@ function setTab(t){
   var ps = document.querySelectorAll('.tabpane');
   for (var j = 0; j < ps.length; j++) ps[j].classList.toggle('on', ps[j].id === 'tab-' + t);
   /* v31-fix：visibility 常驻渲染下 CSS animation 不会随显隐重启（与 display:none 不同），
-     面板入场动画必须在切页时显式重播——参数与 cssPaneIn keyframes 一字不差（.16s / 同曲线 / 同位移缩放），
+     面板入场动画必须在切页时显式重播——参数与 cssPaneIn keyframes 一字不差（v50e 起为 .45s 长尾缓出 / 同位移），
      细腻感与原版完全一致；仅首次进会议时由 CSS animation 自然播放，此后每次切页由 WAAPI 接管。
      同样尊重系统「减少动画」偏好 */
   if (!sprReduce()) {
@@ -4994,10 +5002,10 @@ function setTab(t){
        用户指认的「突兀」是当初切入时叠加的整列重建交叉（已由等数幂等路径根除），
        面板浮现本身是舒缓渐显，保留；等数幂等路径继续保留防整列闪动 */
     if (onPane && onPane.animate) {
-      /* v48n：位移与其他栏目完全一致——全部面板同一套 cssPaneIn（含纪要 3px 下沉），不做任何特判；
-         v49d（用户要求打断更细腻）：时长 160→260ms 与 CSS 通道同步，与窗口 620ms 形成从容层次 */
-      onPane.animate([{ transform: 'translateY(-3px)' }, { transform: 'none' }],
-        { duration: 260, easing: 'cubic-bezier(.22,1,.36,1)', fill: 'backwards' });
+      /* v48n：位移与其他栏目完全一致——全部面板同一套 cssPaneIn，不做任何特判；
+         v50e（用户要求细腻舒适）：时长 620→450ms，位移 14px→6px 微浮，长尾缓出曲线 */
+      onPane.animate([{ transform: 'translateY(6px)' }, { transform: 'none' }],
+        { duration: 450, easing: 'cubic-bezier(.16,1,.3,1)', fill: 'backwards' });
     }
     /* v32-detail：面板落定后侧栏图标微弹——生命感反馈，纯 transform 合成器动画 */
     if (!sprReduce() && onPane) {
@@ -5005,7 +5013,7 @@ function setTab(t){
       var ico = tgtBtn && tgtBtn.querySelector('.dk-ico');
       if (ico && ico.animate) ico.animate(
         [{ transform: 'scale(1)' }, { transform: 'scale(1.14)' }, { transform: 'scale(1)' }],
-        { duration: 190, delay: 170, easing: 'cubic-bezier(.34,1.56,.64,1)' });
+        { duration: 190, delay: 280, easing: 'cubic-bezier(.34,1.56,.64,1)' }); /* v50e：delay 随面板节奏同步（.45s 的 ~62%），避免「面板还在飘、图标先弹」的脱节 */
     }
     /* v32-detail：侧栏滑动指示条——高亮滑块沿 dock 平滑滑动到当前面板（纯 transform） */
     var glide = document.getElementById('dockGlide');
@@ -5065,7 +5073,17 @@ function setTab(t){
          就是整页从下往上浮（顶边行程含缩放达 27px vs 17px）。故纪要位移等比收敛
          14px→4px、scale .985→.996（同约 1/3.5），时长/曲线/淡入与其他栏目完全同一套：
          位移仍在（非删除），观感与其他栏目同级的轻微浮现，不再有整页滑动 */
-      var wSlide = (t === 'minutes') ? 'translateY(9px) scale(.991)' : 'translateY(14px) scale(.985)';
+      /* v59（用户裁决"每个栏目切页最终效果完全一致，没有任何区别"）：窗口浮入的顶边
+         行程 = 位移 + 窗口高度×(1−缩放)/2，随窗口高度连续变化——任何固定参数都无法让
+         全部栏目一致（计时器小窗 17px vs 纪要 2675px 满窗 21~33px），v48o/v58 的栏目
+         特判只是离散近似。现按窗口实际高度动态求位移，使顶边行程对所有栏目恒定 17px：
+         translateY = 17 − H×(1−.991)/2（下限 3px 防极端长窗），缩放统一 .991。
+         时长 620ms 金标准 / 曲线 / 填充一字不动。行程恒定后小窗与大窗的浮入观感
+         完全相同——「最终效果零区别」的物理等价实现。offsetHeight 读取发生在
+         class 切换后的同一次布局内，不产生额外重排 */
+      var winH59 = win.offsetHeight;
+      var wTy59 = Math.max(3, 17 - winH59 * 0.0045);
+      var wSlide = 'translateY(' + wTy59.toFixed(1) + 'px) scale(.991)';
       var wAn = win.animate([{ transform: wSlide }, { transform: 'none' }],
         { duration: 620, easing: 'cubic-bezier(.22,1,.36,1)', fill: 'backwards' });
       if (wAn) {
@@ -5092,9 +5110,19 @@ function scheduleTabRender(t){
   var pane0 = document.getElementById('tab-' + t);
   if (pane0 && !pane0.firstElementChild) { renderTab(t); return; }
   pendingRenderTab = t;
-  setTimeout(function(){
-    if (pendingRenderTab !== null) { var tt = pendingRenderTab; pendingRenderTab = null; renderTab(tt); }
-  }, 0);
+  /* v56（用户裁决：性能根修、动画参数零改动）：重灌从 setTimeout(0) 改为双 rAF——
+     setTimeout 宏任务会在首帧渲染之前被抢先执行，重面板（纪要长列表全文扫描+满屏
+     大排版）把动画首帧整体推迟约 0.1s：面板 CSS 动画（startTime=样式重算时刻）因此
+     晚于 WAAPI（startTime=创建时刻）启动，两条通道一前一后、收尾被拉出可感拖尾，
+     表现为「纪要切页最终动画与其他栏目不一致」。双 rAF 保证动画首帧先完整出去
+     （CSS/WAAPI 同帧同步启动），重灌在第二帧才跑——v30-perf「缓存内容先入场、
+     下一帧再重灌」的设计意图由此真正落地。连续快切只渲染最后目标，逻辑不变 */
+  requestAnimationFrame(function(){
+    if (pendingRenderTab === null) return;
+    requestAnimationFrame(function(){
+      if (pendingRenderTab !== null) { var tt = pendingRenderTab; pendingRenderTab = null; renderTab(tt); }
+    });
+  });
 }
 /* v31-perf：按下预热——手指按下到抬起间有 50–100ms，利用这段时间预建合成层，
    click 到达时动画零准备直接开跑 */
@@ -5620,51 +5648,7 @@ function crossGhostify(el){
   var gn = el.querySelectorAll('*');
   for (var i = 0; i < gn.length; i++) if (gn[i].style) gn[i].style.animation = 'none';
 }
-function crossCapture(box){
-  if (!box || sprReduce() || !box.animate) return null;
-  var old = box.firstElementChild;
-  while (old && old.style && old.style.position === 'absolute') old = old.nextElementSibling; /* 跳过未清场的旧定格层 */
-  if (!old) return null;
-  var g = old.cloneNode(true);
-  crossGhostify(g);
-  return g;
-}
-function crossPlay(box, ghost){
-  if (!ghost) return;
-  var restorePos = box.style.position === '';
-  box.style.position = 'relative';
-  ghost.style.position = 'absolute'; ghost.style.inset = '0';
-  ghost.style.margin = '0'; ghost.style.pointerEvents = 'none'; ghost.style.zIndex = '1';
-  box.insertBefore(ghost, box.firstChild);
-  var cleanup = function(){ if (ghost.parentNode) ghost.parentNode.removeChild(ghost); if (restorePos) box.style.position = ''; };
-  /* v47-silk：旧字快速干脆让位（150ms 内淡出+上移 3px）——重叠重影窗口压到最短，白字不再叠白字 */
-  var ga = ghost.animate([{ opacity: 1, transform: 'none' }, { opacity: 0, transform: 'translateY(-3px)' }],
-    { duration: 240, easing: 'ease-in', fill: 'forwards' });
-  if (ga && ga.onfinish !== undefined) ga.onfinish = cleanup;
-  setTimeout(cleanup, 400);   /* 双保险：容器被切走（display:none）冻结动画时也能清场，cleanup 幂等 */
-  /* v44-bglock：新卡背景立即满格（禁整卡 scIn 的透明度动画），交叉只发生在内容层——
-     卡内子元素淡入并上移 6px（继承 v37 scIn 的衔接感），底色全程恒定不闪 */
-  for (var i = 1; i < box.children.length; i++) {
-    var nc = box.children[i];
-    if (!nc || !nc.style) continue;
-    nc.style.animation = 'none';
-    if (!nc.animate) continue;
-    var subs = nc.children;
-    if (!subs.length) {
-      nc.animate([{ transform: 'translateY(5px)' }, { transform: 'none' }],
-        { duration: 260, delay: 50, easing: 'cubic-bezier(.22,1,.36,1)', fill: 'backwards' });
-      continue;
-    }
-    for (var si = 0; si < subs.length; si++) {
-      if (!subs[si].animate) continue;
-      /* v47-silk：延迟错时浮现——旧字先走、新字后到；v49d 总窗口 240→310ms 同步放宽 */
-      subs[si].animate([{ transform: 'translateY(5px)' }, { transform: 'none' }],
-        { duration: 260, delay: 50, easing: 'cubic-bezier(.22,1,.36,1)', fill: 'backwards' });
-    }
-  }
-}
 
-/* v43-cross2：容器内「活」子元素——跳过未清场的 absolute 定格层，避免把旧幽灵当成内容 */
 function crossLiveKids(box){
   var out = [], n = box.firstElementChild;
   while (n) {
@@ -5675,37 +5659,57 @@ function crossLiveKids(box){
 }
 /* v43-cross2：多子元素容器交叉淡化——旧内容（已摘出的节点）定格为覆盖层淡出，
    与新内容入场同帧重叠，消除「旧内容瞬间消失 + 新内容单独淡入」的空窗跳变 */
+
+/* v43-cross2：单卡替换交叉——旧卡克隆定格原位淡出（新卡 CSS 入场动画自动交叉），
+   下方卡片 FLIP 平滑让位（高度变化不再瞬移）；减弱动态时退化为直接替换 */
 function crossPlayAll(box, olds){
-  if (!box || !olds || !olds.length || sprReduce() || !box.animate) return;
+  /* v51（用户要求"细腻、不突兀"）：无缝墨晕——旧条目 240ms 快速消散（长尾缓出先快后柔），
+     新内容不等散尽，120ms 后即从 5px 浮起 360ms（零透明度）；交接点旧字仅剩约两成余韵，
+     连续无空窗、无同位重影，如墨入水 */
+  if (!box || !olds || !olds.length) return;
+  if (sprReduce() || !box.animate) return;
+  if (box._crossReveal) box._crossReveal();
   var cs = getComputedStyle(box);
   var wrap = document.createElement('div');
   for (var i = 0; i < olds.length; i++) { crossGhostify(olds[i]); wrap.appendChild(olds[i]); }
-  wrap.style.cssText = 'position:absolute;inset:0;margin:0;pointer-events:none;z-index:0;';
+  wrap.style.cssText = 'position:absolute;inset:0;margin:0;pointer-events:none;z-index:1;';
   if (cs.display === 'flex' || cs.display === 'grid') wrap.style.display = cs.display;
   if (cs.padding && cs.padding !== '0px') wrap.style.padding = cs.padding;
   if (cs.gap && cs.gap !== 'normal' && cs.gap !== '') wrap.style.gap = cs.gap;
   var restorePos = box.style.position === '';
   box.style.position = 'relative';
   box.appendChild(wrap);
+  var live = crossLiveKids(box);
+  for (var k = 0; k < live.length; k++) { if (live[k].style) live[k].style.visibility = 'hidden'; }
+  var ga = wrap.animate([{ opacity: 1, transform: 'none' }, { opacity: 0, transform: 'translateY(-2px)' }],
+    { duration: 240, easing: 'cubic-bezier(.16,1,.3,1)', fill: 'forwards' });
+  var cleanupDone = false;
   var cleanup = function(){
+    if (cleanupDone) return; cleanupDone = true;
     if (wrap.parentNode) wrap.parentNode.removeChild(wrap);
     if (restorePos) box.style.position = '';
   };
-  var ga = wrap.animate([{ opacity: 1, transform: 'none' }, { opacity: 0, transform: 'translateY(-3px)' }],
-    { duration: 240, easing: 'ease-in', fill: 'forwards' });
   if (ga && ga.onfinish !== undefined) ga.onfinish = cleanup;
-  setTimeout(cleanup, 400);   /* 双保险：容器被切走（display:none）冻结动画时也能清场，cleanup 幂等 */
+  setTimeout(cleanup, 500);
+  /* 新内容 120ms 后浮现（墨晕交接点：旧字仅剩约两成余韵），纯位移 360ms 长尾 */
+  var revealTimer = setTimeout(function(){
+    for (var k = 0; k < live.length; k++) { if (live[k].style) live[k].style.visibility = ''; }
+    box.animate([{ transform: 'translateY(5px)' }, { transform: 'none' }],
+      { duration: 360, easing: 'cubic-bezier(.16,1,.3,1)', fill: 'backwards' });
+  }, 120);
+  box._crossReveal = function(){
+    cleanupDone = true;
+    clearTimeout(revealTimer);
+    if (wrap.parentNode) wrap.parentNode.removeChild(wrap);
+    if (restorePos) box.style.position = '';
+    for (var k = 0; k < live.length; k++) { if (live[k].style) live[k].style.visibility = ''; }
+  };
 }
-/* v43-cross2：单卡替换交叉——旧卡克隆定格原位淡出（新卡 CSS 入场动画自动交叉），
-   下方卡片 FLIP 平滑让位（高度变化不再瞬移）；减弱动态时退化为直接替换 */
 function crossSwapCard(box, kids, idx, fresh){
   var cur = kids[idx], i, el, dy;
   if (sprReduce() || !box.animate) { box.replaceChild(fresh, cur); return; }
-  var ghost = cur.cloneNode(true);
-  crossGhostify(ghost);
-  var bRect = box.getBoundingClientRect(), cRect = cur.getBoundingClientRect();
-  ghost.style.cssText += ';position:absolute;left:' + (cRect.left - bRect.left) + 'px;top:' + (cRect.top - bRect.top)
-    + 'px;width:' + cRect.width + 'px;margin:0;pointer-events:none;z-index:1;';
+  /* v51（用户要求"细腻、不突兀"）：无缝墨晕——旧卡 240ms 快速消散（长尾缓出），120ms 后
+     新卡落位并从 5px 浮起 360ms（交接点旧卡仅剩约两成余韵）；下方卡片 FLIP 平滑补位同步进行 */
   var afters = [];
   var vhLim = window.innerHeight + 80;
   for (i = idx + 1; i < kids.length; i++) {
@@ -5715,50 +5719,100 @@ function crossSwapCard(box, kids, idx, fresh){
   }
   var restorePos = box.style.position === '';
   box.style.position = 'relative';
-  box.appendChild(ghost);
-  box.replaceChild(fresh, cur);
-  /* v44-bglock：新卡背景立即满格（禁整卡 rowInR 透明度），内容子元素淡入上移交叉 */
-  if (fresh.style) fresh.style.animation = 'none';
-  if (fresh.animate) {
-    var fsubs = fresh.children;
-    if (!fsubs.length) fresh.animate([{ transform: 'translateY(5px)' }, { transform: 'none' }],
-      { duration: 260, delay: 50, easing: 'cubic-bezier(.22,1,.36,1)', fill: 'backwards' });
-    for (var fi2 = 0; fi2 < fsubs.length; fi2++) {
-      if (!fsubs[fi2].animate) continue;
-      fsubs[fi2].animate([{ transform: 'translateY(5px)' }, { transform: 'none' }],
-        { duration: 260, delay: 50, easing: 'cubic-bezier(.22,1,.36,1)', fill: 'backwards' });
+  crossGhostify(cur);
+  var gf = cur.animate([{ opacity: 1, transform: 'none' }, { opacity: 0, transform: 'translateY(-3px)' }],
+    { duration: 240, easing: 'cubic-bezier(.16,1,.3,1)', fill: 'forwards' });
+  var done = false;
+  var doSwap = function(){
+    if (done) return; done = true;
+    if (cur.parentNode !== box) return;   /* v50e 打断防护：180ms 窗口内列表被整体重建清场时静默放弃（最新数据已由重建路径渲染） */
+    box.replaceChild(fresh, cur);
+    if (fresh.style) fresh.style.animation = 'none';
+    if (fresh.animate) {
+      var fsubs = fresh.children;
+      if (!fsubs.length) fresh.animate([{ transform: 'translateY(5px)' }, { transform: 'none' }],
+        { duration: 360, easing: 'cubic-bezier(.16,1,.3,1)', fill: 'backwards' });
+      for (var fi2 = 0; fi2 < fsubs.length; fi2++) {
+        if (!fsubs[fi2].animate) continue;
+        fsubs[fi2].animate([{ transform: 'translateY(5px)' }, { transform: 'none' }],
+          { duration: 360, easing: 'cubic-bezier(.16,1,.3,1)', fill: 'backwards' });
+      }
     }
-  }
-  for (i = 0; i < afters.length; i++) {
-    el = afters[i].el;
-    dy = afters[i].top - el.getBoundingClientRect().top;
-    if (Math.abs(dy) > 0.5 && el.animate) el.animate(
-      [{ transform: 'translateY(' + dy + 'px)' }, { transform: 'none' }],
-      { duration: 240, easing: 'cubic-bezier(.22,1,.36,1)' });
-  }
-  var cleanup = function(){
-    if (ghost.parentNode) ghost.parentNode.removeChild(ghost);
+    for (i = 0; i < afters.length; i++) {
+      el = afters[i].el;
+      dy = afters[i].top - el.getBoundingClientRect().top;
+      if (Math.abs(dy) > 0.5 && el.animate) el.animate(
+        [{ transform: 'translateY(' + dy + 'px)' }, { transform: 'none' }],
+        { duration: 360, easing: 'cubic-bezier(.16,1,.3,1)' });
+    }
     if (restorePos) box.style.position = '';
   };
-  /* v47-silk：同款快速让位 */
-  var ga = ghost.animate([{ opacity: 1, transform: 'none' }, { opacity: 0, transform: 'translateY(-3px)' }],
-    { duration: 240, easing: 'ease-in', fill: 'forwards' });
-  if (ga && ga.onfinish !== undefined) ga.onfinish = cleanup;
-  setTimeout(cleanup, 400);   /* 双保险：容器被切走（display:none）冻结动画时也能清场，cleanup 幂等 */
+  setTimeout(doSwap, 120);   /* 墨晕交接点：旧卡仅剩约两成余韵时新卡落位 */
+  if (gf && gf.onfinish !== undefined) gf.onfinish = function(){ if (cur.parentNode === box) box.replaceChild(fresh, cur); };
 }
-/* v33：发言人/状态卡片切换淡入——仅当身份标记变化（换人/开始/结束）时播放；
-   走秒重绘身份不变则不播，避免每秒闪烁。传入 ghost（crossCapture 捕获的旧卡定格层）时走交叉淡化 */
+function crossCapture(box){
+  if (!box || sprReduce() || !box.animate) return null;
+  var old = box.firstElementChild;
+  while (old && old.style && old.style.position === 'absolute') old = old.nextElementSibling; /* 跳过未清场的旧定格层 */
+  if (!old) return null;
+  var g = old.cloneNode(true);
+  crossGhostify(g);
+  return g;
+}
 function swapFlash(box, idTag, ghost){
   if (!box) return;
-  /* v45-idem：data-cur 幂等守卫上移到调用方（内容签名级比对）——
-     此处只负责：内容真变了 → 有 ghost 走背景锁定交叉，无 ghost 退化为入场淡入 */
   box.setAttribute('data-cur', String(idTag));
-  if (ghost) { crossPlay(box, ghost); return; }
-  if (sprReduce()) return;
-  var card = box.querySelector('.speaker-current, .card');
-  if (card && card.animate) card.animate(
-    [{ transform: 'translateY(4px)' }, { transform: 'none' }],
-    { duration: 220, easing: 'cubic-bezier(.22,1,.36,1)' });
+  /* v53（用户选定「向上流动接力」）：旧内容与新内容像同一条向上传送带上的前后两格——
+     同曲线同时长同速运动（360ms 长尾缓出）：旧字定格层向上滑出（前 55% 全程实体流动，
+     后 45% 沿消失路径淡出并滑完余程），新内容以完全相同的速度从下方滑入归位
+     （纯位移零透明度）。与 v51 墨晕的本质区别：不再"一个先走一个后到"，
+     而是全程同步流动，无先后感、无残影停留、无空窗；文字全程只动不闪。
+     box 临时 overflow:hidden 裁剪：旧字从卡片上口流出、新字从下口流入（真传送带）。
+     连点时 innerHTML 重建 + onfinish/520ms 双保险清场，零定时器堆积 */
+  if (!ghost || sprReduce() || !box.animate) return;
+  var restorePos = box.style.position === '';
+  var restoreOv = box.style.overflow === '';
+  box.style.position = 'relative';
+  box.style.overflow = 'hidden';
+  ghost.style.position = 'absolute'; ghost.style.inset = '0';
+  ghost.style.margin = '0'; ghost.style.pointerEvents = 'none'; ghost.style.zIndex = '2';
+  box.insertBefore(ghost, box.firstChild);
+  /* 旧字：与传送带同速上滑 12px；前 55% 全实体，后 45% 淡出滑完余程（消失路径） */
+  var ga = ghost.animate(
+    [{ transform: 'translateY(0px)', opacity: 1 },
+     { transform: 'translateY(-7px)', opacity: 1, offset: 0.55 },
+     { transform: 'translateY(-12px)', opacity: 0 }],
+    { duration: 360, easing: 'cubic-bezier(.16,1,.3,1)', fill: 'forwards' });
+  /* 新内容：同速从下方 12px 滑入归位（12→5→0，与旧字保持恒定 12px 间距），零透明度 */
+  var kids = [];
+  var n = box.firstElementChild;
+  while (n) {
+    if (!(n.style && n.style.position === 'absolute')) { kids.push(n); if (n.style) n.style.animation = 'none'; }
+    n = n.nextElementSibling;
+  }
+  for (var i = 0; i < kids.length; i++) {
+    var nc = kids[i];
+    if (!nc.animate) continue;
+    var subs = nc.children;
+    if (!subs.length) {
+      nc.animate([{ transform: 'translateY(12px)' }, { transform: 'translateY(5px)', offset: 0.55 }, { transform: 'none' }],
+        { duration: 360, easing: 'cubic-bezier(.16,1,.3,1)', fill: 'backwards' });
+    } else {
+      for (var si = 0; si < subs.length; si++) {
+        if (subs[si].animate) subs[si].animate([{ transform: 'translateY(12px)' }, { transform: 'translateY(5px)', offset: 0.55 }, { transform: 'none' }],
+          { duration: 360, easing: 'cubic-bezier(.16,1,.3,1)', fill: 'backwards' });
+      }
+    }
+  }
+  var swept = false;
+  var sweep = function(){
+    if (swept) return; swept = true;
+    if (ghost.parentNode) ghost.parentNode.removeChild(ghost);
+    if (restorePos) box.style.position = '';
+    if (restoreOv) box.style.overflow = '';
+  };
+  if (ga && ga.onfinish !== undefined) ga.onfinish = sweep;
+  setTimeout(sweep, 520);   /* 双保险：容器被切走冻结动画时也能清场，sweep 幂等 */
 }
 function renderGsl(m){
   migrateGsl(m);
@@ -5800,7 +5854,7 @@ function renderGsl(m){
     /* 签名用业务参数（身份/秒数/语言），不用 innerHTML 字符串——v44 交叉会写内联样式污染序列化 */
     var sigG = tagG + '|' + (csGsl ? csGsl.seconds : (np ? np.seconds : '')) + '|' + LANG;
     if (box.getAttribute('data-sig') !== sigG) {
-      var ghostGsl = crossCapture(box);
+      var ghostGsl = crossCapture(box);   /* v53：流动接力需要旧字定格层 */
       box.innerHTML = htmlG;
       box.setAttribute('data-sig', sigG);
       if (csGsl) document.getElementById('btnGslEnd').onclick = function(){ endSpeech(m, false); };
@@ -6151,6 +6205,10 @@ function paintQueue(container, items, emptyText){
   for (var j = 0; j < items.length; j++) frag.appendChild(buildQueueItem(items[j], j));
   container.innerHTML = '';
   container.appendChild(frag);
+  /* v51：形态切换（empty→列表 / 成员替换重建）整列轻浮现——纯位移零透明度，
+     与尾部弹入同语言，消除首次加入名单时的瞬跳 */
+  if (!sprReduce() && frag.animate) frag.animate([{ transform: 'translateY(5px)' }, { transform: 'none' }],
+    { duration: 300, easing: 'cubic-bezier(.16,1,.3,1)' });
 }
 function paintCaucusRemaining(m){
   if (!m) return;
@@ -6312,7 +6370,7 @@ function renderSpeakers(m){
     var sigS = tagS + '|' + (cs ? cs.seconds + (active ? '|' + fmtSec(c.remainingSec) : '')
       : (np ? np.seconds : (active ? '|' + fmtSec(c.remainingSec) + '|' + canAppend : ''))) + '|' + LANG;
     if (box.getAttribute('data-sig') !== sigS) {
-      var ghostSpk = crossCapture(box);
+      var ghostSpk = crossCapture(box);   /* v53：流动接力需要旧字定格层 */
       box.innerHTML = htmlS;
       box.setAttribute('data-sig', sigS);
       if (cs) document.getElementById('btnSpkEnd').onclick = function(){ endSpeech(m, false); };
@@ -8120,9 +8178,8 @@ function docCardHtml(m, d){
     s += '<button class="btn btn-sm" data-doc-preview="' + d.id + '">' + t('预览') + '</button>';
   }
   if (d.status === '草案') s += '<button class="btn btn-sm" data-doc-adv="' + d.id + ':introduced">' + t('引入文件') + '</button>';
-  if (d.status === '已引入') s += '<button class="btn btn-sm" data-doc-adv="' + d.id + ':discussing">' + t('开始讨论') + '</button>';
   if (isPostponed(d)) s += '<span class="hint warn">' + t('此决议草案已被延置，不得发起讨论、提出修正案或进行表决，直至取消延置动议通过') + '</span>';
-  else if (d.status === '讨论中') s += '<span class="hint">' + t('可在「动议与表决」中发起表决') + '</span>';
+  else if (d.status === '已引入' || d.status === '讨论中') s += '<span class="hint">' + t('可在「动议与表决」中发起表决') + '</span>';   /* v51：移除「开始讨论」步骤——引入即具备表决条件（旧存档的「讨论中」状态同样提示，保持兼容） */
   s += '<button class="btn btn-sm btn-danger" data-doc-rm="' + d.id + '">' + t('删除') + '</button></div></div>';
   return s;
 }
@@ -8380,21 +8437,21 @@ document.getElementById('docList').addEventListener('click', function(e){
   if (adv) {
     if (guardSuspended(m)) return;
     var p = adv.getAttribute('data-doc-adv').split(':');
-    /* 已延置的决议草案：针对它的讨论不再被允许，引入 / 开始讨论一律拦截 */
+    /* 已延置的决议草案：引入一律拦截（v51：不再有「开始讨论」步骤） */
     var advDoc = findDoc(m, p[0]);
     if (advDoc && isPostponed(advDoc)) {
-      toast(t('该决议草案已被延置，不得引入或开始讨论') + '：' + docLabel(advDoc));
+      toast(t('该决议草案已被延置，不得引入') + '：' + docLabel(advDoc));
       log(m, t('文件状态未变更') + '：' + advDoc.type + '《' + advDoc.title + '》 '
-        + t('已被延置，不得引入或开始讨论')
+        + t('已被延置，不得引入')
         + '（' + t('须待取消延置决议草案动议通过后方可继续') + '）');
       m.updatedAt = nowStr(); saveMeetings(); renderDocs(m); renderMinutes(m);
       return;
     }
-    /* 入撤销栈：误点「引入文件 / 开始讨论」可回退到上一状态 */
-    snapshot(m, p[1] === 'introduced' ? '引入文件' : '开始讨论');
+    /* 入撤销栈：误点「引入文件」可回退到上一状态 */
+    snapshot(m, '引入文件');
     for (var i = 0; i < m.docs.length; i++) if (m.docs[i].id === p[0]) {
-      m.docs[i].status = p[1] === 'introduced' ? '已引入' : '讨论中';
-      log(m, t('文件') + ' ' + m.docs[i].type + '《' + m.docs[i].title + '》' + (p[1] === 'introduced' ? t('已引入') : t('进入讨论')));
+      m.docs[i].status = '已引入';
+      log(m, t('文件') + ' ' + m.docs[i].type + '《' + m.docs[i].title + '》' + t('已引入'));
     }
     m.updatedAt = nowStr(); saveMeetings(); renderDocs(m); renderMinutes(m); syncUndoBtn(); return;
   }
@@ -9140,38 +9197,10 @@ function renderStats(m){
       /* v43-cross2：统计表交叉淡化——旧行摘出定格为覆盖表淡出，新行 fadeUp stagger 在其下交叉入场，消除全表消失重建的闪动；
          v49h（用户要求）：语言性重建静默化——签名仅语言位变化（数据完全相同，如切换语言后表头重译）时，
          直接静默替换不摘出不交叉，切换语言后的首次切入不再有任何重绘感（表头/点名状态列文字瞬时变译） */
-      var prevSigSt = _rgSig['statsTable'];
-      var langOnlySt = !!prevSigSt && prevSigSt.indexOf(';') >= 0 &&
-        prevSigSt.slice(prevSigSt.indexOf(';')) === stSig.slice(stSig.indexOf(';'));
-      var oldsTr = null;
-      if (!langOnlySt && !sprReduce() && stBox.animate && stBox.rows && stBox.rows.length > 1) {
-        oldsTr = [];
-        while (stBox.firstChild) oldsTr.push(stBox.removeChild(stBox.firstChild));   /* 摘走（含隐式 tbody），否则 firstChild 恒定死循环 */
-      }
+      /* v50c（用户要求消除文字覆盖感）：不再摘出旧行构建幽灵覆盖表——数据变化时直接替换，
+         零叠影；渲染守卫与 v49h 语言静默化逻辑保持不变 */
       stBox.innerHTML = rows;
       renderGuardPut('statsTable', m, stSig);
-      if (oldsTr) {
-        var wrapEl = stBox.parentNode;
-        if (wrapEl) {
-          var gt = document.createElement('table');
-          gt.className = stBox.className;
-          for (var gi = 0; gi < oldsTr.length; gi++) gt.appendChild(oldsTr[gi]);
-          crossGhostify(gt);   /* v44-bglock：定格表只留文字，白卡底色恒定 */
-          var gtc = gt.querySelectorAll('th,td');
-          for (var gj = 0; gj < gtc.length; gj++) gtc[gj].style.background = 'transparent';
-          var bRect = wrapEl.getBoundingClientRect(), tRect = stBox.getBoundingClientRect();
-          gt.style.cssText = 'position:absolute;left:' + (tRect.left - bRect.left) + 'px;top:' + (tRect.top - bRect.top)
-            + 'px;width:' + tRect.width + 'px;margin:0;pointer-events:none;z-index:0;';
-          var rp2 = wrapEl.style.position === '';
-          wrapEl.style.position = 'relative';
-          wrapEl.appendChild(gt);
-          var cl2 = function(){ if (gt.parentNode) gt.parentNode.removeChild(gt); if (rp2) wrapEl.style.position = ''; };
-          var ga2 = gt.animate([{ opacity: 1, transform: 'none' }, { opacity: 0, transform: 'translateY(-3px)' }],
-            { duration: 240, easing: 'ease-in', fill: 'forwards' });   /* v49d：150→240 从容让位 */
-          if (ga2 && ga2.onfinish !== undefined) ga2.onfinish = cl2;
-          setTimeout(cl2, 400);   /* 双保险：容器被切走（display:none）冻结动画时也能清场，cl2 幂等 */
-        }
-      }
     }
   }
   var html = '';   /* patch113：下拉刷新已提到函数开头的快速返回之前，此处不再重复调用 */
@@ -9262,6 +9291,7 @@ document.getElementById('btnGuide').onclick = function(){
     + '<li>' + t('发言名单：供有主持核心磋商与个人演讲使用，有主持核心磋商或个人演讲通过后自动进入本栏目，按队列依序发言。') + '</li>'
     + '<li>' + t('动议与表决：每条动议须由一个国家提出；程序性动议由主席团依现场表决结果选择通过或未通过，无需逐国点击。') + '</li>'
     + '<li>' + t('点名有三种状态：「出席」计入出席数并拥有程序性动议的投票权，但不参与最后的文件表决（例外：门槛选「宪章第 27 条」的安理会所有出席理事国都有文件表决权；门槛选「有表决权国家的三分之二多数」的安理会，其常任理事国即使只标「出席」也默认有表决权）；「出席并投票」在前者基础上另有实质性表决文件的投票权；「缺席」不计入出席数。法定出席数与各类多数门槛均以出席数（含「出席并投票」）为基数。') + '</li>'
+    + '<li>' + t('文件流转：在「文件」栏目提交决议草案（须上传 Word 或 PDF 文件，标题与起草国、附议国一并登记）；主席确认无误后点击「引入文件」，引入后即可在「动议与表决」栏目对其发起表决，文件卡片上会给出表决入口提示。被延置的决议草案不得引入或表决，须待「取消延置决议草案」动议通过。') + '</li>'
     + '<li>' + t('实质性表决文件：单独栏目、使用国家全称。动议通过后须重新点名，点名完成自动进入本栏目；第一轮可投赞成 / 反对 / 弃权 / 过，选「过」者进入第二轮，第二轮仅可赞成或反对。所有委员会（含安理会）均为两轮制。安理会通过门槛在新建会议时二选一：宪章第 27 条的至少 9 票赞成，或有表决权国家的三分之二多数；两种口径均须无常任理事国（★）否决，且弃权未达简单多数（按有表决权席数计）。安理会门槛选「宪章第 27 条」时所有出席理事国均默认拥有决议草案表决权，点名时无需区分「出席」与「出席并投票」；门槛选「有表决权国家的三分之二多数」时非常任理事国须点名选「出席并投票」才拥有表决权，五个常任理事国默认拥有表决权，其一票否决权在两种门槛下都保留。其他委员会一律为三分之二多数，且仅点名选「出席并投票」者拥有表决权。') + '</li>'
     + '<li>' + t('决议草案表决规则：以「有决议草案表决权国家」为基数，赞成须达其三分之二多数，且弃权票不得超过其简单多数，方可通过（安理会宪章 9 票制的弃权简单多数同样按实际有表决权席数计算，不按 15 国固定）；安理会采用三分之二口径时，五个常任理事国另有一票否决权。安理会采用宪章第 27 条口径时：赞成须达 9 票、无常任理事国否决，且弃权票不得达到有表决权国家席数的简单多数（满席 15 国时为 8 票，不满席时按实际有表决权席数计算）。点名栏目的汇总条同时列出两种基数：「三分之二多数」按出席数计（用于程序性动议），「有表决权 2/3 多数」与「有表决权简单多数」按有表决权国家计（用于决议草案），两者都随点名逐次实时更新，与表决面板显示的门槛同源。') + '</li>'
     + '<li>' + t('安理会表决权随门槛口径变化：门槛选「宪章第 27 条」时，所有出席理事国都有实质性文件表决权，点名无需区分「出席」与「出席并投票」；门槛选「有表决权国家的三分之二多数」时，非常任理事国须点名选「出席并投票」才有文件表决权（点名须区分），而五个常任理事国默认拥有表决权；两种门槛下五个常任理事国的一票否决权都保留。') + '</li>'
