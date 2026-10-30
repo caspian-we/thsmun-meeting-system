@@ -29,6 +29,7 @@
   --spring:cubic-bezier(.22,.61,.36,1);
   --spring-soft:cubic-bezier(.4,0,.2,1);
   --pop:cubic-bezier(.34,1.56,.64,1);
+  --velvet:cubic-bezier(.22,1,.36,1); /* v42：缓出长尾，入场落定更绵柔 */
 }
 *{box-sizing:border-box; margin:0; padding:0;}
 html{-webkit-text-size-adjust:100%; scrollbar-gutter:stable; /* patch82：预留滚动条槽位，滚动条出现/消失不再挤动内容宽度 */}
@@ -38,7 +39,7 @@ img,video,canvas,svg{ max-width:100%; }
 input,select,textarea{ min-width:0; max-width:100%; }
 table{ max-width:100%; }
 /* 长国名 / 长标题在窄容器内可断行，不撑破布局 */
-.dv-name,.vc-name,.gr-item,.m-title,.sc-name,.archive-card .name,.doc-card .d-title,.pt-who,.min-line span,.modal-msg{
+.dv-name,.gr-item,.m-title,.sc-name,.archive-card .name,.doc-card .d-title,.pt-who,.min-line span,.modal-msg{
   overflow-wrap:break-word; word-break:break-word;
 }
 body{
@@ -47,7 +48,7 @@ body{
 }
 button{font-family:inherit; cursor:pointer; -webkit-tap-highlight-color:transparent;}
 button,label{ touch-action:manipulation; }   /* 消除移动端双击缩放延迟 */
-.dv-grid,.vote-grid,.gr-items,.dock,.doc-content,.modal-msg{ -webkit-overflow-scrolling:touch; }
+.dv-grid,.gr-items,.dock,.doc-content,.modal-msg{ -webkit-overflow-scrolling:touch; }
 input,select,textarea{font-family:inherit; font-size:14px; color:var(--ink);}
 /* iOS Safari：输入框字号小于 16px 时聚焦会自动放大页面，导致「显示不全」，
    故在触屏窄屏下统一提升到 16px；桌面端外观不受影响 */
@@ -111,20 +112,6 @@ input,select,textarea{font-family:inherit; font-size:14px; color:var(--ink);}
   text-align:center; color:var(--muted); background:#fff; border:1px dashed var(--line);
   border-radius:12px; padding:40px 20px; font-size:14px;
 }
-.site-foot{text-align:center; color:var(--muted); font-size:12px; padding:0 0 32px; letter-spacing:1px;}
-/* SECTION: styles-topbar-tabs */
-.topbar{
-  background:var(--un-deep); color:#fff; padding:10px 0;
-  position:sticky; top:0; z-index:20; box-shadow:0 2px 8px rgba(0,0,0,.18);
-}
-.topbar .wrap{display:flex; align-items:center; gap:12px;}
-.topbar .mini-logo{width:38px; height:38px; border-radius:50%; object-fit:cover; background:#fff; flex:none;}
-.topbar .mini-fallback{display:none; width:38px; height:38px; border-radius:50%; background:#fff; color:var(--un-blue); font-size:9px; font-weight:700; align-items:center; justify-content:center; flex:none;}
-.topbar .t-info{flex:1; min-width:0;}
-.topbar .t-name{font-size:15px; font-weight:600; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;}
-.topbar .t-meta{font-size:12px; opacity:.8; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;}
-.topbar .btn{background:transparent; color:#fff; border-color:rgba(255,255,255,.45);}
-.topbar .btn:hover{background:rgba(255,255,255,.14); color:#fff;}
 .tabs{
   display:flex; gap:4px; overflow-x:auto; background:#fff; border-bottom:1px solid var(--line);
   padding:0 12px; position:sticky; top:58px; z-index:19;
@@ -182,12 +169,12 @@ input,select,textarea{font-family:inherit; font-size:14px; color:var(--ink);}
 /* SECTION: styles-meeting-panels */
 .summary-strip{display:flex; gap:12px; flex-wrap:wrap; margin-bottom:14px;}
 .stat-chip{background:#fff; border:1px solid var(--line); border-radius:10px; padding:10px 16px; font-size:13px; color:var(--muted);}
-.stat-chip b{display:block; font-size:20px; color:var(--un-deep);}
+.stat-chip b{display:block; font-size:20px; color:var(--un-deep); font-variant-numeric:tabular-nums; min-width:2ch;} /* 数字等宽+定宽：位数变化（9→10）时 chip 不再变宽推动后续 chip 位移（偶发闪屏源之一） */
 .roll-row{display:flex; align-items:center; gap:10px; padding:10px 4px; border-bottom:1px solid #eef3f8; flex-wrap:wrap;}
 .roll-row .who{flex:1; min-width:160px;}
 .roll-row .country{font-weight:600; font-size:14px;}
 .seg{display:flex; gap:4px;}
-.seg button{padding:5px 10px; font-size:12px; border-radius:6px; border:1px solid var(--line); background:#fff; color:var(--muted);}
+.seg button{padding:5px 10px; font-size:12px; border-radius:6px; border:1px solid var(--line); background:#fff; color:var(--muted); white-space:nowrap;} /* 锁不折行：英文按钮文本较长（Present and voting），防止折行导致行高跳动（偶发闪屏源之二） */
 .seg button.on-p{background:var(--un-blue); border-color:var(--un-blue); color:#fff;}
 .seg button.on-pv{background:var(--ok); border-color:var(--ok); color:#fff;}
 .seg button.on-a{background:var(--abs); border-color:var(--abs); color:#fff;}
@@ -199,16 +186,10 @@ input,select,textarea{font-family:inherit; font-size:14px; color:var(--ink);}
 /* tabular-nums：等宽数字。原为比例字体，「磋商剩余」每秒变化时文本宽度随之变化，
    整行文字左右跳动（闪烁感的另一来源） */
 .speaker-current .sc-meta{font-size:13px; opacity:.9; font-variant-numeric:tabular-nums;}
-.spk-row{display:flex; align-items:center; gap:10px; padding:9px 4px; border-bottom:1px solid #eef3f8;}
-.spk-row .idx{width:26px; height:26px; border-radius:50%; background:#eef6fc; color:var(--un-blue); font-size:13px; display:flex; align-items:center; justify-content:center; flex:none;}
-.spk-row .who{flex:1;}
 .motion-card{border:1px solid var(--line); border-radius:12px; padding:14px 16px; margin-bottom:12px; background:#fff;}
 .motion-card .m-head{display:flex; gap:10px; align-items:center; flex-wrap:wrap; margin-bottom:8px;}
 .motion-card .m-title{font-weight:600; font-size:14px;}
-.vote-grid{display:grid; grid-template-columns:repeat(auto-fill,minmax(210px,1fr)); gap:8px; margin:10px 0;}
-.vote-cell{display:flex; align-items:center; gap:8px; border:1px solid #eef3f8; border-radius:8px; padding:6px 8px; font-size:13px;}
 /* v35：逐国点击格国名同样不再省略截断（投屏 21px 下 210px 窄格截断最严重），长名折行完整显示 */
-.vote-cell .vc-name{flex:1; min-width:0; overflow-wrap:anywhere;}
 .tally{font-size:14px; margin:8px 0;}
 .tally b.y{color:var(--ok);} .tally b.n{color:var(--no);} .tally b.a{color:var(--abs);}
 .timer-box{text-align:center; padding:26px 10px;}
@@ -230,9 +211,10 @@ input,select,textarea{font-family:inherit; font-size:14px; color:var(--ink);}
   letter-spacing:1px; line-height:1; flex:1; text-align:center;
 }
 .pt-display.warn{color:var(--no);}
-/* 修复闪烁：原 .pt-display.run 挂 pulseWarn 无限动画，而 run 类在计时期间恒为真，
-   导致整个发言过程中大号数字持续缩放至 1.05 并降到 .72 透明度，文字反复重新栅格化而发虚。
-   脉动只应在剩余告警时出现（见 .timer-display.warn），故此处不再附加任何动画。 */
+/* 修复闪烁：原 .pt-display.run 挂无限脉动动画，而 run 类在计时期间恒为真，
+   导致整个发言过程中大号数字持续缩放并降低透明度，文字反复重新栅格化而发虚，
+   故此处不附加任何动画。计时器告警态（.timer-display.warn）的脉动亦已按用户要求移除，
+   仅保留变红与进度条转红的静态警示。 */
 .pt-pool{display:flex; gap:8px; flex-wrap:wrap; justify-content:flex-end;}
 .pt-pool span{
   font-size:12px; background:var(--un-pale); color:var(--un-deep);
@@ -261,6 +243,10 @@ input,select,textarea{font-family:inherit; font-size:14px; color:var(--ink);}
 table.stats{width:100%; border-collapse:collapse; font-size:13px; background:#fff;}
 table.stats th,table.stats td{border:1px solid var(--line); padding:8px 10px; text-align:left;}
 table.stats th{background:#eef6fc; color:var(--un-deep);}
+/* v49c（用户要求）：统计与评奖栏一点开直接显现——图表条形（dvRise）与奖项行（rowInR）
+   不再播放入场动画，内容随面板一次性完整呈现；表决页同款动画不受影响（作用域限定） */
+#statsCharts .c-bar-row{ animation:none; }
+#tab-stats .award-row{ animation:none; }
 .award-row{display:flex; gap:10px; align-items:center; padding:8px 4px; border-bottom:1px solid #eef3f8; font-size:14px;}
 /* SECTION: styles-modal-toast */
 .modal-mask{position:fixed; inset:0; background:rgba(8,30,50,.45); display:flex; align-items:center; justify-content:center; z-index:60; padding:20px;
@@ -287,7 +273,6 @@ table.stats th{background:#eef6fc; color:var(--un-deep);}
 
 
 
-@keyframes pulseWarn{ 0%,100%{ transform:scale(1); opacity:1; } 50%{ transform:scale(1.05); opacity:.72; } }
 @keyframes popNum{ 0%{ transform:scale(1); } 40%{ transform:scale(1.22); color:var(--un-blue); } 100%{ transform:scale(1); } }
 /* patch82：此处原有一条 .view.active 的 viewIn .3s cubic-bezier 规则，与下方
    .view.active 的 paneIn .3s var(--spring) 规则选择器与属性完全相同，前者被后者覆盖，属死代码，已删除 */
@@ -311,10 +296,8 @@ table.stats th{background:#eef6fc; color:var(--un-deep);}
 .seg button.on-p:hover,.seg button.on-a:hover,.seg button.on-pv:hover{ box-shadow:var(--e1); }
 .archive-card,.motion-card,.doc-card,.card,.stat-chip{ transition:box-shadow .2s ease, border-color .2s ease, transform .2s ease; }
 .archive-card:hover,.motion-card:hover,.doc-card:hover{ box-shadow:0 5px 18px rgba(13,78,126,.10); border-color:#bcd8ec; }
-.roll-row,.spk-row,.vote-cell,.min-line,.award-row{ transition:background .15s ease; }
-.roll-row:hover,.spk-row:hover,.min-line:hover,.award-row:hover{ background:#f5f9fd; }
-.vote-cell:hover{ background:#f5f9fd; }
-.timer-display.warn{ animation:pulseWarn .9s ease-in-out infinite; }
+.roll-row,.min-line,.award-row{ transition:background .15s ease; }
+.roll-row:hover,.min-line:hover,.award-row:hover{ background:#f5f9fd; }
 .stat-chip b.bump{ animation:popNum .38s ease; }
 #toast{ transition:opacity .3s cubic-bezier(.2,.8,.2,1), transform .3s cubic-bezier(.2,.8,.2,1); }
 *{ scrollbar-width:thin; scrollbar-color:#c3d4e4 transparent; }
@@ -322,13 +305,13 @@ table.stats th{background:#eef6fc; color:var(--un-deep);}
 ::-webkit-scrollbar-thumb{ background:#c3d4e4; border-radius:6px; border:2px solid transparent; background-clip:content-box; }
 ::-webkit-scrollbar-thumb:hover{ background:#a9c2d8; background-clip:content-box; }
 @media (prefers-reduced-motion: reduce){
-  *,.view.active,.tabpane.on,.archive-card,.modal-mask.on .modal,.m-banner,.timer-display.warn,.stat-chip b.bump{ animation:none !important; }
+  *,.view.active,.tabpane.on,.archive-card,.modal-mask.on .modal,.m-banner,.stat-chip b.bump{ animation:none !important; }
   *{ transition:none !important; }
 }
 /* SECTION: styles-os-shell */
 :root{
   --dock-w:188px; --bar-h:34px;
-  --glass:rgba(255,255,255,.96); --shell-bg:#e8eef5; /* v34-perf：.72+.blur 改为 .96 实色，视觉几乎一致 */
+  --glass:rgba(255,255,255,.96); /* v34-perf：.72+.blur 改为 .96 实色，视觉几乎一致 */
 }
 /* 开机启动画面 */
 #boot{
@@ -398,7 +381,7 @@ table.stats th{background:#eef6fc; color:var(--un-deep);}
 /* 计时器 Dock 标签每秒追加剩余秒数，等宽数字避免标签宽度每秒跳动 */
 .dock button .dk-txt{ font-variant-numeric:tabular-nums; }
 /* v32-detail：结果卡片进场——票型图/门槛条/结果条依次上浮淡入（纯 CSS，随 innerHTML 重建自动播放） */
-@keyframes dvRise{ from{ opacity:0; transform:translateY(10px); } to{ opacity:1; transform:none; } }
+@keyframes dvRise{ from{ transform:translateY(10px); } to{ transform:none; } }
 .dv-charts{ animation:dvRise .34s cubic-bezier(.22,1,.36,1) .05s backwards; }
 .c-bar-row{ animation:dvRise .3s cubic-bezier(.22,1,.36,1) backwards; }
 .c-bar-row:nth-child(1){ animation-delay:.12s; } .c-bar-row:nth-child(2){ animation-delay:.2s; }
@@ -449,7 +432,7 @@ table.stats th{background:#eef6fc; color:var(--un-deep);}
 .m-banner .mb-sub{ font-size:12px; opacity:.82; margin-top:3px; }
 .m-banner.suspended{ background:linear-gradient(120deg,#fff7e2,#fdeecb); color:#7a5a10; border-color:#e9d49a; }
 .m-banner.adjourned{ background:linear-gradient(120deg,#eef2f7,#e2e9f1); color:#33475e; border-color:#c3cfdd; }
-@keyframes fadeUp{ from{ opacity:0; transform:translateY(-8px); } to{ opacity:1; transform:none; } }
+@keyframes fadeUp{ from{ transform:translateY(-8px); } to{ transform:none; } }
 /* 桌面启动器（首页） */
 .desktop{
   min-height:100vh; padding:0 0 40px;
@@ -484,7 +467,6 @@ table.stats th{background:#eef6fc; color:var(--un-deep);}
   .grid2{grid-template-columns:1fr;}
   .timer-display{font-size:60px;}
   .tabs{top:56px;}
-  .topbar .t-meta{display:none;}
   /* 移动端：Dock 变为底部栏，窗口铺满 */
   :root{ --dock-w:0px; }
   .stage{ margin-left:0; padding:calc(var(--bar-h) + 14px) 12px 74px; }
@@ -524,7 +506,7 @@ table.stats th{background:#eef6fc; color:var(--un-deep);}
   
 }
 @media (max-width:420px){
-  .statusbar .sb-chip.hide-xs{ display:none; }
+  /* .sb-chip.hide-xs 隐藏由 max-width:1280px 组统一承担（同值冗余已清） */
   .statusbar .sb-title{ display:none; }        /* 极窄屏让位给计时/法定芯片与按钮 */
   .timer-display{ font-size:52px; letter-spacing:1px; }
   .pt-display{ font-size:38px; }
@@ -547,7 +529,6 @@ table.stats th{background:#eef6fc; color:var(--un-deep);}
   #toast{ bottom:74px; max-width:92vw; }
   /* 固定最小列宽在小屏会溢出，改为单列 */
   .dv-grid{ grid-template-columns:1fr; }
-  .vote-grid{ grid-template-columns:1fr; }
   .dv-btns{ gap:5px; }
   .dv-btns .vote-btn{ flex:1 1 auto; min-width:0; padding:7px 0; }
   .vote-btn{ min-width:0; padding:7px 8px; }
@@ -599,9 +580,6 @@ table.stats th{background:#eef6fc; color:var(--un-deep);}
 .stat-chip.maj b{ color:var(--un-blue); }
 .roll-row .full{ font-size:12px; color:var(--muted); margin-top:2px; }
 /* 主发言名单：待发言队列（原轮次样式，现用于不分轮次的顺序队列） */
-.gsl-round{ border:1px solid var(--line); border-radius:10px; padding:10px 12px; margin-bottom:10px; background:#fff; }
-.gsl-round.cur{ border-color:var(--un-blue); box-shadow:0 0 0 2px rgba(91,158,214,.14); }
-.gr-head{ font-weight:600; font-size:13px; margin-bottom:8px; display:flex; gap:8px; align-items:center; }
 .gr-items{ display:flex; gap:8px; flex-wrap:wrap; }
 .gr-item{ display:flex; align-items:center; gap:6px; padding:6px 10px; border-radius:8px; background:#f4f9fd; border:1px solid var(--line); font-size:13px; }
 .gr-item i{ font-style:normal; width:18px; height:18px; border-radius:50%; background:var(--un-blue); color:#fff; font-size:11px; display:flex; align-items:center; justify-content:center; flex:none; }
@@ -612,9 +590,6 @@ table.stats th{background:#eef6fc; color:var(--un-deep);}
 /* 表决结果裁定区 */
 .chair-rule{ border:1px dashed var(--un-blue); border-radius:10px; padding:12px; background:#f7fbfe; margin-top:6px; }
 .cr-label{ font-size:13px; font-weight:600; display:flex; gap:8px; align-items:center; flex-wrap:wrap; margin-bottom:8px; }
-.cr-tally{ display:flex; gap:12px; flex-wrap:wrap; margin-bottom:10px; }
-.cr-tally label{ font-size:12px; color:var(--muted); display:flex; align-items:center; gap:6px; }
-.cr-tally input{ width:66px; padding:6px 8px; border:1px solid var(--line); border-radius:6px; font-size:13px; }
 /* 实质性表决文件 */
 .dv-doc{ display:flex; gap:10px; align-items:center; flex-wrap:wrap; margin-bottom:10px; }
 .dv-doc b{ font-size:15px; }
@@ -670,7 +645,7 @@ body{
 /* 移除三点悬停的颜色渐变提亮：用户反馈渐变不舒服，圆点保持恒定颜色 */
 .win-title{ letter-spacing:.2px; }
 /* 4) 卡片体系：静置有厚度，悬浮轻抬升 */
-.card,.motion-card,.doc-card,.mod-info,.gsl-round,.dv-cell,.stat-chip,.dv-result,.chair-rule{ box-shadow:var(--e1); }
+.card,.motion-card,.doc-card,.mod-info,.dv-cell,.stat-chip,.dv-result,.chair-rule{ box-shadow:var(--e1); }
 .card,.motion-card,.doc-card,.mod-info{
   transition:box-shadow .26s var(--spring-soft), border-color .26s var(--spring-soft), transform .26s var(--spring);
 }
@@ -793,7 +768,7 @@ body{
 .gr-item{ transition:background .18s, border-color .18s, transform .18s var(--spring), box-shadow .18s; }
 .gr-item:hover{ transform:translateY(-1px); box-shadow:var(--e1); }
 .gr-item.now{ box-shadow:0 4px 14px rgba(13,78,126,.28); }
-.roll-row,.spk-row,.min-line,.award-row,.vote-cell{ transition:background .16s var(--spring-soft), box-shadow .16s; }
+.roll-row,.min-line,.award-row{ transition:background .16s var(--spring-soft), box-shadow .16s; }
 /* 18) 统计表：斑马纹 + 悬停高亮 */
 table.stats th{ box-shadow:inset 0 -1px 0 rgba(8,54,90,.10); }
 table.stats tr:nth-child(even) td{ background:#fafcfe; }
@@ -917,8 +892,8 @@ table.stats td,table.stats th{ transition:background .16s var(--spring-soft); }
 }
 /* 32) 纪要时间戳基线对齐，形成日志感 */
 .min-line{ align-items:baseline; }
-.min-line .t{ letter-spacing:.2px; opacity:.82; transition:opacity .18s var(--spring-soft); }
-.min-line:hover .t{ opacity:1; }
+/* v49f（用户要求）：时间戳不再用透明度弱化/hover 渐变（字体零闪烁），改用颜色灰阶弱化 */
+.min-line .t{ letter-spacing:.2px; }
 /* 33) 桌面分区标题装饰条与徽章计数 */
 .desk-section h2::before{
   content:""; width:3px; height:14px; border-radius:999px; flex:none;
@@ -953,16 +928,16 @@ table.stats td,table.stats th{ transition:background .16s var(--spring-soft); }
    全部只用 transform / opacity（走合成器，不触发 layout）；图表条形的 barIn 来自全局既有
    规则 .c-bar-tr i，非本区新增。系统级 prefers-reduced-motion 下由第 312 行的
    *{animation:none!important} 统一关闭，无需本区另写降级。 */
-.dv-hist{ animation:scIn .3s var(--spring) both; }
-.dv-result{ animation:scIn .34s var(--spring) both; }
-.dv-detail{ animation:scIn .42s var(--spring) both; }
-.dv-charts .c-panel{ animation:scIn .34s var(--spring) both; }
+.dv-hist{ animation:scIn .3s var(--velvet) both; }
+.dv-result{ animation:scIn .34s var(--velvet) both; }
+.dv-detail{ animation:scIn .42s var(--velvet) both; }
+.dv-charts .c-panel{ animation:scIn .34s var(--velvet) both; }
 .dv-charts .c-panel:nth-child(2){ animation-delay:.06s; }
 .dv-charts .c-panel:nth-child(3){ animation-delay:.12s; }
-.dv-roster{ animation:rowInR .34s var(--spring) both; }
+.dv-roster{ animation:rowInR .34s var(--velvet) both; }
 /* ===== v33 细腻感增强：全部合成器工艺/复用既有 keyframes，零布局成本 ===== */
 /* ② 评奖揭晓：逐行上浮 stagger（奖项行数少；封顶 8 行后统一延迟，避免长列表并发） */
-.award-row{ animation:rowInR .3s var(--spring) backwards; }
+.award-row{ animation:rowInR .3s var(--velvet) backwards; }
 .award-row:nth-child(2){ animation-delay:.06s; }
 .award-row:nth-child(3){ animation-delay:.12s; }
 .award-row:nth-child(4){ animation-delay:.18s; }
@@ -971,8 +946,8 @@ table.stats td,table.stats th{ transition:background .16s var(--spring-soft); }
 .award-row:nth-child(n+7){ animation-delay:.36s; }
 /* ③④ 动议卡/文件卡入场：与存档卡同款 rowInR。列表走逐卡签名比对（patch111 范式），
    未变化的卡完全不动 DOM，只有重建的单卡播放——无全列重播风险 */
-.motion-card{ animation:rowInR .26s var(--spring) backwards; }
-.doc-card{ animation:rowInR .26s var(--spring) backwards; }
+.motion-card{ animation:rowInR .26s var(--velvet) backwards; }
+.doc-card{ animation:rowInR .26s var(--velvet) backwards; }
 /* ⑤ 法定达标时刻：达标后 chip 绿描边亮起；border/box-shadow 已在既有 transition 内，
    颜色平滑过渡，配合 bump 脉冲一次到位 */
 .stat-chip.quorum-ok{ border-color:var(--ok); box-shadow:inset 0 0 0 1px var(--ok); }
@@ -981,14 +956,8 @@ table.stats td,table.stats th{ transition:background .16s var(--spring-soft); }
 .dv-rs.veto{ animation:vetoPulse .8s var(--spring) .35s backwards; }
 @keyframes vetoPulse{ 0%,100%{ transform:none; } 35%{ transform:scale(1.03); } 65%{ transform:scale(.997); } }
 /* ⑪ 统计表行入场：前 6 行 stagger，第 13 行起禁用——百席表格不并发上百动画 */
-#statsTable tr{ animation:fadeUp .26s ease backwards; }
-#statsTable tr:nth-child(2){ animation-delay:.03s; }
-#statsTable tr:nth-child(3){ animation-delay:.06s; }
-#statsTable tr:nth-child(4){ animation-delay:.09s; }
-#statsTable tr:nth-child(5){ animation-delay:.12s; }
-#statsTable tr:nth-child(6){ animation-delay:.15s; }
-#statsTable tr:nth-child(n+7){ animation-delay:.18s; }
-#statsTable tr:nth-child(n+13){ animation:none; }
+/* v48s（用户要求）：代表参与统计表点开直接显现——移除逐行 fadeUp stagger，
+   表格随窗口统一入场即可，行内容不再单独播放动画 */
 .dv-rs{ display:flex; align-items:center; gap:8px; padding:6px 9px; font-size:12.5px;
   border:1px solid var(--line); border-left-width:3px; border-radius:8px; background:var(--card);
   transition:box-shadow .2s var(--spring-soft), border-color .2s var(--spring-soft); }
@@ -1118,7 +1087,6 @@ body.projector .speaker-current .sc-name{ font-size:34px; }
 body.projector .pt-who{ font-size:19px; }
 body.projector .tally{ font-size:22px; }
 body.projector .dv-name{ font-size:20px; }
-body.projector .vc-name{ font-size:17px; }
 body.projector .dv-result{ font-size:22px; }
 body.projector .dv-result b{ font-size:30px; }
 body.projector .stat-chip{ font-size:16px; }
@@ -1139,7 +1107,6 @@ body.projector .min-line{ font-size:16px; }
   body.projector .dv-result b{ font-size:17px; }
   /* 其余放大项一并收敛到窄屏可读且不溢出的尺寸 */
   body.projector .pt-who{ font-size:13px; }
-  body.projector .vc-name{ font-size:12.5px; }
   body.projector .stat-chip{ font-size:12.5px; }
   body.projector .m-title{ font-size:14px; }
   body.projector .min-line{ font-size:13px; }
@@ -1183,7 +1150,6 @@ body.dark .btn{ background:#16232f; }
 body.dark .btn-icon{ background:#16232f; }
 body.dark .vote-btn{ background:#16232f; }
 body.dark .empty{ background:#16232f; }
-body.dark .topbar .mini-fallback{ background:#16232f; }
 body.dark .tabs{ background:#16232f; }
 body.dark .field input, body.dark .field select, body.dark .field textarea{ background:#16232f; }
 body.dark .file-drop{ background:#16232f; }
@@ -1196,7 +1162,6 @@ body.dark .badge.gray{ background:#182634; }
 body.dark .badge.gold{ background:#182634; color:#e6eef6; }
 body.dark .stat-chip{ background:#16232f; }
 body.dark .seg button{ background:#16232f; }
-body.dark .spk-row .idx{ background:#182634; }
 body.dark .motion-card{ background:#16232f; }
 body.dark .mod-info{ background:#16232f; }
 body.dark .doc-card{ background:#16232f; }
@@ -1205,8 +1170,7 @@ body.dark table.stats{ background:#16232f; }
 body.dark table.stats th{ background:#182634; }
 body.dark .modal{ background:#16232f; }
 body.dark .doc-preview{ background:#16232f; color:#e6eef6; }
-body.dark .roll-row:hover, body.dark .spk-row:hover, body.dark .min-line:hover, body.dark .award-row:hover{ background:#16232f; }
-body.dark .vote-cell:hover{ background:#16232f; }
+body.dark .roll-row:hover, body.dark .min-line:hover, body.dark .award-row:hover{ background:#16232f; }
 body.dark ::-webkit-scrollbar-thumb{ background:#263d52; }
 body.dark #boot .boot-fallback{ background:#16232f; }
 body.dark .dock .dk-foot kbd{ background:#16232f; }
@@ -1216,11 +1180,10 @@ body.dark .m-banner.suspended{ background:#16232f; color:#e6eef6; }
 body.dark .m-banner.adjourned{ background:#182634; color:#e6eef6; }
 body.dark .launch-tile{ background:#1a2937; }
 body.dark .desk-section h2 .cnt{ background:#1a2937; }
-body.dark .gsl-round{ background:#16232f; }
 body.dark .gr-item{ background:#16232f; }
 body.dark .chair-rule{ background:#16232f; }
 body.dark .dv-cell{ background:#16232f; }
-body.dark .dv-cell.locked{ background:#16232f; }
+/* body.dark .dv-cell.locked 同值规则由下方 1278 行区承担（重复声明已清） */
 body.dark .dv-locked{ background:#182634; }
 body.dark .dv-result.pass{ background:#182634; }
 body.dark .dv-result.fail{ background:#182634; }
@@ -1232,32 +1195,31 @@ body.dark table.stats tr:hover td{ background:#16232f; }
    刻意保持白色的元素：顶栏 logo、启动进度条、状态栏圆点、#printReport（打印必须白底黑字）。 */
 body.dark{
   --bg:#0f1a26; --card:#182634; --ink:#e6eef6; --muted:#93a7bb; --line:#2b3f53;
-  --glass:rgba(20,33,47,.97); --shell-bg:#0b141e; --un-pale:#1c2f41; /* v34-perf：同上 */
+  --glass:rgba(20,33,47,.97); --un-pale:#1c2f41; /* v34-perf：同上 */
   --hair:inset 0 1px 0 rgba(255,255,255,.07);
   --e1:0 1px 2px rgba(0,0,0,.34), 0 1px 3px rgba(0,0,0,.30);
   --e2:0 2px 4px rgba(0,0,0,.30), 0 6px 16px rgba(0,0,0,.38);
   --e3:0 4px 8px rgba(0,0,0,.34), 0 14px 34px rgba(0,0,0,.46);
   --e4:0 8px 16px rgba(0,0,0,.38), 0 26px 60px rgba(0,0,0,.56);
   /* ⚠ --un-deep 语义分裂：18 处当文字色（含 .timer-display/.pt-display/.card h3/
-     .win-title/.modal h4/.desk-hero h1），仅 4 处当背景（.topbar/#toast/#boot）。
-     故深色下必须把它「变亮」，那 4 处背景在下方单独压深。
+     .win-title/.modal h4/.desk-hero h1），其余少数几处当背景（#toast/#boot 等）。
+     故深色下必须把它「变亮」，那几处背景在下方单独压深。
      若在此设成近黑，计时器主数字等会在深底上隐形。 */
   --un-deep:#dceaf6; --un-dark:#3d92d0; --un-blue:#4aa3e0;
   --ok:#43c98a; --no:#ef7a6c; --abs:#9aa4ae; --gold:#e3c463;
   /* 注意：--tp 是计时器进度用的数字变量（calc((1 - var(--tp,1)) * 100%)），
      绝不能在此覆盖为颜色值，否则进度条算式失效。 */
 }
-/* --un-deep 的 4 处背景用途：深色下单独压回深色，白字才够对比 */
-body.dark .topbar{ background:#0a1a28; }
+/* --un-deep 的 4 处背景用途：深色下单独压回深色，白字才够对比
+   （#toast 同值规则由 styles-charts 前区 1298 行承担，此处不重复声明） */
 body.dark #boot{ background:#0a1a28; }
-body.dark #toast{ background:#0a1a28; color:#e6eef6; box-shadow:var(--e3); }
 /* 彩底白字的块：深色下把彩底压深一档，保证白字对比度 */
 body.dark .btn-primary{ background:#1f76b8; border-color:#1f76b8; color:#fff; }
 body.dark .btn-primary:hover{ background:#2684c9; border-color:#2684c9; color:#fff; }
 body.dark .btn-primary:active{ background:#1a6ba9; color:#fff; }
 body.dark .dock button.on{ background:linear-gradient(120deg,#1f76b8,#2684c9); color:#fff; }
 body.dark .gr-item.now{ background:#1f76b8; border-color:#1f76b8; color:#fff; }
-body.dark .speaker-current{ background:linear-gradient(125deg,#164f7d 0%,#1f76b8 48%,#2684c9 100%); }
+/* body.dark .speaker-current 同值规则由 1411 行区承担（重复声明已清） */
 /* 危险按钮：浅粉边框在深底上突兀 */
 body.dark .btn-danger{ color:var(--no); border-color:#5b3a38; }
 /* 计时器文字阴影原为白色（0 1px 0 rgba(255,255,255,.9)），深色下发虚 */
@@ -1282,21 +1244,20 @@ body.dark .archive-card:hover, body.dark .motion-card:hover, body.dark .doc-card
 /* 卡片类白底（原 #fff） */
 body.dark .btn-icon, body.dark .vote-btn, body.dark .stat-chip, body.dark .seg button,
 body.dark .motion-card, body.dark .mod-info, body.dark .doc-card, body.dark table.stats,
-body.dark .modal, body.dark .gsl-round, body.dark .dv-cell, body.dark .empty{
+body.dark .modal, body.dark .dv-cell{
   background:var(--card); color:var(--ink); }
-body.dark .empty{ background:#16232f; }
+body.dark .empty{ background:#16232f; color:var(--ink); }
 body.dark .modal{ box-shadow:var(--e4); }
 /* 行分隔线与次级底色（原 #eef3f8 / #f4f9fd / #eef2f7 / #f7fafc / #f7fbfe） */
-body.dark .roll-row, body.dark .spk-row, body.dark .min-line{ border-bottom-color:#22354a; }
-body.dark .vote-cell{ border-color:#22354a; }
+body.dark .roll-row, body.dark .min-line{ border-bottom-color:#22354a; }
 body.dark .gr-item{ background:#1c2f41; }
 body.dark .dv-locked{ background:#1c2f41; color:var(--muted); }
 body.dark .doc-preview{ background:#131f2b; color:#cfdde9; border-color:var(--line); }
 body.dark .chair-rule{ background:#16283a; }
 body.dark .pool-bar{ background:rgba(255,255,255,.12); }
 /* hover 态 */
-body.dark .roll-row:hover, body.dark .spk-row:hover, body.dark .min-line:hover,
-body.dark .award-row:hover, body.dark .vote-cell:hover, body.dark .dv-cell:hover{ background:#1f3143; }
+body.dark .roll-row:hover, body.dark .min-line:hover,
+body.dark .award-row:hover, body.dark .dv-cell:hover{ background:#1f3143; }
 /* 会议横幅（原浅黄/浅灰渐变） */
 body.dark .m-banner{ border-color:rgba(255,255,255,.10); }
 body.dark .m-banner.suspended{ background:linear-gradient(120deg,#3a2f14,#2c2410); color:#f2e3bd; }
@@ -1461,7 +1422,6 @@ body.dark .doc-content{ background:#131f2b; color:#cfdde9; border-color:#2b3f53;
 /* 首页桌面容器：原 #eaf1f8 浅底，深色下整页发白 */
 body.dark .desktop{ background:transparent; }
 /* 发言序号圆点：原浅蓝底+亮蓝字(2.53) */
-body.dark .spk-row .idx{ background:#1c2f41; color:#8ecbf2; }
 /* 当前发言者内的白点：原白底亮蓝字(2.76) → 白点配深蓝字 */
 body.dark .gr-item.now i{ background:#fff; color:#12456e; }
 /* 点名单选选中态：白字压亮蓝(2.76) → 压深蓝底，白字达 7+ */
@@ -1480,7 +1440,7 @@ body.dark .tabs{ background:var(--card); border-bottom-color:var(--line); }
 body.dark .tabs button{ color:var(--muted); }
 body.dark .tabs button.on{ color:#8ecbf2; border-bottom-color:#4aa3e0; }
 /* logo 加载失败兜底文字：白底蓝字(2.76) → 深底亮字 */
-body.dark .logo-fallback, body.dark .topbar .mini-fallback, body.dark #boot .boot-fallback{ background:#1c2f41; color:#8ecbf2; }
+body.dark .logo-fallback, body.dark #boot .boot-fallback{ background:#1c2f41; color:#8ecbf2; }
 /* 徽标文字确保够亮（v1 用 rgba 底，此处补文字色兜底）*/
 body.dark .badge.green{ color:#7fdcae; } body.dark .badge.red{ color:#f2a196; }
 body.dark .badge.gray{ color:#c2ccd6; } body.dark .badge.blue{ color:#8ecbf2; }
@@ -1508,7 +1468,7 @@ body.dark .c-donut circle[stroke]:not([stroke^="var(--line"]) { filter:drop-shad
 .c-lg{ padding:3px 6px; margin:-1px -6px; border-radius:7px; transition:background .18s var(--spring-soft); }
 .c-lg:hover{ background:rgba(127,150,175,.12); }
 /* 条形：进入动画（transform 走 GPU，不触发 layout）+ 圆角端 */
-.c-bar-tr i{ transform-origin:left center; animation:barIn .5s var(--spring) both; }
+.c-bar-tr i{ transform-origin:left center; animation:barIn .5s var(--velvet) both; }
 @keyframes barIn{ from{ transform:scaleX(0); } to{ transform:scaleX(1); } }
 .c-bar-row:hover .c-bar-lb{ color:var(--un-blue); }
 body.dark .c-bar-row:hover .c-bar-lb{ color:#8ecbf2; }
@@ -1525,7 +1485,6 @@ body:not(.dark) .desk-hero::before{ content:''; position:absolute; left:50%; top
    auto 关键字让浏览器记住已渲染项的真实高度，避免滚动条跳动。旧浏览器不支持则自动降级为无效果。 */
 .min-line{ content-visibility:auto; contain-intrinsic-size:auto 34px; }
 .roll-row{ content-visibility:auto; contain-intrinsic-size:auto 48px; }
-.spk-row{ content-visibility:auto; contain-intrinsic-size:auto 44px; }
 .doc-card, .motion-card, .archive-card{ content-visibility:auto; contain-intrinsic-size:auto 88px; }
 /* patch112：逐国表决格（.dv-cell，每格含 4 个投票键）是全场节点密度最高的一处——
    百席会议产生约 500 个节点，切到表决面板时整屏布局/绘制成本即由此而来（实测该面板切页
@@ -1556,9 +1515,6 @@ body:not(.dark) .desk-hero::before{ content:''; position:absolute; left:50%; top
   body.projector .seg{ gap:8px; }
   body.projector .seg button{ font-size:18px; min-height:46px; padding:9px 14px; border-radius:8px; }
   /* 逐国表决：单元格 13→18、国名 →21、投票键 13→18 */
-  body.projector .vote-grid{ grid-template-columns:repeat(auto-fill,minmax(260px,1fr)); gap:12px; }
-  body.projector .vote-cell{ font-size:18px; padding:10px 12px; gap:10px; }
-  body.projector .vc-name{ font-size:21px; }
   body.projector .vote-btn{ font-size:18px; min-height:46px; min-width:54px; padding:9px 6px; border-radius:8px; }
   /* 实质性表决文件卡：文件名 →22、卡内边距按 1.4x */
   body.projector .dv-grid{ grid-template-columns:repeat(auto-fill,minmax(320px,1fr)); gap:14px; }
@@ -1574,20 +1530,20 @@ body:not(.dark) .desk-hero::before{ content:''; position:absolute; left:50%; top
    投屏下点名行/纪要行字号与内边距被大幅放大，v3 的 contain-intrinsic-size 估值
    （34/44/48/88px）远小于真实高度，会让初始滚动条长度偏低、渲染后跳动。
    恢复 content-visibility:visible 即解除尺寸包含，估值不再生效，滚动条恒准。 */
-body.projector .min-line, body.projector .roll-row, body.projector .spk-row,
+body.projector .min-line, body.projector .roll-row,
 body.projector .doc-card, body.projector .motion-card, body.projector .archive-card,
 body.projector .dv-cell{
   content-visibility:visible;
 }
 /* ===== SECTION: styles-motion-v10 — 动效手感升级（spring 入场 + 可打断按压反馈）===== */
 /* 入场关键帧：位移 + 透明，spring 缓动，both 填充防首帧闪白 */
-@keyframes paneInR{ from{ opacity:0; transform:translateY(7px); } to{ opacity:1; transform:none; } }
+@keyframes paneInR{ from{ transform:translateY(7px); } to{ transform:none; } }
 
-@keyframes rowInR{ from{ opacity:0; transform:translateY(6px) scale(.992); } to{ opacity:1; transform:none; } }
+@keyframes rowInR{ from{ transform:translateY(6px) scale(.992); } to{ transform:none; } }
 
 /* 面板 / 视图 / 窗口：由纯淡入升级为 spring 位移（覆盖原 paneIn/winIn） */
-.view.active{ animation:paneInR .30s var(--spring) both; }
-.archive-card{ animation:rowInR .26s var(--spring) both; }
+.view.active{ animation:paneInR .30s var(--velvet) both; }
+.archive-card{ animation:rowInR .26s var(--velvet) both; }
 /* 按压反馈：transform 换 spring 缓动，按下跟手、释放回弹；transition 天然可打断，
    快速连点时从当前进度平滑接管，不会像 animation 那样从头重播 */
 .btn,.vote-btn,.btn-icon,.seg button,.dock button,.preset-row .btn,.timer-ctrl .btn,.pt-ctrl .btn{
@@ -1600,8 +1556,7 @@ body.projector .dv-cell{
 .dock button .dk-ico{ transition:transform .22s var(--pop); }
 /* 状态栏按钮按压回弹 */
 .sb-exit{ transition:transform .14s var(--spring), background .18s var(--spring-soft), border-color .18s var(--spring-soft), color .18s; }
-/* 计时器归零警示与实时脉冲：保持既有，但确保走 GPU 合成不抖动 */
-.timer-display.warn{ will-change:opacity; }
+/* 状态栏实时徽标呼吸：确保走 GPU 合成不抖动（计时器告警脉动已删，无对应优化需要） */
 .sb-chip.live{ will-change:opacity; }
 /* ===== SECTION: styles-motion-progress-v11 — 进程动画丝滑化（解锁每秒进度硬跳）===== */
 /* 计时器倒计时进度条：clip-path 由 --tp 每秒驱动，加 1s linear 让其连续扫过而非逐格跳。
@@ -1614,8 +1569,8 @@ body.projector .dv-cell{
    .idle 为「满格未运行」态，暂停由 JS 停 tick 后 --tp 不再变，均无副作用。 */
 .timer-display.idle::before,.pt-display.idle::before{ transition:none !important; }
 /* 当前发言者切换：整块 innerHTML 替换，加入场位移让「换人」有衔接感 */
-@keyframes scIn{ from{ opacity:0; transform:translateY(6px) scale(.994); } to{ opacity:1; transform:none; } }
-.speaker-current{ animation:scIn .28s var(--spring) both; }
+@keyframes scIn{ from{ transform:translateY(6px) scale(.994); } to{ transform:none; } }
+.speaker-current{ animation:scIn .28s var(--velvet) both; }
 /* 计票/统计数字变动时的轻微强调走已有 popNum（.bump 类由 JS 控制），此处仅确保走 GPU 不抖 */
 .stat-chip b.bump,.tally b{ will-change:transform; }
 /* 队列胶囊 now/done 状态切换（发言推进）：颜色与位移过渡更跟手 */
@@ -1662,13 +1617,13 @@ body.dark #syncCard{ background:rgba(255,255,255,.025); border-color:rgba(255,25
 /* ===== SECTION: styles-css-entrance-v19 — 纯 CSS 入场（GPU 合成，零 JS 开销）===== */
 /* v31-perf：视差编排 + 消空窗——起点改微透明 .15（画面不再闪白），面板反向 -3px 微浮与窗口 +14px 形成前后景深；
    曲线/时长不变，去 scale 避免与窗口缩放叠加 */
-@keyframes cssPaneIn{ from{ opacity:.15; transform:translateY(-3px); }
-  to{ opacity:1; transform:none; } } /* v24：去 blur，blur 仅保留在页面级 cssViewIn（同 samunos 结构） */
-@keyframes cssWinIn{ from{ opacity:.15; transform:translateY(14px) scale(.985); }
-  to{ opacity:1; transform:none; } } /* v31-perf：起点同步微透明，消空窗（理由同 cssPaneIn） */
-@keyframes cssModalIn{ from{ opacity:0; filter:blur(4px); transform:scale(.94) translateY(12px); }
-  62%{ opacity:1; filter:blur(0); transform:scale(1.014) translateY(0); }
-  to{ opacity:1; filter:blur(0); transform:none; } }
+@keyframes cssPaneIn{ from{ transform:translateY(-3px); }
+  to{ transform:none; } } /* v49f（用户要求）：轻触切栏保留微微浮动、移除透明度渐变——文字全程不闪（不透明度恒 1） */
+@keyframes cssWinIn{ from{ transform:translateY(14px) scale(.985); }
+  to{ transform:none; } } /* v31-perf：起点同步微透明，消空窗（理由同 cssPaneIn） */
+@keyframes cssModalIn{ from{ filter:blur(4px); transform:scale(.94) translateY(12px); }
+  62%{ filter:blur(0); transform:scale(1.014) translateY(0); }
+  to{ filter:blur(0); transform:none; } }
 /* v22：fill 用 backwards 而非 both —— both 会让 to 帧的 filter:blur(0) 永久残留，
    blur(0) 仍是非 none 滤镜，会使 .view 成为 fixed 后代（dock/statusbar 内的元素）的包含块。
    backwards 在动画结束后回落基础样式（与 to 帧逐值一致），无跳变、无残留。 */
@@ -1676,9 +1631,9 @@ body.dark #syncCard{ background:rgba(255,255,255,.025); border-color:rgba(255,25
    仅时长 .62s → .16s：0.62s 超过人眼交互基准（150-250ms），是「切换延迟感」的主要来源；
    .16s 后动画依旧平滑（同一条 cubic-bezier(.22,1,.36,1) 弹性曲线），但落定快 3.9 倍。
    内容区 .dv-* 入场（.30-.42s）节奏不变，外层先落定、内容再优雅淡入，层次更清晰。 */
-.tabpane.on{ animation:cssPaneIn .16s cubic-bezier(.22,1,.36,1) backwards; }
-@keyframes cssViewIn{ from{ opacity:0; filter:blur(4px); transform:translateY(10px) scale(.995); }
-  to{ opacity:1; filter:blur(0); transform:none; } }
+.tabpane.on{ animation:cssPaneIn .26s cubic-bezier(.22,1,.36,1) backwards; } /* v49d（用户要求打断更细腻）：160→260ms 回归 v30-perf 确立的节奏，与窗口 620ms 形成从容层次；全面板统一原则不变 */
+@keyframes cssViewIn{ from{ filter:blur(4px); transform:translateY(10px) scale(.995); }
+  to{ filter:blur(0); transform:none; } }
 /* SECTION: fix-dock-v24：视图级入场仅限 home/setup（其内无 fixed 元素）；
    会议视图不参与——dock(position:fixed) 在 #view-meeting 内，祖先带 transform/filter
    会劫持 fixed 定位，导致快捷键与 dock 在入场期间错位、延后显示（v22 漏改的祖先层）。 */
@@ -1758,8 +1713,8 @@ body.dark #syncCard{ background:rgba(255,255,255,.025); border-color:rgba(255,25
 }
 @keyframes liveRing{ 0%,100%{ transform:scale(1); opacity:.55; } 60%{ transform:scale(1.26); opacity:0; } }
 /* ===== SECTION: styles-detail-v34 — 呼吸灯与胶囊微交互（全合成器工艺，无常驻 JS）===== */
-/* ① 相位灯分层呼吸：发言/磋商/点名进行中=灯点轻呼吸（刻意弱于表决光环，紧急度分层）；
-   表决=liveRing 光环；空闲/休会/闭幕=静默（会议停了灯就停）。prefers-reduced-motion 下由全局禁用清单接管 */
+/* ① 相位灯分层呼吸：发言/磋商/点名进行中=灯点轻呼吸；表决=liveRing 光环；
+   空闲/休会/闭幕=静默。prefers-reduced-motion 下由全局禁用清单接管 */
 .sb-chip.live.ph-speak .sb-live-dot, .sb-chip.live.ph-roll .sb-live-dot {
   animation: dotBreath 2.8s ease-in-out infinite;
 }
@@ -1770,10 +1725,16 @@ body.dark .sb-chip.warn{ background:rgba(239,122,108,.85); color:#1a0505; }
 @keyframes chipBreath{ 0%,100%{ opacity:1; } 50%{ opacity:.76; } }
 /* ③ 投屏进行中：投屏按钮轻呼吸提示当前处于投屏态（再次点击即恢复） */
 body.projector #sbProject{ animation:chipBreath 2.2s ease-in-out infinite; }
-/* ⑧ 深浅主题切换：仅切换瞬间临时启用的全局颜色过渡（320ms 后由 JS 移除，不常驻） */
-html.theme-fade, html.theme-fade *, html.theme-fade *::before, html.theme-fade *::after{
-  transition: background-color .3s ease, border-color .3s ease, color .3s ease, box-shadow .3s ease !important;
-}
+/* v48c 深浅主题切换：View Transitions API 快照交叉（合成器线程完成，主线程零过渡开销）。
+   采用 UA 原生双向交叉：旧快照淡出 + 新快照淡入，plus-lighter 混合保证交叉全程总不透明度恒为 1
+   （无底色透出、无空窗白屏）。实测教训：对 old 设 animation:none 会让旧快照直接消失=切换闪白屏。
+   此处仅自定义时长与 velvet 曲线，混合模式交给 UA 动画全权处理 */
+::view-transition-old(root){ animation-duration:.26s; animation-timing-function:cubic-bezier(.22,1,.36,1); }
+::view-transition-new(root){ animation-duration:.26s; animation-timing-function:cubic-bezier(.22,1,.36,1); }
+/* v48b vt-lock：交叉瞬间临时禁用常驻颜色 transition（毫秒级窗口：快照捕获前颜色直接落定，
+   交叉结束后无残留渐变）。与旧 theme-fade 相反——它不加动画，只灭动画，窗口内零主线程动画。
+   由 JS 在过渡结束后移除（finished 回调 + 600ms 兜底双保险） */
+html.vt-lock, html.vt-lock *, html.vt-lock *::before, html.vt-lock *::after{ transition:none !important; }
 /* 用户要求移除（v34）：实质性表决文件/会议纪要/统计与评奖三栏的悬停上移感。
    保留阴影与边框变色反馈，仅去除 transform 位移。特异性 (1,2,1) 高于原 .card:hover 等的 (0,2,1)，
    无需 !important；刻意只限定这三个面板，其他栏目的悬停触感一律保留 */
@@ -1814,7 +1775,7 @@ body.dark .sb-chip.live.ph-roll{ background:rgba(67,201,138,.88); color:#06170f;
   <img class="boot-logo js-logo" alt="天中模联徽章" onerror="this.style.display='none';this.nextElementSibling.style.display='flex';">
   <div class="boot-fallback">THSMUN</div>
   <div class="boot-name">THSMUN OS</div>
-  <div class="boot-sub">浙江省天台中学模拟联合国社团</div>
+  <div class="boot-sub" data-i18n="浙江省天台中学模拟联合国社团">浙江省天台中学模拟联合国社团</div>
   <div class="boot-bar"><i></i></div>
 </div>
 <!-- SECTION: os-statusbar -->
@@ -2190,6 +2151,55 @@ body.dark .sb-chip.live.ph-roll{ background:rgba(67,201,138,.88); color:#06170f;
 /* SECTION: js-core */
 'use strict';
 var LS_KEY = 'thsmun_meetings_v1';
+/* v48s：存档数据版本号。旧存档（无 dver 或 dver 小于当前值）在加载时自动规范化补齐
+   新版所需字段（幂等，只补缺不删改未知字段），迁移后写回并盖戳，避免
+   「旧存档形态与新代码快速路径判定不匹配」导致的切页动画/渲染异常复发。
+   数据模型再有变化时递增 DATA_VER 并在 normalizeMeetingData 内补充对应分支。 */
+var DATA_VER = 2;
+function normalizeMeetingData(m){
+  if (!m || typeof m !== 'object') return false;
+  var changed = false;
+  function ensure(key, val){
+    if (m[key] === undefined || m[key] === null) { m[key] = val; changed = true; }
+  }
+  function ensureArr(key){
+    if (!Array.isArray(m[key])) { m[key] = []; changed = true; }
+  }
+  /* 顶层字段兑底（只补缺，已有值一律不覆盖） */
+  ensureArr('delegates'); ensureArr('gsl'); ensureArr('spkList');
+  ensureArr('motions'); ensureArr('docs'); ensureArr('minutes'); ensureArr('awards');
+  if (typeof m.stats !== 'object' || m.stats === null) { m.stats = {}; changed = true; }
+  if (!Array.isArray(m.undo)) { m.undo = []; changed = true; }
+  ensure('id', uid()); ensure('name', ''); ensure('committee', ''); ensure('topic', '');
+  ensure('dateStart', ''); ensure('dateEnd', '');
+  ensure('speechSec', 90); ensure('gslSec', 120);
+  ensure('isSC', false); ensure('scRule', 'nine');
+  ensure('rollDone', false); ensure('status', 'active');
+  ensure('currentSpeaker', null); ensure('docVote', null); ensure('pendingDocVote', null);
+  ensure('rollFor', null); ensure('hasVotedOnce', false);
+  ensure('createdAt', ''); ensure('updatedAt', '');
+  /* 代表团：id/country 兕底，roll 限定合法值，veto/fullName 兕底 */
+  for (var i = 0; i < m.delegates.length; i++) {
+    var d = m.delegates[i];
+    if (!d || typeof d !== 'object') { m.delegates[i] = { id: uid(), country: '', fullName: '', veto: false, roll: null }; changed = true; continue; }
+    if (typeof d.id !== 'string' || !d.id) { d.id = uid(); changed = true; }
+    if (typeof d.country !== 'string') { d.country = String(d.country || ''); changed = true; }
+    if (d.roll !== 'P' && d.roll !== 'PV' && d.roll !== 'A' && d.roll !== null) { d.roll = null; changed = true; }
+    if (typeof d.veto !== 'boolean') { d.veto = !!d.veto; changed = true; }
+    if (typeof d.fullName !== 'string') { d.fullName = String(d.fullName || ''); changed = true; }
+  }
+  /* 纪要条目：统一为 {t:'HH:MM', text:string}，应用 normalizePunct（幂等）；
+     不删除未知字段，保证对历史数据零破坏 */
+  for (var j = 0; j < m.minutes.length; j++) {
+    var e = m.minutes[j];
+    if (!e || typeof e !== 'object') { m.minutes[j] = { t: '', text: String(e || '') }; changed = true; continue; }
+    if (typeof e.t !== 'string') { e.t = String(e.t || ''); changed = true; }
+    if (typeof e.text !== 'string') { e.text = String(e.text || ''); changed = true; }
+    var np = normalizePunct(e.text);
+    if (np !== e.text) { e.text = np; changed = true; }
+  }
+  return changed;
+}
 /* SECTION: js-badge — 社团徽章内嵌数据（base64 JPEG，264px）
    由 badge_raw.jpg（1280px 原图）压缩而来；如需更换徽章，替换本常量即可 */
 var BADGE_DATA_URI = 'data:image/jpeg;base64,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';
@@ -2220,6 +2230,21 @@ function uid(){ return 'id' + Date.now().toString(36) + Math.random().toString(3
 function loadMeetings(){
   try { state.meetings = JSON.parse(localStorage.getItem(LS_KEY) || '[]'); }
   catch (e) { state.meetings = []; }
+  /* v48s：旧存档规范化迁移——无 dver 戳（旧版本写入）或版本号落后的存档，
+     加载时补齐新版所需字段后写回并盖戳（幂等，一次性）；
+     之后 renderMinutes 幂等快路径 / 统计表直显等新逻辑才能稳定命中 */
+  var __mig = false;
+  for (var __i = 0; __i < state.meetings.length; __i++) {
+    var __m = state.meetings[__i];
+    if (__m && __m.dver !== DATA_VER) {
+      normalizeMeetingData(__m);
+      __m.dver = DATA_VER;
+      __mig = true;
+    }
+  }
+  if (__mig) {
+    try { localStorage.setItem(LS_KEY, JSON.stringify(meetingsForPersist())); } catch (e) {}
+  }
   migratePVMeetings();
   /* 旧存档无 rev：由文本时间戳补齐，保证首页排序与跨设备比较可用（幂等） */
   stampRevisions();
@@ -2563,6 +2588,506 @@ var I18N = {
   '回退上一步（Ctrl+Z）':'Undo last step (Ctrl+Z)',
   '时间到':'Time is up', '纪要已导出':'Minutes exported', '会议已创建':'Meeting created',
   '文件已提交':'Document submitted', '奖项已记录':'Award recorded', '存档已删除':'Archive deleted'
+,
+  ' 个国家':' countries',
+  ' 个国家，导入会替换当前名单，是否继续？':' countries. Importing will replace the current roster. Continue?',
+  ' 个重复项':' duplicates',
+  ' 以内':'',
+  '1.5MB（当前浏览器以兼容模式存储文件，上限较低）':'1.5MB (this browser stores files in compatibility mode with a lower limit)',
+  'THSMUN OS / 会议设置':'THSMUN OS / Meeting Settings',
+  '— 选择决议草案 —':'— Select a draft resolution —',
+  '— 选择决议草案（可不选）—':'— Select a draft resolution (optional) —',
+  '— 选择提出国 —':'— Select the proposing country —',
+  '— 选择演讲国 —':'— Select the speaking country —',
+  '、缺席 ':', Absent ',
+  '「结束名单」会中断当前发言、停止计时、清空整个发言队列，并同时结束进行中的有主持核心磋商；「清空名单」仅清空队列，不中断发言、不结束磋商。':'"End List" interrupts the current speech, stops the timer, clears the entire queue and also ends any moderated caucus in progress; "Clear List" only clears the queue — it does not interrupt a speech or end the caucus.',
+  '三分之二多数需':'Two-thirds requires',
+  '下一位':'Next',
+  '不再使用':'will not be used',
+  '不得对其发起讨论动议、提出修正案或进行表决':'No debate motions, amendments or votes may target it',
+  '不规定参与国家':'with no fixed participating countries',
+  '且弃权未达有表决权国家':'and abstentions below the voters\'',
+  '且无常任理事国否决':'and no permanent-member veto',
+  '个人演讲仅允许 1 个国家参与，通过后自动进入「发言名单」栏目。':'An individual speech allows only one country; once passed it switches to the Speakers\' List automatically.',
+  '个人演讲结束':'Individual speech ended',
+  '个代表团':' delegations',
+  '个代表团未点名':' delegations unmarked',
+  '个代表团进入第二轮':' delegations advance to the second round',
+  '个国家':' countries',
+  '个国家已保留':' countries reserved',
+  '中英双语：点击状态栏 EN / 中文 即时切换。':'Bilingual: tap EN / 中文 in the status bar to switch instantly.',
+  '主发言名单全部发言完毕':'All GSL speeches completed',
+  '主发言名单尚未开启':'GSL not yet open',
+  '主发言名单尚未开启：可先加入国家，再点击「开启名单」，或通过「返回主发言名单」动议开启。名单为空也可开启，开启后仍可继续加入国家。':'GSL not yet open: add countries first, then tap "Open List", or pass the "Return to GSL" motion. The list can be opened empty; countries can keep joining after it opens.',
+  '主发言名单已全部发言完毕':'All GSL speeches completed',
+  '主发言名单已全部发言完毕。':'All GSL speeches completed.',
+  '主发言名单已关闭':'GSL closed',
+  '主发言名单已开启':'GSL opened',
+  '主发言名单默认每位代表发言 2 分钟，在本栏目内计时。':'GSL defaults to 2 minutes per delegate, timed in this tab.',
+  '主发言名单（GSL）':'General Speakers\' List (GSL)',
+  '主发言名单：通过「返回主发言名单」动议通过后自动跳转，按加入顺序依序发言，不分轮次，默认 2 分钟；已发言完毕的国家自动移出待发言队列，名单为空也可开启，关闭名单不清空尚未发言的国家。':'GSL: switches over automatically once the "Return to GSL" motion passes. Countries speak in joining order with no rounds, 2 minutes each by default; countries that finish are removed from the pending queue automatically. The list may be opened empty, and closing it never clears countries that have not yet spoken.',
+  '主席宣布复会，会议继续进行；出席状态已清空，请重新点名确认法定人数':'The chair has resumed the meeting; attendance was cleared, please take roll call again to confirm quorum',
+  '主席重新开启会议':'Chair reopened the meeting',
+  '主签/附议：':'Main signatory / signatories: ',
+  '仅支持 Word（.doc/.docx）或 PDF 文件':'Only Word (.doc/.docx) or PDF files are supported',
+  '仅支持 Word（.docx）、PDF、Excel（.xlsx）或 CSV / TXT 文件':'Only Word (.docx), PDF, Excel (.xlsx) or CSV / TXT files are supported',
+  '仅第一轮投「过」者':'Only those who voted "Pass" in round one',
+  '仍有代表正在发言，请先结束当前发言':'A delegate is still speaking; end the current speech first',
+  '从文档导入':'Import from document',
+  '从文档导入：支持 Word（.docx）、PDF、Excel（.xlsx）与 CSV / TXT。每行一个国家，或在 Excel 表格中按列排列；系统按联合国官方国名自动识别中英文国名，并自动补全全称。导入会替换当前名单。':'Import from document: supports Word (.docx), PDF, Excel (.xlsx) and CSV / TXT. One country per line, or arranged in columns in Excel. The system recognizes official UN country names in Chinese and English and auto-completes full names. Importing replaces the current roster.',
+  '代表':'Delegate',
+  '代表团总数':'Total delegations',
+  '代表认为有必要取消对一份决议草案的延置、重新开始对其讨论、修正和投票时，可动议取消延置。本动议应包括建议取消延置的决议草案编号。':'When delegates consider it necessary to remove a draft resolution from the table and resume its debate, amendment and voting, they may move to remove it from the table. The motion should state the number of the draft resolution concerned.',
+  '以下为 .docx 正文的纯文本提取结果，图片、表格样式与排版不会呈现。':'Below is the plain text extracted from the .docx body; images, table styles and layout are not rendered.',
+  '以文件为准（本机会议将被文件内容替换，导入前会自动备份）':'File takes precedence (local meetings will be replaced by the file; a backup is made automatically first)',
+  '休会期间不计时，由主席决定复会时间。宣布复会后需重新点名以确认法定人数。':'No time runs during a recess; the chair decides when to resume. After resumption is announced, roll call must be taken again to confirm quorum.',
+  '会期':'Session dates',
+  '会议':'Meeting',
+  '会议休息':'Recess',
+  '会议休息通过后按设定时长在「计时器」面板计时。':'Once a recess passes, it runs for the set duration on the Timer tab.',
+  '会议已复会，请重新点名':'Meeting resumed; please take roll call again',
+  '会议已导入，但部分附件写入失败':'Meeting imported, but some attachments failed to save',
+  '会议已重新开启':'Meeting reopened',
+  '会议流程':'Meeting flow',
+  '会议状态':'Meeting status',
+  '会议状态将恢复为进行中，已有纪要与数据保留。':'The meeting returns to "in progress"; existing minutes and data are kept.',
+  '依现场表决结果选择通过或未通过':'Choose Passed or Failed by the floor vote',
+  '修改正式辩论发言时间动议通过':'Motion to change formal debate speaking time passed',
+  '修正案 (AM)':'Amendment (AM)',
+  '全部决议草案均已排定':'All draft resolutions are ordered',
+  '关闭弹窗':'Close dialog',
+  '其中待发言':'queued: ',
+  '内容':'Note',
+  '决议草案 (DR)':'Draft Resolution (DR)',
+  '决议草案已延置':'Draft resolution tabled',
+  '决议草案表决规则：以「有决议草案表决权国家」为基数，赞成须达其三分之二多数，且弃权票不得超过其简单多数，方可通过（安理会宪章 9 票制的弃权简单多数同样按实际有表决权席数计算，不按 15 国固定）；安理会采用三分之二口径时，五个常任理事国另有一票否决权。安理会采用宪章第 27 条口径时：赞成须达 9 票、无常任理事国否决，且弃权票不得达到有表决权国家席数的简单多数（满席 15 国时为 8 票，不满席时按实际有表决权席数计算）。点名栏目的汇总条同时列出两种基数：「三分之二多数」按出席数计（用于程序性动议），「有表决权 2/3 多数」与「有表决权简单多数」按有表决权国家计（用于决议草案），两者都随点名逐次实时更新，与表决面板显示的门槛同源。':'Draft resolution voting rules: with "countries holding a vote on draft resolutions" as the base, passage requires a two-thirds majority of Yes votes, and abstentions must not exceed their simple majority (under the Security Council\'s Charter nine-vote rule the abstention simple majority is likewise computed from the actual number of voting seats, not a fixed 15). Under the two-thirds threshold the five permanent members additionally hold a veto. Under the Charter Article 27 threshold: at least 9 Yes votes, no permanent-member veto, and abstentions must not reach a simple majority of the seats holding a vote (8 votes at full attendance of 15; otherwise computed from actual voting seats). The roll-call summary strip lists both bases side by side: "Two-thirds majority" counts attendance (for procedural motions), while "2/3 of voters" and "Simple majority of voters" count countries holding a vote (for draft resolutions); both update live with every roll-call mark and share one source with the thresholds shown on the vote panel.',
+  '切换左侧面板':'Toggle left panel',
+  '切换面板':'Toggle panel',
+  '创建，共':'created with ',
+  '删除存档':'Delete archive',
+  '删除文件':'Delete document',
+  '剩余':'left: ',
+  '剩余总时长':'Total time remaining',
+  '剩余时长不足一位代表发言':'Time left is not enough for another speech',
+  '剩余时长不足一位代表发言，磋商即将结束。':'Time left is not enough for another speech; the caucus is about to end.',
+  '加入主发言名单':'Add to GSL',
+  '加入发言名单':'Add to Speakers\' List',
+  '动议':'Motion',
+  '动议与表决：每条动议须由一个国家提出；程序性动议由主席团依现场表决结果选择通过或未通过，无需逐国点击。':'Motions & Voting: every motion must be raised by one country; procedural motions are ruled Passed or Failed by the dais from the floor vote, with no per-country tapping.',
+  '动议内容（可选）':'Motion note (optional)',
+  '动议已提出，请选择通过或未通过':'Motion raised; choose Passed or Failed',
+  '动议未通过':'Motion failed',
+  '动议记录':'Motion records',
+  '动议通过':'Motion passed',
+  '勾选后：下方代表名单中的五个常任理事国（中华人民共和国、法兰西共和国、俄罗斯联邦、大不列颠及北爱尔兰联合王国、美利坚合众国）会自动获得否决权并标记 ★，其余代表团无否决权；未勾选时任何代表团都没有否决权。安理会中若通过门槛选「宪章第 27 条」，所有出席理事国都拥有实质性表决文件的投票权，点名时无需区分「出席」与「出席并投票」；若选「有表决权国家的三分之二多数」，则非常任理事国须点名选「出席并投票」才计入文件表决池，而五个常任理事国默认拥有表决权、点名时无需特意区分，且其一票否决权在两种门槛下都保留。非安理会委员会须在点名时选「出席并投票」才计入文件表决池。':'When checked: the five permanent members on the roster below (People\'s Republic of China, French Republic, Russian Federation, United Kingdom of Great Britain and Northern Ireland, United States of America) automatically receive the veto and a ★ mark; no other delegation has a veto. When unchecked, no delegation has one. In the Security Council, if the passage threshold is "Charter Article 27", every present member holds a vote on substantive documents and roll call need not distinguish "Present" from "Present and voting"; if "Two-thirds of countries holding a vote" is chosen, non-permanent members must be marked "Present and voting" to enter the document vote pool, while the five permanent members hold the vote by default with no special marking needed — and their one-country veto survives under both thresholds. Non-SC committees require "Present and voting" at roll call to enter the document vote pool.',
+  '历次实质性表决':'Past substantive votes',
+  '历次表决':'Past votes',
+  '历次表决回看：一场会议往往要表决多份决议草案，而表决面板一次只承载当前这一份。因此每次宣布结果都会固化为一条历史记录（票数、门槛口径、否决情况、逐国票与宣布时间），随会议存档一并保存，最多留存 50 条。结果卡片上方的「历次表决」胶囊条列出全部记录，最近的排在最前，绿点为通过、红点为未通过或被否决，点击即可回看任意一份文件的表决情况；开始新表决、取消表决或切换会议时自动回到最近一次。回看是只读的，不会改动任何会议数据。':'Past vote review: a session often votes on several draft resolutions, but the vote panel holds only the current one. So each announced result is frozen into a history record (tallies, threshold basis, veto, per-country votes and announcement time), saved with the meeting archive, up to 50 records. The "Past votes" capsule above the result card lists them all, newest first — green dot for passed, red for failed or vetoed; tap any record to review that document\'s vote. Starting a new vote, cancelling, or switching meetings jumps back to the latest. Review is read-only and never alters meeting data.',
+  '原设':'originally ',
+  '发言名单':'Speakers\' List',
+  '发言名单为空':'Speakers\' list is empty',
+  '发言名单为空：由有主持核心磋商或个人演讲动议通过后进入本栏目，也可在上方手动加入国家。':'Speakers\' list is empty: this tab fills automatically when a moderated caucus or individual speech passes; you can also add countries manually above.',
+  '发言名单已全部发言完毕':'All speeches completed',
+  '发言名单已清空':'Speakers\' list cleared',
+  '发言名单已结束':'Speakers\' list ended',
+  '发言名单：供有主持核心磋商与个人演讲使用，有主持核心磋商或个人演讲通过后自动进入本栏目，按队列依序发言。':'Speakers\' List: used by moderated caucuses and individual speeches. It fills automatically when such a motion passes, and countries speak in queue order.',
+  '发言时长（秒）':'Speech time (seconds)',
+  '发言结束':'Speech ended',
+  '发言计时':'Speech timer',
+  '发言计时归零':'Speech timer reached zero',
+  '发言队列':'Speech queue',
+  '取消延置决议草案动议通过':'Motion to remove from table passed',
+  '取消本次实质性表决文件':'Cancel this substantive vote',
+  '取消本次表决':'Cancel this vote',
+  '取消本次表决？':'Cancel this vote?',
+  '取自动议设定的每位代表发言时长':'Taken from the per-delegate time set in the motion',
+  '可在「动议与表决」中发起表决':'A vote can be started under "Motions & Voting"',
+  '可追加':'can append',
+  '可追加发言名单，追加国家数 = 剩余总时长 ÷ 每位代表发言时长（向下取整）=':'The speakers\' list can be extended; additions = total time remaining ÷ time per delegate (floor) =',
+  '合并（保留两边会议，各自取较新版本；推荐）':'Merge (keep both sides, taking the newer of each; recommended)',
+  '名单为空':'List is empty',
+  '名单为空，可随时加入国家':'List is empty; countries may join anytime',
+  '名单内国家均已发言完毕':'Every country on the list has spoken',
+  '名单尚未开启':'List not yet open',
+  '名单已关闭，尚未发言的':'List closed; not yet spoken: ',
+  '名单已开启':'List opened',
+  '名单已自动关闭':'List closed automatically',
+  '名单未开启':'List not open',
+  '吗？已上传的文件内容会一并从本机浏览器存储中移除。':' Uploaded file contents will also be removed from this browser\'s storage.',
+  '吗？该会议已上传的文件也会一并从本机浏览器存储中移除，操作不可恢复。':' Its uploaded files will also be removed from this browser\'s storage. This cannot be undone.',
+  '否决权已行使，文件被否决':'Veto exercised; document rejected',
+  '否决权行使':'Veto exercised',
+  '否决权：仅当新建会议时勾选「联合国安全理事会」才存在否决权，且自动归属五个常任理事国（中华人民共和国、法兰西共和国、俄罗斯联邦、大不列颠及北爱尔兰联合王国、美利坚合众国），名单中以 ★ 标记；无需也无法手动勾选。':'Veto: it exists only when "United Nations Security Council" is checked at meeting creation, and belongs automatically to the five permanent members (People\'s Republic of China, French Republic, Russian Federation, United Kingdom of Great Britain and Northern Ireland, United States of America), marked ★ on the roster; it cannot be assigned manually.',
+  '含已上传的文件（体积较大）':'Include uploaded files (larger)',
+  '回退上一步':'Undo last step',
+  '回退仅在当前页面内有效：刷新或关闭页面后撤销记录清空，会议数据本身不受影响。':'Undo works only within the current page: records clear on refresh or close, and the meeting data itself is unaffected.',
+  '回退：误点后按状态栏「回退」或 Ctrl+Z 可撤销上一步，该操作产生的纪要条目一并移除。':'Undo: after a mis-tap, tap "Undo" in the status bar or press Ctrl+Z to revert the last step; its minutes entries are removed as well.',
+  '团':' Delegation',
+  '国':' countries',
+  '国。':' countries.',
+  '多设备同步':'Multi-device sync',
+  '多设备同步：在首页「多设备同步」导出存档文件，通过网盘或 U 盘拷到另一台设备导入，即可继续同一批会议。导入按每场会议的最后修改时间自动保留较新版本，已删除的会议不会复活，导入前会自动备份本机存档。':'Multi-device sync: export an archive from "Multi-device sync" on the home page, copy it via cloud drive or USB stick to another device and import it there to continue the same meetings. Import keeps the newer version of each meeting by last-modified time, deleted meetings do not resurrect, and a local backup is made before importing.',
+  '天中模联 THSMUN · 会议数据保存在当前浏览器本地':'THSMUN · All meeting data stays in this browser',
+  '天中模联 · THSMUN':'THSMUN Model UN',
+  '天中模联 · THSMUN MEETING SYSTEM':'THSMUN MEETING SYSTEM',
+  '奖项':'Awards',
+  '如需调整，请在「动议与表决」发起「更改投票顺序」动议。':'To adjust it, raise a "Change voting order" motion under "Motions & Voting".',
+  '如：DR1.1 关于建立反恐情报共享机制':'e.g. DR1.1 Establishing a counter-terrorism intelligence sharing mechanism',
+  '如：人道走廊的准入与安全监督':'e.g. Humanitarian corridor access and safety oversight',
+  '如：加纳、巴西':'e.g. Ghana, Brazil',
+  '如：动议设立人道走廊临时工作组':'e.g. Motion to establish a humanitarian corridor working group',
+  '如：国际反恐合作框架下的情报共享':'e.g. Intelligence sharing under an international counter-terrorism framework',
+  '如：天中模联 2026 年秋季大会':'e.g. THSMUN 2026 Autumn Conference',
+  '如：法国、德国':'e.g. France, Germany',
+  '如：联合国安全理事会':'e.g. United Nations Security Council',
+  '如：请允许就人道走廊准入问题展开磋商':'e.g. Please allow a caucus on humanitarian corridor access',
+  '存档已导入':'Archive imported',
+  '存档已导出':'Archive exported',
+  '安理会':'Security Council',
+  '安理会表决权随门槛口径变化：门槛选「宪章第 27 条」时，所有出席理事国都有实质性文件表决权，点名无需区分「出席」与「出席并投票」；门槛选「有表决权国家的三分之二多数」时，非常任理事国须点名选「出席并投票」才有文件表决权（点名须区分），而五个常任理事国默认拥有表决权；两种门槛下五个常任理事国的一票否决权都保留。':'SC voting rights shift with the threshold: under "Charter Article 27", every present member holds a substantive document vote and roll call need not distinguish "Present" from "Present and voting"; under "Two-thirds of countries holding a vote", non-permanent members must be marked "Present and voting" to hold the document vote (roll call must distinguish), while the five permanent members hold it by default; the permanent members\' one-country veto survives under both thresholds.',
+  '安理会需至少':'SC requires at least',
+  '实质性表决文件动议未执行：目标决议草案已被延置':'Substantive vote motion not executed: target draft resolution is tabled',
+  '实质性表决文件未发起：目标决议草案已被延置':'Substantive vote not started: target draft resolution is tabled',
+  '实质性表决文件未开始：目标决议草案已被延置':'Substantive vote not started: target draft resolution is tabled',
+  '实质性表决文件结果':'Substantive vote result',
+  '实质性表决文件：单独栏目、使用国家全称。动议通过后须重新点名，点名完成自动进入本栏目；第一轮可投赞成 / 反对 / 弃权 / 过，选「过」者进入第二轮，第二轮仅可赞成或反对。所有委员会（含安理会）均为两轮制。安理会通过门槛在新建会议时二选一：宪章第 27 条的至少 9 票赞成，或有表决权国家的三分之二多数；两种口径均须无常任理事国（★）否决，且弃权未达简单多数（按有表决权席数计）。安理会门槛选「宪章第 27 条」时所有出席理事国均默认拥有决议草案表决权，点名时无需区分「出席」与「出席并投票」；门槛选「有表决权国家的三分之二多数」时非常任理事国须点名选「出席并投票」才拥有表决权，五个常任理事国默认拥有表决权，其一票否决权在两种门槛下都保留。其他委员会一律为三分之二多数，且仅点名选「出席并投票」者拥有表决权。':'Substantive vote: a dedicated tab using full country names. After the motion passes, roll call must be retaken; the tab opens automatically once done. Round one offers Yes / No / Abstain / Pass, with "Pass" voters advancing to a second round that allows only Yes or No. All committees (the SC included) use two rounds. The SC passage threshold is chosen at meeting creation: at least 9 Yes votes under Charter Article 27, or two-thirds of countries holding a vote; both require no permanent-member (★) veto and abstentions below the simple majority (computed from voting seats). Under "Charter Article 27" every present member holds the draft-resolution vote by default and roll call need not distinguish "Present" from "Present and voting"; under "Two-thirds of countries holding a vote" non-permanent members must be marked "Present and voting" to hold the vote, the five permanent members hold it by default, and their veto survives under both. All other committees use the two-thirds rule, with only "Present and voting" delegations holding the vote.',
+  '宪章第 27 条：需至少 9 票赞成（固定票数，所有出席理事国都有表决权）':'Charter Article 27: at least 9 Yes votes required (fixed count; every present member holds the vote)',
+  '导入名单':'Import roster',
+  '导入失败：不是本系统导出的存档文件':'Import failed: not an archive exported by this system',
+  '导入失败：存档版本较新，请先升级本系统':'Import failed: archive from a newer version; update this system first',
+  '导入失败：文件不是有效的存档 JSON':'Import failed: the file is not valid archive JSON',
+  '导入失败：文件读取错误':'Import failed: file read error',
+  '导入失败：无法解析该文件':'Import failed: cannot parse this file',
+  '导入存档':'Import archive',
+  '导入完成：识别 ':'Import complete: recognized ',
+  '导入方式':'Import method',
+  '导出一个存档文件，通过网盘、微信或 U 盘拷到另一台设备，再在那台设备上导入，即可继续同一批会议。导入不会清空本机已有会议：按每场会议的最后修改时间自动保留较新的一方，已删除的会议不会被复活。':'Export an archive, copy it via cloud drive, chat app or USB stick to another device and import it there to continue the same meetings. Import never clears existing local meetings: the newer side of each meeting is kept by last-modified time, and deleted meetings do not resurrect.',
+  '导出全部存档':'Export all archives',
+  '导出失败：无法读取已上传的文件':'Export failed: unable to read uploaded files',
+  '导出时间':'Exported at',
+  '将从文档识别出 ':'Will recognize ',
+  '尚无任何代表团投票':'No delegation has voted yet',
+  '尚未发言的国家已保留':'Countries not yet spoken are kept',
+  '尚未排定顺序':'Order not yet set',
+  '工作文件 (WP)':'Working Paper (WP)',
+  '已关闭投屏模式':'Projector mode off',
+  '已同步名单中':'synced with the list',
+  '已延置':'Tabled',
+  '已延置的决议草案不参与投票排序':'Tabled draft resolutions are excluded from the voting order',
+  '已延置的决议草案不接受修正案。':'Tabled draft resolutions do not accept amendments.',
+  '已延置，不参与投票':'Tabled; excluded from voting',
+  '已延置，不接受修正案':'Tabled; not accepting amendments',
+  '已开启投屏模式':'Projector mode on',
+  '已引入':'Introduced',
+  '已恢复对该决议草案的讨论、修正与表决':'Debate, amendments and voting on this draft resolution have resumed',
+  '已投的票将清除，文件状态回到讨论中。':'Cast votes will be cleared and the document returns to "under discussion".',
+  '已清空发言队列':'Speech queue cleared',
+  '已直接计入计票':'counted directly into the tally',
+  '已自动移出发言队列':'Automatically removed from the speech queue',
+  '已被延置，不得引入或开始讨论':'Tabled; it cannot be introduced or opened for debate',
+  '已追加':'Appended',
+  '已选择：':'Selected: ',
+  '已通过':'Passed',
+  '席的简单多数':'-seat simple majority',
+  '常任理事国否决权':'Permanent-member veto',
+  '常任理事国（安理会拥有否决权）':'Permanent member (holds the SC veto)',
+  '延置决议草案动议通过':'Motion to table the draft resolution passed',
+  '延置已取消':'Tabling removed',
+  '建议修改后的发言时间（秒）':'Proposed new speaking time (seconds)',
+  '建议改为':'Change to',
+  '开始发言':'Start speech',
+  '开始实质性表决文件':'Start substantive vote',
+  '开始新的有主持核心磋商':'Start a new moderated caucus',
+  '开始，时长':' started, duration ',
+  '弃权已达简单多数':'Abstentions reached the simple majority',
+  '弃权已达简单多数，文件未通过':'Abstentions reached the simple majority; document failed',
+  '弃权阻断线':'Abstention cap',
+  '归零时将发出提示音并自动写入会议纪要。':'A chime sounds at zero and the event is written into the minutes automatically.',
+  '当前已延置的决议草案':'Currently tabled draft resolutions',
+  '当前投票顺序':'Current voting order',
+  '当前没有进行中的有主持核心磋商':'No moderated caucus in progress',
+  '当前浏览器不支持本地解压，无法解析该文档。':'This browser cannot decompress locally; the document cannot be parsed.',
+  '待发言':'Pending',
+  '待发言队列':'Pending speeches',
+  '待发言队列为空':'No pending speeches',
+  '待开始':'Not started',
+  '待表决':'Pending vote',
+  '待表决的决议草案因被延置而取消排队':'A draft resolution awaiting vote was pulled from the queue because it was tabled',
+  '快捷键':'Shortcuts',
+  '总时长':'Total time',
+  '所有会议与上传文件默认仅保存在当前浏览器本地，不会自动上传到任何外部服务；只有当你主动点击「导出全部存档」时，才会生成一个文件由你自行保管或传输。历次表决记录属于会议数据，会随存档保存并一同导出；撤销记录不写入存档，以节省本地空间。':'All meetings and uploaded files stay in this browser by default and are never uploaded to any external service; only when you tap "Export all archives" is a file generated for you to keep or transfer. Past vote records are meeting data, saved with the archive and exported with it; undo records are not written to the archive, to save local space.',
+  '所有会议进度将保存在当前浏览器中。':'All meeting progress is saved in this browser.',
+  '打印存档已生成':'Printable report generated',
+  '打印存档（PDF）':'Print report (PDF)',
+  '打印存档：在「会议纪要」栏目点击「打印存档（PDF）」，生成含会议信息、点名统计、动议记录、文件与表决结果、代表参与统计、奖项与完整纪要的报告，再用浏览器「另存为 PDF」即可存档。':'Print report: in the Minutes tab tap "Print report (PDF)" to generate a report with meeting info, roll-call stats, motions, documents and vote results, delegate participation, awards and the full minutes; then use the browser\'s "Save as PDF" to archive it.',
+  '投屏模式（放大计时、点名与表决显示）':'Projector mode (enlarges timer, roll call and vote displays)',
+  '投票顺序已更新':'Voting order updated',
+  '按加入顺序依序发言，不分轮次；已发言完毕的国家自动移出待发言队列。名单为空也可开启，关闭名单不会清空尚未发言的国家，关闭后仍可继续加入国家。':'Countries speak in joining order with no rounds; those who finish leave the pending queue automatically. The list may be opened empty, closing it never clears countries that have not yet spoken, and countries may keep joining after it closes.',
+  '按名额加入待选国家':'Add candidate countries by quota',
+  '提出动议':'Raise a motion',
+  '提出国':'Proposing country',
+  '提示：第一轮投赞成、反对或弃权的代表团不再进入第二轮，其票已直接计入计票；仅第一轮投「过」的代表团在本轮重新投票，本轮只可投赞成或反对。':'Note: delegations that voted Yes, No or Abstain in round one do not enter the second round — their votes are already in the tally. Only round-one "Pass" voters vote again in this round, which allows only Yes or No.',
+  '提示：第一轮投赞成、反对或弃权的代表团将直接计入计票，不进入第二轮；仅投「过」的代表团进入第二轮重新投票。':'Note: delegations voting Yes, No or Abstain in round one are counted into the tally directly and skip the second round; only "Pass" voters advance to vote again.',
+  '数字键':'Number keys',
+  '数据说明':'About the data',
+  '文件与表决结果':'Documents & vote results',
+  '文件仅保存在当前浏览器本地，不会上传到任何外部服务。':'Files stay in this browser only and are never uploaded to any external service.',
+  '文件保存失败：浏览器本地存储不可用':'File save failed: browser local storage unavailable',
+  '文件已更换，请重新点击提交':'The file changed; please tap Submit again',
+  '文件未删除：该文件正处于表决中':'Not deleted: this document is under vote',
+  '文件未通过':'Document failed',
+  '文件状态未变更':'Document status unchanged',
+  '文件过大，单个文件请控制在 ':'File too large. Keep each file under ',
+  '文件过大，请控制在 25MB 以内':'File too large; keep it under 25MB',
+  '文件通过':'Document passed',
+  '文件预览':'Document preview',
+  '新建会议：填写会议信息（含会期区间）、载入或手填代表名单（国家全称按联合国官方国名自动填充）。':'New meeting: fill in the meeting info (including session dates) and load or type the roster (full names auto-complete from official UN country names).',
+  '新的投票顺序':'New voting order',
+  '新的投票顺序 *':'New voting order *',
+  '无主持核心磋商通过后按设定时长在「计时器」面板计时，并自动跳转至该栏目。':'Once an unmoderated caucus passes, it runs for the set duration on the Timer tab and the app jumps there automatically.',
+  '无法在浏览器内解析该 Word 文件。':'This Word file cannot be parsed in the browser.',
+  '无进行中磋商':'No caucus in progress',
+  '暂无代表团':'No delegations yet',
+  '暂无会议可打印':'No meeting to print',
+  '暂无动议':'No motions',
+  '暂无动议记录':'No motions yet',
+  '暂无可排定的决议草案（需先提交决议草案）':'No draft resolution to order (submit draft resolutions first)',
+  '暂无可表决的决议草案':'No draft resolution to vote on',
+  '暂无可追加的出席代表团':'No attending delegation available to append',
+  '暂无奖项记录':'No awards yet',
+  '暂无存档可导出':'No archive to export',
+  '暂无文件':'No documents',
+  '暂无文件，可提交决议草案、修正案或工作文件':'No documents yet — submit a draft resolution, amendment or working paper',
+  '暂无进行中的实质性表决文件':'No substantive vote in progress',
+  '暂时休会':'Recess',
+  '暂时休会不计时，由主席决定复会；复会后须重新点名，点名完成后自动进入「主发言名单」栏目（新建会议首次点名完成后同样自动进入）。':'No time runs during a recess; the chair decides when to resume. After resumption, roll call must be retaken, and completing it opens the GSL tab automatically (the same applies after the first roll call of a new meeting).',
+  '暂时休会动议通过，会议暂停，由主席决定复会时间':'Recess motion passed; the meeting is paused and the chair decides when to resume',
+  '更改投票顺序动议通过，未被延置的决议草案按新顺序投票':'Change voting order motion passed; non-tabled draft resolutions vote in the new order',
+  '更新':'Update',
+  '最佳代表团奖':'Best Delegation',
+  '最佳代表奖':'Best Delegate',
+  '最佳修正案奖':'Best Amendment',
+  '最佳决议草案贡献奖':'Best Draft Resolution Contribution',
+  '最佳危机应对奖':'Best Crisis Response',
+  '最佳发言奖':'Best Speech',
+  '最佳指令奖':'Best Directive',
+  '最佳新人奖':'Best Newcomer',
+  '最佳立场把握奖':'Best Command of Position',
+  '最佳立场文件奖':'Best Position Paper',
+  '最佳风度奖':'Best Decorum',
+  '最具潜力奖':'Most Potential',
+  '最近一次实质性表决':'Latest substantive vote',
+  '有主持核心磋商同时结束':'The moderated caucus also ends',
+  '有主持核心磋商在本栏目计时，每位代表发言均消耗磋商总时长；个人演讲按其设定时长计时。':'Moderated caucuses are timed in this tab; every delegate\'s speech consumes the caucus\'s total time, while individual speeches run on their own set time.',
+  '有主持核心磋商已结束':'Moderated caucus ended',
+  '有主持核心磋商总时长用尽，磋商结束':'Moderated caucus time exhausted; caucus ended',
+  '有主持核心磋商结束':'Moderated caucus ended',
+  '有主持核心磋商进行中':'Moderated caucus in progress',
+  '有主持核心磋商进行中：每位代表发言时长由动议设定为 ':'Moderated caucus in progress: time per delegate was set by the motion to ',
+  '有主持核心磋商需填写议题、总时长与每位代表发言时长；通过后自动进入「发言名单」栏目，在该栏目内计时，每位代表发言均消耗磋商总时长。发言名单走完而总时长有剩余时，可追加发言名单，追加国家数 = 剩余总时长 ÷ 每位代表发言时长（向下取整）。':'A moderated caucus needs a topic, total time and time per delegate; once passed it opens the Speakers\' List tab automatically and is timed there, each speech consuming the caucus\'s total time. If the list finishes with time remaining, it can be extended: additions = total time remaining ÷ time per delegate (floor).',
+  '有表决权 2/3 多数':'2/3 of voters',
+  '有表决权简单多数':'Simple majority of voters',
+  '未找到待表决文件':'No document found for the vote',
+  '未找到目标决议草案':'Target draft resolution not found',
+  '未找到该文件，可能已被清理':'Document not found; it may have been cleared',
+  '未投票':'Not voted',
+  '未排定的决议草案已按原顺序追加至末尾':'Unordered draft resolutions were appended in their original order',
+  '未点名':'Unmarked',
+  '未知代表团':'Unknown delegation',
+  '未获通过':'Failed',
+  '未设委员会':'No committee set',
+  '未设日期':'No date set',
+  '未设议题':'No topic set',
+  '未识别到任何国家名称':'No country names recognized',
+  '未达法定出席数，会议不得开始':'Quorum not met; the meeting cannot start',
+  '本修正案针对的决议草案':'Draft resolution targeted by this amendment',
+  '本动议应包括代表要求延置的决议草案编号。通过后，针对该决议草案的讨论动议不再被允许，也不能对其提出修正案或进行表决，直至「取消延置决议草案」动议通过。':'The motion should state the number of the draft resolution to be tabled. Once passed, debate motions on it are disallowed, and it cannot be amended or voted on until the "Remove from table" motion passes.',
+  '本动议应排定决议草案的新投票顺序。通过后，所有未被延置的决议草案按此新顺序投票；已延置的决议草案不参与本次排序，也不得表决。':'The motion sets a new voting order for draft resolutions. Once passed, all non-tabled draft resolutions vote in this order; tabled ones are excluded from the ordering and cannot be voted on.',
+  '本动议通过后将中断当前磋商并自动返回「主发言名单」栏目（名单为空也会开启，可继续加入国家）。':'Once passed, this motion interrupts the current caucus and returns to the GSL tab automatically (the list opens even if empty; countries can keep joining).',
+  '本动议通过后需重新点名，点名完成将自动进入「实质性表决文件」栏目。所有委员会（含安理会）均为两轮表决：第一轮投赞成 / 反对 / 弃权者直接计入计票，仅投「过」者进入第二轮。安理会通过门槛在新建会议时二选一：宪章第 27 条的至少 9 票赞成，或有表决权国家的三分之二多数；两种口径均须无常任理事国否决，且弃权未达简单多数（按有表决权席数计）。安理会门槛选「宪章第 27 条」时所有出席理事国都默认拥有决议草案表决权；选「有表决权国家的三分之二多数」时非常任理事国须点名选「出席并投票」才拥有表决权，五个常任理事国默认拥有表决权，其否决权在两种门槛下都保留。其他委员会一律为三分之二多数，且仅点名选「出席并投票」者拥有表决权。':'Once passed, roll call must be retaken; completing it opens the Substantive Vote tab automatically. All committees (the SC included) vote in two rounds: round-one Yes / No / Abstain votes go straight into the tally, and only "Pass" voters enter the second round. The SC passage threshold is chosen at meeting creation: at least 9 Yes votes under Charter Article 27, or two-thirds of countries holding a vote; both require no permanent-member veto and abstentions below the simple majority (computed from voting seats). Under "Charter Article 27" every present member holds the draft-resolution vote by default; under "Two-thirds of countries holding a vote" non-permanent members must be marked "Present and voting" to hold the vote, the five permanent members hold it by default, and their veto survives under both. All other committees use the two-thirds rule, with only "Present and voting" delegations holding the vote.',
+  '本动议需由提出国提出，并填写建议修改后的发言时间；通过后主发言名单的默认发言时长即更新为该值（已排入名单的国家同步生效）。':'This motion is raised by a proposing country and needs the proposed new speaking time; once passed, the GSL default speaking time updates to that value (applying to countries already on the list).',
+  '本地保存失败：浏览器存储不可用':'Local save failed: browser storage unavailable',
+  '本地存储空间已满，保存失败：请删除部分会议存档后重试':'Local storage is full; save failed. Delete some meeting archives and retry',
+  '本存档由天中模联会议系统（THSMUN OS）生成，记录会议全过程。':'This archive was generated by the THSMUN Meeting System (THSMUN OS) and records the full course of the meeting.',
+  '本次委员会为联合国安全理事会（适用安理会表决规则）':'This committee is the United Nations Security Council (SC voting rules apply)',
+  '本系统（THSMUN OS）为社团会议量身打造，覆盖点名、主发言名单、动议裁定、实质性表决文件两轮投票（安理会门槛在新建会议时选定：宪章 9 票制或有表决权国家的三分之二多数，并含否决权）、计时、文件流转、表决结果图表化呈现与历次表决回看、纪要导出、打印存档、统计评奖、投屏模式、多设备存档同步与中英双语的完整流程，参照安理会等委员会的真实议事规则设计，供主席团与代表在会议中直接使用。':'THSMUN OS is purpose-built for our society\'s sessions, covering the full flow — roll call, GSL, motion rulings, two-round substantive voting (the SC threshold is chosen at meeting creation: the Charter nine-vote rule or two-thirds of voting countries, with the veto), timing, document circulation, charted vote results with past-vote review, minutes export, printable reports, stats and awards, projector mode, multi-device archive sync and bilingual UI. It follows the real rules of procedure of the Security Council and similar committees, ready for the dais and delegates to use live.',
+  '杰出代表团奖':'Outstanding Delegation',
+  '杰出代表奖':'Outstanding Delegate',
+  '次':' times',
+  '正在发言':'Speaking',
+  '正在打包…':'Packing…',
+  '正在本地解析文件内容…':'Parsing file locally…',
+  '正在本地解析文档…':'Parsing document locally…',
+  '此决议草案已被延置，不得发起讨论、提出修正案或进行表决，直至取消延置动议通过':'This draft resolution is tabled: no debate motions, amendments or votes until the remove-from-table motion passes',
+  '每人':'per speaker',
+  '每位代表':'per delegate',
+  '每位代表发言时长不得超过磋商总时长':'Time per delegate cannot exceed the caucus total',
+  '每位代表发言时长（秒）':'Time per delegate (seconds)',
+  '永久休会':'Permanent adjournment',
+  '永久休会动议已通过。会议纪要与统计数据仍可查看、导出与评奖。':'The permanent adjournment motion has passed. Minutes and stats remain viewable, exportable and award-ready.',
+  '永久休会动议通过，本次会议正式结束':'Permanent adjournment passed; this meeting is formally closed',
+  '永久休会后会议正式结束，首页显示「会议结束」，不再提供继续入口，但仍可查看全部内容与导出数据。':'After permanent adjournment the meeting is closed for good — the home page shows "Adjourned" with no resume entry, though everything remains viewable and exportable.',
+  '没有国家选择「过」，可直接结束表决':'No country chose "Pass"; the vote can be closed directly',
+  '法定出席数':'Quorum count',
+  '法定出席数（需 ':'Quorum (need ',
+  '浙江省天台中学模拟联合国社团':'Zhejiang Tiantai High School Model United Nations',
+  '清空名单':'Clear list',
+  '清空顺序':'Clear order',
+  '演讲国':'Speaking country',
+  '演讲国（个人演讲仅限 1 国）':'Speaking country (individual speeches: one country only)',
+  '点击下方决议草案，按希望的投票先后依次排定':'Tap the draft resolutions below in your desired voting order',
+  '点击可重新选择':'Tap to reselect',
+  '点击选择，或将 Word / PDF 文件拖拽到此处':'Tap to choose, or drag a Word / PDF file here',
+  '点击选择，或将 Word / PDF 文件拖拽到此处（当前浏览器为兼容存储模式，单文件上限 1.5MB）':'Tap to choose, or drag a Word / PDF file here (this browser is in compatibility storage mode; 1.5MB per file)',
+  '点名与出席':'Roll Call & Attendance',
+  '点名完成：出席 ':'Roll call done: Present ',
+  '点名结果已记入纪要':'Roll call result recorded in the minutes',
+  '点名：每国有三个按钮，顺序为「出席并投票」（绿色，居首）→「出席」（蓝色）→「缺席」。「出席并投票」与「出席」都计入出席数并拥有程序性动议的投票权，但只有前者拥有决议草案表决权（安理会的例外见下面两条）。汇总栏并列显示两套基数：法定出席数、20% 多数、简单多数、三分之二多数按出席数计，用于程序性动议；「有表决权 2/3 多数」与「有表决权简单多数」按有表决权国家数计，用于决议草案表决；这两项随点名逐次实时更新，未点名时为 0。':'Roll call: each country has three buttons in order "Present and voting" (green, first) → "Present" (blue) → "Absent". Both "Present and voting" and "Present" count toward attendance and carry the vote on procedural motions, but only the former carries the draft-resolution vote (SC exceptions in the next two notes). The summary strip lists two bases side by side: quorum, the 20% mark, simple majority and two-thirds count attendance, for procedural motions; "2/3 of voters" and "Simple majority of voters" count countries holding a vote, for draft resolutions; both update live with every mark and read 0 until the roll is taken.',
+  '状态':'Status',
+  '用于有主持核心磋商与个人演讲的发言队列，按加入顺序依序发言。':'The speech queue for moderated caucuses and individual speeches; countries speak in joining order.',
+  '的发言因休会中断':'\'s speech was interrupted by the recess',
+  '的发言因名单关闭而中断':'\'s speech was interrupted by the list closing',
+  '的发言因名单结束而中断':'\'s speech was interrupted by the list ending',
+  '的发言因返回主发言名单而中断':'\'s speech was interrupted by the return to GSL',
+  '的发言因闭幕中断':'\'s speech was interrupted by adjournment',
+  '目标决议草案（编号）*':'Target draft resolution (No.) *',
+  '知道了':'Got it',
+  '确定删除':'Confirm delete',
+  '确定删除会议':'Delete this meeting?',
+  '确认删除':'Confirm deletion',
+  '确认取消':'Confirm cancel',
+  '确认开启':'Confirm open',
+  '确认操作':'Confirm',
+  '磋商仍有剩余时长，可追加发言名单':'Caucus time remains; the speakers\' list can be extended',
+  '磋商剩余':'Caucus left ',
+  '磋商总时长':'Total caucus time',
+  '磋商总时长已用尽':'Total caucus time used up',
+  '磋商总时长（秒）':'Total caucus time (seconds)',
+  '磋商议题 *':'Caucus topic *',
+  '票':' votes',
+  '票反对':' votes against',
+  '票弃权':' abstentions',
+  '票赞成':' votes in favor',
+  '票门槛':'-vote threshold',
+  '秒':'s',
+  '移出顺序':'Remove from order',
+  '移除':'Remove',
+  '程序性 · 修改正式辩论发言时间':'Procedural · Change formal debate speaking time',
+  '程序性 · 取消延置决议草案':'Procedural · Remove draft resolution from table',
+  '程序性 · 延置决议草案':'Procedural · Table draft resolution',
+  '程序性 · 更改投票顺序':'Procedural · Change voting order',
+  '程序性动议由主席团依现场表决结果选择通过或未通过，无需逐国点击。':'Procedural motions are ruled Passed or Failed by the dais from the floor vote, with no per-country tapping.',
+  '空格':'Space',
+  '立 足 天 台 · 放 眼 世 界':'ROOTED IN TIANTAI · REACHING THE WORLD',
+  '立足天台 · 放眼世界。':'Rooted in Tiantai, reaching the world.',
+  '第':'Round',
+  '第一轮':'Round 1',
+  '第一轮可选赞成 / 反对 / 弃权 / 过（进入第二轮）':'Round 1 offers Yes / No / Abstain / Pass (Pass advances to round 2)',
+  '第一轮已定':'Round 1 settled',
+  '第二轮仅可投赞成或反对':'Round 2 allows only Yes or No',
+  '等待开始发言':'Waiting to start the speech',
+  '类型':'Type',
+  '累计发言':'Total speeches',
+  '纪要为历史记录，按写入时的界面语言定稿，不随语言切换而重译；导出的纪要同样保留当时的语言。':'Minutes are a historical record, finalized in the UI language at write time and never retranslated on language switch; exported minutes keep their original language too.',
+  '结束发言名单':'End speakers\' list',
+  '结束名单':'End list',
+  '结束日期不能早于开始日期':'End date cannot precede the start date',
+  '结束辩论':'Close debate',
+  '结束辩论动议通过，辩论结束':'Close debate motion passed; debate is closed',
+  '结束辩论须以三分之二多数通过，规则已锁定。':'Closing debate requires a two-thirds majority; the rule is locked.',
+  '继续':'Continue',
+  '编号':'No.',
+  '老式 .doc / .xls 二进制格式无法在浏览器内解析，请另存为 .docx / .xlsx 后重试。':'Legacy .doc / .xls binary formats cannot be parsed in the browser; save them as .docx / .xlsx and retry.',
+  '老式 .doc 二进制格式无法在浏览器内直接预览。':'Legacy .doc binary files cannot be previewed directly in the browser.',
+  '联合国安全理事会':'United Nations Security Council',
+  '自定义 · 自行命名动议':'Custom · Name your own motion',
+  '自定义动议名称 *':'Custom motion name *',
+  '自由辩论不规定参与国家，通过后按设定时长在「计时器」面板计时，并自动跳转至该栏目。':'An unmoderated caucus has no fixed participants; once passed it runs for the set duration on the Timer tab and the app jumps there automatically.',
+  '至':' to',
+  '至少保留 2 个代表团':'Keep at least 2 delegations',
+  '荣誉提名':'Honorable Mention',
+  '表决':'Vote',
+  '表决时间':'Voted at',
+  '表决结果':'Vote result',
+  '表决结果呈现：宣布结果后，结论条下方给出「表决结果详情」——票型构成环形图（赞成 / 反对 / 弃权及占比）、门槛达成条形（赞成对比通过门槛、弃权对比弃权阻断线，同基线并列，可直接看出差几票或弃权是否踩线）、以及逐国投票明细（国家全称、★ 常任理事国标记，行使否决权者红色高亮并标注「否决权行使」）。全部数字取自宣布结果当时留存的快照，此后点名状态变化不会改写已宣布的结果。':'Vote result display: once the result is announced, a "Vote result details" panel appears below the conclusion strip — a donut of the vote split (Yes / No / Abstain with shares), threshold bars (Yes against the passage threshold, abstentions against the abstention cap, plotted on one baseline so you can read the gap or whether abstentions hit the cap), and per-country details (full names, ★ permanent-member marks, vetoers highlighted in red and labeled "Veto exercised"). All figures come from the snapshot taken at announcement; later roll-call changes never rewrite an announced result.',
+  '表决结果详情':'Vote result details',
+  '表决规则':'Voting rules',
+  '被否决':'Vetoed',
+  '计时开始 / 暂停':'Start / pause timer',
+  '计时开始/暂停':'Start/pause timer',
+  '计时归零':'Timer reached zero',
+  '评定奖项':'Awards',
+  '该代表团第一轮已定案，不进入第二轮投票':'This delegation settled in round one and does not enter round two',
+  '该决议草案已处于延置状态':'This draft resolution is already tabled',
+  '该决议草案已被延置，不得发起针对它的讨论动议':'This draft resolution is tabled: debate motions targeting it are disallowed',
+  '该决议草案已被延置，不得引入或开始讨论':'This draft resolution is tabled: it cannot be introduced or opened for debate',
+  '该决议草案已被延置，不得进行表决':'This draft resolution is tabled: it cannot be voted on',
+  '该决议草案已被延置，不能对其提出修正案':'This draft resolution is tabled: it cannot be amended',
+  '该决议草案未被延置':'This draft resolution is not tabled',
+  '该文件':'This document',
+  '该文件正处于表决中，不得删除':'This document is under vote and cannot be deleted',
+  '该文件类型不支持预览':'Preview is not supported for this file type',
+  '请先在「文件」页提交需表决的文件':'Submit the document to vote on under the Documents tab first',
+  '请先添加代表团':'Add delegations first',
+  '请先结束或取消本次表决':'End or cancel this vote first',
+  '请先选择要上传的 Word 或 PDF 文件':'Choose a Word or PDF file to upload first',
+  '请在「动议与表决」发起「实质性 · 表决文件」动议；动议通过后需重新点名，点名完成会自动进入本栏目。':'Raise a "Substantive · Vote on document" motion under "Motions & Voting"; after it passes, roll call must be retaken and this tab opens automatically once done.',
+  '请在「发言名单」栏目加入国家并依序发言':'Add countries on the Speakers\' List tab and speak in order',
+  '请填写会议名称':'Please enter the meeting name',
+  '请填写磋商议题':'Please enter the caucus topic',
+  '请点击「下载文件」后用 Word 或 WPS 打开查看。':'Tap "Download file" and open it with Word or WPS to view.',
+  '请至少填写 2 个代表团':'Please enter at least 2 delegations',
+  '请至少排定 2 份决议草案的投票顺序':'Please order at least 2 draft resolutions',
+  '请输入自定义动议名称':'Please enter a custom motion name',
+  '请输入至少 5 秒':'Please enter at least 5 seconds',
+  '请选择':'Please select',
+  '请选择提出国':'Please select the proposing country',
+  '请选择演讲国':'Please select the speaking country',
+  '请选择目标决议草案':'Please select the target draft resolution',
+  '请重新点名，完成后自动进入实质性表决文件':'Please retake roll call; the Substantive Vote tab opens automatically once done',
+  '读取文件失败':'Failed to read the file',
+  '赞成未达':'Yes below',
+  '起草国：':'Drafted by: ',
+  '转入个人演讲':'Switch to individual speeches',
+  '轮':'',
+  '轮次':'Rounds',
+  '输入国家简称后，「全称」会按联合国官方公布的国名自动填充（如「荷兰」→「荷兰王国」）；也可自行修改，留空则在保存时自动填充，无对照则沿用简称。否决权无需手动勾选：仅当上方勾选「联合国安全理事会」时，五个常任理事国自动拥有否决权并显示 ★。':'After typing a short country name, "Full name" auto-completes from official UN country names (e.g. 荷兰 → 荷兰王国); you may edit it, leave it blank to auto-fill on save, or keep the short name if no match exists. The veto needs no manual checkbox: only when "United Nations Security Council" is checked above do the five permanent members automatically receive the veto and a ★.',
+  '返回主发言名单':'Return to GSL',
+  '返回主发言名单动议通过，已自动返回主发言名单栏目':'Return to GSL motion passed; switched to the GSL tab automatically',
+  '还有 ':'Still ',
+  '进入第二轮投票':'Proceed to the second round',
+  '进入讨论':'Open for debate',
+  '进行个人演讲':'Individual speech',
+  '进行中':'In progress',
+  '进行中的实质性表决文件因该决议草案被延置而中止':'The substantive vote in progress was halted because this draft resolution was tabled',
+  '追加发言名单':'Extend speakers\' list',
+  '适用联合国安全理事会表决规则':'UN Security Council voting rules apply',
+  '选填。用于补充说明本动议的具体诉求，会显示在动议卡片与会议纪要中；留空则标题仅由动议类型自动生成。':'Optional. Adds specifics about this motion; shown on the motion card and in the minutes. If left blank, the title is generated from the motion type alone.',
+  '选择「自定义」类型后在此命名，名称将作为动议标题显示在卡片与会议纪要中；属程序性动议，通过后不触发自动计时或流程切换。':'After choosing "Custom", name the motion here. The name becomes the motion title shown on cards and in the minutes. It is a procedural motion; passing it triggers no automatic timer or flow change.',
+  '逐国投票（使用国家全称）':'Country-by-country voting (full country names)',
+  '通过门槛':'Pass threshold',
+  '重复，请检查名单':'Duplicate; please check the roster',
+  '重新开启名单可继续发言':'Reopen the list to continue speeches',
+  '重新开启已闭幕的会议？':'Reopen this adjourned meeting?',
+  '针对该决议草案的讨论动议不再被允许，也不能对其提出修正案或进行表决，直至取消延置动议通过':'Debate motions on this draft resolution are disallowed, and it cannot be amended or voted on, until the remove-from-table motion passes',
+  '针对：':'Target: ',
+  '门槛':'Threshold',
+  '附议国：':'Signatories: ',
+  '非安理会，无否决权':'Not the Security Council; no veto',
+  '项':' items',
+  '须待取消延置决议草案动议通过后方可继续':'Debate may continue only after the remove-from-table motion passes',
+  '须待取消延置决议草案动议通过后方可表决':'Voting may proceed only after the remove-from-table motion passes',
+  '（暂无可延置的决议草案）':'(No draft resolution available to table)',
+  '（暂无可表决文件，请先在「文件」页提交）':'(No document to vote on — submit one under the Documents tab first)',
+  '（暂无已延置的决议草案）':'(No tabled draft resolution)',
+  '（未提取到正文内容）':'(No body text extracted)',
+  '（计时归零）':'(timer reached zero)',
+  '（需 ':' (need ',
+  '）':')',
+  '，已跳过 ':', skipped ',
+  '，本栏目无需再设置；按加入顺序依序发言。':', so nothing to set up here; countries speak in joining order.',
+  '，法定人数达到':', quorum reached',
+  '；点名完成后将自动进入主发言名单':'; the GSL tab opens automatically once roll call completes'
 };
 /* 词典补充（一）：静态标签、奖项、主发言名单、实质性表决 */
 Object.assign(I18N, {
@@ -2987,8 +3512,8 @@ Object.assign(I18N, {
 function t(zh){ if (LANG !== 'en') return zh; var v = I18N[String(zh)]; return v === undefined ? zh : v; }
 /* 标点按语言归一化：中文模式原样返回（零影响）；英文模式把拼接串里残留的中文标点
    转为英文标点，避免英文界面出现中英混排（如 Delete the meeting「X」? 或 Proposer：China） */
-function normalizePunct(str){
-  if (LANG !== 'en' || str === undefined || str === null) return str;
+function punctKey(str){
+  if (str === undefined || str === null) return str;
   return String(str)
     .replace(/\u300c/g, ' "').replace(/\u300d/g, '" ')      /* 「 」 */
     .replace(/\u300a/g, ' "').replace(/\u300b/g, '" ')      /* 《 》 */
@@ -3002,6 +3527,10 @@ function normalizePunct(str){
     .replace(/\s+([,;:.)!?])/g, '$1')                        /* 去掉收尾标点前的空格 */
     .replace(/[ \t]{2,}/g, ' ')                              /* 压缩连续空格 */
     .replace(/\s+$/, '');                                    /* 去掉尾部空格 */
+}
+function normalizePunct(str){
+  if (LANG !== 'en' || str === undefined || str === null) return str;
+  return punctKey(str);
 }
 /* 对 DOM 子树内的文本节点做标点归一化：只改文本节点，不触碰标签与属性，
    因此不会破坏 HTML 结构，也不影响 input/select 的取值 */
@@ -3147,7 +3676,7 @@ function syncUndoBtn(){
   var sbWasHidden = b.style.display === 'none';
   b.style.display = show2 ? '' : 'none';
   /* v34：撤销按钮出现时淡入 */
-  if (show2 && sbWasHidden && !sprReduce() && b.animate) b.animate([{ opacity: 0, transform: 'scale(.92)' }, { opacity: 1, transform: 'none' }], { duration: 180, easing: 'ease-out' });
+  if (show2 && sbWasHidden && !sprReduce() && b.animate) b.animate([{ transform: 'scale(.92)' }, { transform: 'none' }], { duration: 180, easing: 'ease-out' });
   var last = (show2 && m.undo.length) ? m.undo[m.undo.length - 1] : null;
   /* 英文模式用半角括号，避免中英标点混排 */
   /* 标签走 undoLabel：英文为名词短语，缺失时回落中文而非留空 */
@@ -3255,8 +3784,8 @@ function viewActive(v){ var el = document.getElementById('view-' + v); return !!
 /* v34：标题变化轻淡入（切换面板/视图时避免生硬跳变；值未变则完全不动） */
 function sbTitleSet(txt){
   var el = document.getElementById('sbTitle'); if (!el || el.textContent === txt) return;
+  /* v49e（用户要求）：移除切栏时状态栏标题的 180ms 透明度淡入——标题瞬时更新，不再闪动 */
   el.textContent = txt;
-  if (!sprReduce() && el.animate) el.animate([{ opacity: .3 }, { opacity: 1 }], { duration: 180, easing: 'ease-out' });
 }
 function syncStatusBar(){
   var sbTitle = document.getElementById('sbTitle'), sbExit = document.getElementById('sbExit');
@@ -3340,7 +3869,7 @@ function syncLiveChips(){
   if (liveSp && liveSp.textContent !== liveTxt) {
     liveSp.textContent = liveTxt;
     /* v34：会议阶段切换时文字上滑淡入（背景色过渡由 .sb-chip 既有 transition 承担） */
-    if (!sprReduce() && liveSp.animate) liveSp.animate([{ opacity: 0, transform: 'translateY(4px)' }, { opacity: 1, transform: 'none' }], { duration: 160, easing: 'ease-out' });
+    if (!sprReduce() && liveSp.animate) liveSp.animate([{ transform: 'translateY(4px)' }, { transform: 'none' }], { duration: 160, easing: 'ease-out' });
   } else if (liveSp) liveSp.textContent = liveTxt;
   live.title = t(spec.txt);
   live.style.display = spec.live ? '' : 'none';
@@ -3359,7 +3888,7 @@ function updateDockBadges(){
   function setB(id, n){ var el = document.getElementById(id); if (!el) return; var vs = n > 99 ? '99+' : String(n); if (el.textContent !== vs) { el.textContent = vs; if (!sprReduce() && el.animate) el.animate([{ transform: 'scale(1)' }, { transform: 'scale(1.22)' }, { transform: 'scale(1)' }], { duration: 200, easing: 'cubic-bezier(.34,1.56,.64,1)' }); }
   var wasOn = el.classList.contains('on'); el.classList.toggle('on', n > 0);
   /* v34：徽标从无到有弹入（熄灭保持瞬时——.on 移除即 display:none，缩出动画不可见） */
-  if (n > 0 && !wasOn && !sprReduce() && el.animate) el.animate([{ opacity: 0, transform: 'scale(.4)' }, { opacity: 1, transform: 'scale(1)' }], { duration: 200, easing: 'cubic-bezier(.34,1.56,.64,1)' }); }
+  if (n > 0 && !wasOn && !sprReduce() && el.animate) el.animate([{ transform: 'scale(.4)' }, { transform: 'scale(1)' }], { duration: 200, easing: 'cubic-bezier(.34,1.56,.64,1)' }); }
   if (!m) { setB('badge-roll', 0); setB('badge-gsl', 0); setB('badge-speakers', 0); setB('badge-motions', 0); setB('badge-docvote', 0); setB('badge-docs', 0); return; }
   var pendingRoll = 0;
   for (var i = 0; i < m.delegates.length; i++) if (!m.delegates[i].roll) pendingRoll++;
@@ -3959,7 +4488,7 @@ document.getElementById('btnAddDel').onclick = function(){
   /* v33：新行淡入 */
   var nr = document.querySelector('#delRows .del-row:last-child');
   if (nr && !sprReduce() && nr.animate) nr.animate(
-    [{ opacity: 0, transform: 'translateY(6px)' }, { opacity: 1, transform: 'none' }],
+    [{ transform: 'translateY(6px)' }, { transform: 'none' }],
     { duration: 220, easing: 'cubic-bezier(.22,1,.36,1)' });
   syncP5Marks();
 };
@@ -3976,7 +4505,7 @@ document.getElementById('btnSampleDel').onclick = function(){
     var dRows = document.querySelectorAll('#delRows .del-row');
     for (var dri = 0; dri < dRows.length; dri++) {
       if (dRows[dri].animate) dRows[dri].animate(
-        [{ opacity: 0, transform: 'translateY(6px)' }, { opacity: 1, transform: 'none' }],
+        [{ transform: 'translateY(6px)' }, { transform: 'none' }],
         { duration: 220, delay: dri * 35, easing: 'cubic-bezier(.22,1,.36,1)', fill: 'backwards' });
     }
   }
@@ -4333,6 +4862,7 @@ document.getElementById('setupForm').addEventListener('submit', function(e){
     /* 文件表决会话：所有委员会（含安理会）均为两轮制 */
     docVote: null, pendingDocVote: null, rollFor: null,
     hasVotedOnce: false, motions: [], docs: [], minutes: [], awards: [], stats: {}, undo: [],
+    dver: DATA_VER,
     createdAt: nowStr(), updatedAt: nowStr()
   };
   var p5n = 0;
@@ -4460,9 +4990,14 @@ function setTab(t){
      同样尊重系统「减少动画」偏好 */
   if (!sprReduce()) {
     var onPane = document.getElementById('tab-' + t);
+    /* v48d3（用户裁决最终版）：纪要面板浮现动画恢复，与计时器/发言名单等全部面板一致——
+       用户指认的「突兀」是当初切入时叠加的整列重建交叉（已由等数幂等路径根除），
+       面板浮现本身是舒缓渐显，保留；等数幂等路径继续保留防整列闪动 */
     if (onPane && onPane.animate) {
-      onPane.animate([{ opacity: .15, transform: 'translateY(-3px)' }, { opacity: 1, transform: 'none' }],
-        { duration: 160, easing: 'cubic-bezier(.22,1,.36,1)', fill: 'backwards' });
+      /* v48n：位移与其他栏目完全一致——全部面板同一套 cssPaneIn（含纪要 3px 下沉），不做任何特判；
+         v49d（用户要求打断更细腻）：时长 160→260ms 与 CSS 通道同步，与窗口 620ms 形成从容层次 */
+      onPane.animate([{ transform: 'translateY(-3px)' }, { transform: 'none' }],
+        { duration: 260, easing: 'cubic-bezier(.22,1,.36,1)', fill: 'backwards' });
     }
     /* v32-detail：面板落定后侧栏图标微弹——生命感反馈，纯 transform 合成器动画 */
     if (!sprReduce() && onPane) {
@@ -4519,11 +5054,19 @@ function setTab(t){
      dock 与 statusbar 是 .window 的兄弟节点（同在 .stage 内），其 fixed 定位不受影响。
      尊重系统「减少动画」偏好；不支持 WAAPI 的旧浏览器保留原 class 路径降级。 */
   if (win && !sprReduce()) {
+    /* v48d3/v48e（用户裁决）：窗口浮入对含纪要在内的全部面板统一（620ms 舒缓节奏）；
+       纪要的面板浮现也已恢复（与计时器/发言名单同构），纪要额外的行级舒缓渐显见下方 v48e 块 */
     if (win.animate) {
       /* v31-perf：动画参数一字不动（时长 620ms / 位移 / 缩放 / 缓动 / 填充全部保持原状——细腻感完整保留）。
          动画期间动态 will-change 预建合成层，避免首帧光栅化大子树；结束即释放显存 */
       win.style.willChange = 'transform, opacity';
-      var wAn = win.animate([{ opacity: .15, transform: 'translateY(14px) scale(.985)' }, { opacity: 1, transform: 'none' }],
+      /* v48o（用户最终裁决）：纪要保留位移，但幅度与其他栏目观感一致——
+         实测：同样 14px 在计时器（408px 小卡）上是轻微浮现，在纪要（1799px 满屏文字）上
+         就是整页从下往上浮（顶边行程含缩放达 27px vs 17px）。故纪要位移等比收敛
+         14px→4px、scale .985→.996（同约 1/3.5），时长/曲线/淡入与其他栏目完全同一套：
+         位移仍在（非删除），观感与其他栏目同级的轻微浮现，不再有整页滑动 */
+      var wSlide = (t === 'minutes') ? 'translateY(9px) scale(.991)' : 'translateY(14px) scale(.985)';
+      var wAn = win.animate([{ transform: wSlide }, { transform: 'none' }],
         { duration: 620, easing: 'cubic-bezier(.22,1,.36,1)', fill: 'backwards' });
       if (wAn) {
         var clearWC = function(){ win.style.willChange = ''; };
@@ -4543,6 +5086,11 @@ function setTab(t){
    宏任务在 paint 完成后才跑，真正做到「先让动画首帧出去，再重灌数据」 */
 var pendingRenderTab = null;
 function scheduleTabRender(t){
+  /* v49c（用户要求）：面板尚无内容（新建会议首次切入）时同步渲染——
+     空面板先入场、下一帧才灌内容，观感即「先加载一下再显示」；
+     同步路径只命中空面板首切，已缓存面板维持 v30-perf 缓存入场机制不变 */
+  var pane0 = document.getElementById('tab-' + t);
+  if (pane0 && !pane0.firstElementChild) { renderTab(t); return; }
   pendingRenderTab = t;
   setTimeout(function(){
     if (pendingRenderTab !== null) { var tt = pendingRenderTab; pendingRenderTab = null; renderTab(tt); }
@@ -4970,6 +5518,10 @@ document.getElementById('rollList').addEventListener('click', function(e){
   var segs = b.parentNode.children;
   for (var s = 0; s < segs.length; s++) segs[s].className = '';
   b.className = parts[1] === 'P' ? 'on-p' : (parts[1] === 'PV' ? 'on-pv' : 'on-a');
+  /* v46-finesse：选中确认微弹——从按压态(.97)弹回，与背景色 .18s 过渡叠加成「按下去有回应」 */
+  if (!sprReduce() && b.animate) b.animate(
+    [{ transform: 'scale(.96)' }, { transform: 'scale(1.05)' }, { transform: 'scale(1)' }],
+    { duration: 210, easing: 'cubic-bezier(.34,1.56,.64,1)' });
   updateRollSummary(m);
   updateDockBadges(); syncLiveChips();
   m.updatedAt = nowStr(); saveMeetings(); syncUndoBtn();
@@ -5054,17 +5606,158 @@ function openGsl(m){
   log(m, t('主发言名单已开启') + '：' + (pend ? t('待发言') + ' ' + pend + ' ' + t('国') : t('名单为空，可随时加入国家')));
   return true;
 }
+/* v43-cross：交叉淡化——innerHTML 替换前把旧卡定格为覆盖层（双缓冲），
+   替换后旧卡淡出与新卡淡入同帧重叠，两卡短暂共存无空窗，
+   快速连点开始/结束发言时不再「一闪一闪」。纯合成器动画，全浏览器兼容 */
+/* v44-bglock：定格层只承载内容——根元素背景/描边/阴影透明、动画清零。
+   卡片底色由真实卡片恒定承载，交叉只发生在文字内容层，快速连点时底色不再振荡 */
+function crossGhostify(el){
+  el.style.animation = 'none';
+  el.style.background = 'transparent';
+  el.style.backgroundImage = 'none';
+  el.style.borderColor = 'transparent';
+  el.style.boxShadow = 'none';
+  var gn = el.querySelectorAll('*');
+  for (var i = 0; i < gn.length; i++) if (gn[i].style) gn[i].style.animation = 'none';
+}
+function crossCapture(box){
+  if (!box || sprReduce() || !box.animate) return null;
+  var old = box.firstElementChild;
+  while (old && old.style && old.style.position === 'absolute') old = old.nextElementSibling; /* 跳过未清场的旧定格层 */
+  if (!old) return null;
+  var g = old.cloneNode(true);
+  crossGhostify(g);
+  return g;
+}
+function crossPlay(box, ghost){
+  if (!ghost) return;
+  var restorePos = box.style.position === '';
+  box.style.position = 'relative';
+  ghost.style.position = 'absolute'; ghost.style.inset = '0';
+  ghost.style.margin = '0'; ghost.style.pointerEvents = 'none'; ghost.style.zIndex = '1';
+  box.insertBefore(ghost, box.firstChild);
+  var cleanup = function(){ if (ghost.parentNode) ghost.parentNode.removeChild(ghost); if (restorePos) box.style.position = ''; };
+  /* v47-silk：旧字快速干脆让位（150ms 内淡出+上移 3px）——重叠重影窗口压到最短，白字不再叠白字 */
+  var ga = ghost.animate([{ opacity: 1, transform: 'none' }, { opacity: 0, transform: 'translateY(-3px)' }],
+    { duration: 240, easing: 'ease-in', fill: 'forwards' });
+  if (ga && ga.onfinish !== undefined) ga.onfinish = cleanup;
+  setTimeout(cleanup, 400);   /* 双保险：容器被切走（display:none）冻结动画时也能清场，cleanup 幂等 */
+  /* v44-bglock：新卡背景立即满格（禁整卡 scIn 的透明度动画），交叉只发生在内容层——
+     卡内子元素淡入并上移 6px（继承 v37 scIn 的衔接感），底色全程恒定不闪 */
+  for (var i = 1; i < box.children.length; i++) {
+    var nc = box.children[i];
+    if (!nc || !nc.style) continue;
+    nc.style.animation = 'none';
+    if (!nc.animate) continue;
+    var subs = nc.children;
+    if (!subs.length) {
+      nc.animate([{ transform: 'translateY(5px)' }, { transform: 'none' }],
+        { duration: 260, delay: 50, easing: 'cubic-bezier(.22,1,.36,1)', fill: 'backwards' });
+      continue;
+    }
+    for (var si = 0; si < subs.length; si++) {
+      if (!subs[si].animate) continue;
+      /* v47-silk：延迟错时浮现——旧字先走、新字后到；v49d 总窗口 240→310ms 同步放宽 */
+      subs[si].animate([{ transform: 'translateY(5px)' }, { transform: 'none' }],
+        { duration: 260, delay: 50, easing: 'cubic-bezier(.22,1,.36,1)', fill: 'backwards' });
+    }
+  }
+}
+
+/* v43-cross2：容器内「活」子元素——跳过未清场的 absolute 定格层，避免把旧幽灵当成内容 */
+function crossLiveKids(box){
+  var out = [], n = box.firstElementChild;
+  while (n) {
+    if (!(n.style && n.style.position === 'absolute')) out.push(n);
+    n = n.nextElementSibling;
+  }
+  return out;
+}
+/* v43-cross2：多子元素容器交叉淡化——旧内容（已摘出的节点）定格为覆盖层淡出，
+   与新内容入场同帧重叠，消除「旧内容瞬间消失 + 新内容单独淡入」的空窗跳变 */
+function crossPlayAll(box, olds){
+  if (!box || !olds || !olds.length || sprReduce() || !box.animate) return;
+  var cs = getComputedStyle(box);
+  var wrap = document.createElement('div');
+  for (var i = 0; i < olds.length; i++) { crossGhostify(olds[i]); wrap.appendChild(olds[i]); }
+  wrap.style.cssText = 'position:absolute;inset:0;margin:0;pointer-events:none;z-index:0;';
+  if (cs.display === 'flex' || cs.display === 'grid') wrap.style.display = cs.display;
+  if (cs.padding && cs.padding !== '0px') wrap.style.padding = cs.padding;
+  if (cs.gap && cs.gap !== 'normal' && cs.gap !== '') wrap.style.gap = cs.gap;
+  var restorePos = box.style.position === '';
+  box.style.position = 'relative';
+  box.appendChild(wrap);
+  var cleanup = function(){
+    if (wrap.parentNode) wrap.parentNode.removeChild(wrap);
+    if (restorePos) box.style.position = '';
+  };
+  var ga = wrap.animate([{ opacity: 1, transform: 'none' }, { opacity: 0, transform: 'translateY(-3px)' }],
+    { duration: 240, easing: 'ease-in', fill: 'forwards' });
+  if (ga && ga.onfinish !== undefined) ga.onfinish = cleanup;
+  setTimeout(cleanup, 400);   /* 双保险：容器被切走（display:none）冻结动画时也能清场，cleanup 幂等 */
+}
+/* v43-cross2：单卡替换交叉——旧卡克隆定格原位淡出（新卡 CSS 入场动画自动交叉），
+   下方卡片 FLIP 平滑让位（高度变化不再瞬移）；减弱动态时退化为直接替换 */
+function crossSwapCard(box, kids, idx, fresh){
+  var cur = kids[idx], i, el, dy;
+  if (sprReduce() || !box.animate) { box.replaceChild(fresh, cur); return; }
+  var ghost = cur.cloneNode(true);
+  crossGhostify(ghost);
+  var bRect = box.getBoundingClientRect(), cRect = cur.getBoundingClientRect();
+  ghost.style.cssText += ';position:absolute;left:' + (cRect.left - bRect.left) + 'px;top:' + (cRect.top - bRect.top)
+    + 'px;width:' + cRect.width + 'px;margin:0;pointer-events:none;z-index:1;';
+  var afters = [];
+  var vhLim = window.innerHeight + 80;
+  for (i = idx + 1; i < kids.length; i++) {
+    var r = kids[i].getBoundingClientRect();
+    if (r.top > vhLim) break;
+    afters.push({ el: kids[i], top: r.top });
+  }
+  var restorePos = box.style.position === '';
+  box.style.position = 'relative';
+  box.appendChild(ghost);
+  box.replaceChild(fresh, cur);
+  /* v44-bglock：新卡背景立即满格（禁整卡 rowInR 透明度），内容子元素淡入上移交叉 */
+  if (fresh.style) fresh.style.animation = 'none';
+  if (fresh.animate) {
+    var fsubs = fresh.children;
+    if (!fsubs.length) fresh.animate([{ transform: 'translateY(5px)' }, { transform: 'none' }],
+      { duration: 260, delay: 50, easing: 'cubic-bezier(.22,1,.36,1)', fill: 'backwards' });
+    for (var fi2 = 0; fi2 < fsubs.length; fi2++) {
+      if (!fsubs[fi2].animate) continue;
+      fsubs[fi2].animate([{ transform: 'translateY(5px)' }, { transform: 'none' }],
+        { duration: 260, delay: 50, easing: 'cubic-bezier(.22,1,.36,1)', fill: 'backwards' });
+    }
+  }
+  for (i = 0; i < afters.length; i++) {
+    el = afters[i].el;
+    dy = afters[i].top - el.getBoundingClientRect().top;
+    if (Math.abs(dy) > 0.5 && el.animate) el.animate(
+      [{ transform: 'translateY(' + dy + 'px)' }, { transform: 'none' }],
+      { duration: 240, easing: 'cubic-bezier(.22,1,.36,1)' });
+  }
+  var cleanup = function(){
+    if (ghost.parentNode) ghost.parentNode.removeChild(ghost);
+    if (restorePos) box.style.position = '';
+  };
+  /* v47-silk：同款快速让位 */
+  var ga = ghost.animate([{ opacity: 1, transform: 'none' }, { opacity: 0, transform: 'translateY(-3px)' }],
+    { duration: 240, easing: 'ease-in', fill: 'forwards' });
+  if (ga && ga.onfinish !== undefined) ga.onfinish = cleanup;
+  setTimeout(cleanup, 400);   /* 双保险：容器被切走（display:none）冻结动画时也能清场，cleanup 幂等 */
+}
 /* v33：发言人/状态卡片切换淡入——仅当身份标记变化（换人/开始/结束）时播放；
-   走秒重绘身份不变则不播，避免每秒闪烁。纯 opacity/transform 合成器动画 */
-function swapFlash(box, idTag){
+   走秒重绘身份不变则不播，避免每秒闪烁。传入 ghost（crossCapture 捕获的旧卡定格层）时走交叉淡化 */
+function swapFlash(box, idTag, ghost){
   if (!box) return;
-  var tag = String(idTag);
-  if (box.getAttribute('data-cur') === tag) return;
-  box.setAttribute('data-cur', tag);
+  /* v45-idem：data-cur 幂等守卫上移到调用方（内容签名级比对）——
+     此处只负责：内容真变了 → 有 ghost 走背景锁定交叉，无 ghost 退化为入场淡入 */
+  box.setAttribute('data-cur', String(idTag));
+  if (ghost) { crossPlay(box, ghost); return; }
   if (sprReduce()) return;
   var card = box.querySelector('.speaker-current, .card');
   if (card && card.animate) card.animate(
-    [{ opacity: 0, transform: 'translateY(4px)' }, { opacity: 1, transform: 'none' }],
+    [{ transform: 'translateY(4px)' }, { transform: 'none' }],
     { duration: 220, easing: 'cubic-bezier(.22,1,.36,1)' });
 }
 function renderGsl(m){
@@ -5085,25 +5778,35 @@ function renderGsl(m){
   paintTimerAt(timers.gsl);
   var box = document.getElementById('gslCurrent');
   if (box) {
+    /* v45-idem：先构建目标 html 与身份标记，内容签名完全一致则 DOM 纹丝不动——
+       加入名单 / 走秒中其他操作等重绘不再销毁重建蓝卡（scIn 重播即「闪一下」的根源）；
+       内容真变了才替换，并走背景锁定交叉（v44-bglock） */
+    var np = csGsl ? null : (m.gslOpen ? nextPendingInGsl(m) : null);
+    var tagG = csGsl ? 'spk:' + csGsl.delId : (np ? 'pend:' + np.delId : 'none');
+    var htmlG;
     if (csGsl) {
-      box.innerHTML = '<div class="speaker-current"><div style="flex:1;min-width:180px;"><div class="sc-name">' + esc(delName(m, csGsl.delId)) + '</div>'
+      htmlG = '<div class="speaker-current"><div style="flex:1;min-width:180px;"><div class="sc-name">' + esc(delName(m, csGsl.delId)) + '</div>'
         + '<div class="sc-meta">' + t('正在发言') + ' · ' + csGsl.seconds + 's</div></div>'
         + '<button class="btn btn-lg" id="btnGslEnd">' + t('结束发言') + '</button></div>';
-      document.getElementById('btnGslEnd').onclick = function(){ endSpeech(m, false); };
+    } else if (np) {
+      htmlG = '<div class="speaker-current"><div style="flex:1;min-width:180px;"><div class="sc-name">' + t('下一位') + '：' + esc(delName(m, np.delId)) + '</div>'
+        + '<div class="sc-meta">' + t('名单已开启') + ' · ' + t('等待开始发言') + ' · ' + np.seconds + 's</div></div>'
+        + '<button class="btn btn-primary btn-lg" id="btnGslStart">' + t('开始发言') + '</button></div>';
+    } else if (m.gslOpen) {
+      htmlG = '<div class="card"><p class="hint">' + t('主发言名单已全部发言完毕。') + '</p></div>';
     } else {
-      var np = m.gslOpen ? nextPendingInGsl(m) : null;
-      if (np) {
-        box.innerHTML = '<div class="speaker-current"><div style="flex:1;min-width:180px;"><div class="sc-name">' + t('下一位') + '：' + esc(delName(m, np.delId)) + '</div>'
-          + '<div class="sc-meta">' + t('名单已开启') + ' · ' + t('等待开始发言') + ' · ' + np.seconds + 's</div></div>'
-          + '<button class="btn btn-primary btn-lg" id="btnGslStart">' + t('开始发言') + '</button></div>';
-        document.getElementById('btnGslStart').onclick = function(){ startNextSpeaker(m); };
-      } else if (m.gslOpen) {
-        box.innerHTML = '<div class="card"><p class="hint">' + t('主发言名单已全部发言完毕。') + '</p></div>';
-      } else {
-        box.innerHTML = '<div class="card"><p class="hint">' + t('主发言名单尚未开启：可先加入国家，再点击「开启名单」，或通过「返回主发言名单」动议开启。名单为空也可开启，开启后仍可继续加入国家。') + '</p></div>';
-      }
+      htmlG = '<div class="card"><p class="hint">' + t('主发言名单尚未开启：可先加入国家，再点击「开启名单」，或通过「返回主发言名单」动议开启。名单为空也可开启，开启后仍可继续加入国家。') + '</p></div>';
     }
-    swapFlash(box, csGsl ? 'spk:' + csGsl.delId : (typeof np !== 'undefined' && np ? 'pend:' + np.delId : 'none'));
+    /* 签名用业务参数（身份/秒数/语言），不用 innerHTML 字符串——v44 交叉会写内联样式污染序列化 */
+    var sigG = tagG + '|' + (csGsl ? csGsl.seconds : (np ? np.seconds : '')) + '|' + LANG;
+    if (box.getAttribute('data-sig') !== sigG) {
+      var ghostGsl = crossCapture(box);
+      box.innerHTML = htmlG;
+      box.setAttribute('data-sig', sigG);
+      if (csGsl) document.getElementById('btnGslEnd').onclick = function(){ endSpeech(m, false); };
+      else if (np) document.getElementById('btnGslStart').onclick = function(){ startNextSpeaker(m); };
+      swapFlash(box, tagG, ghostGsl);
+    }
   }
   /* 待发言队列：仅显示尚未发言完毕的国家，已发言结束的自动移出。
      走 paintQueue 定点渲染：鼠标悬停在胶囊上时不再因整块重建而丢失抬起态 */
@@ -5310,7 +6013,13 @@ function paintQueueItem(el, it, idx){
   var num = el.querySelector('i');
   if (!num) return false;
   var ns = String(idx + 1);
-  if (num.textContent !== ns) num.textContent = ns;
+  if (num.textContent !== ns) {
+    num.textContent = ns;
+    /* v46-finesse：序号前移（队首发言完毕后连锁前移）轻弹+色闪，与 popNum 同语言 */
+    if (!sprReduce() && num.animate) num.animate(
+      [{ transform: 'scale(1)', color: '#ffffff' }, { transform: 'scale(1.28)', color: '#9fd0f2' }, { transform: 'scale(1)', color: '#ffffff' }],
+      { duration: 280, easing: 'ease-out' });
+  }
   var sm = el.querySelector('small');
   if (!sm) return false;
   var ss = it.seconds + 's';
@@ -5358,7 +6067,7 @@ function paintQueue(container, items, emptyText){
         for (i = common; i < items.length; i++) {
           var qNew = buildQueueItem(items[i], i);
           wrap.appendChild(qNew);
-          if (!sprReduce() && qNew.animate) qNew.animate([{ opacity: 0, transform: 'translateY(6px) scale(.97)' }, { opacity: 1, transform: 'none' }], { duration: 220, easing: 'cubic-bezier(.22,1,.36,1)' });
+          if (!sprReduce() && qNew.animate) qNew.animate([{ transform: 'translateY(6px) scale(.97)' }, { transform: 'none' }], { duration: 220, easing: 'cubic-bezier(.22,1,.36,1)' });
         }
         /* 3) 截断尾部多余条目（发言完毕自动移出队列）——v34：留在原位淡出，动画完再真删；
            data-leaving 防止高频重入对同一行重复播动画；每次只处理最尾一行，多行移除自然级联 */
@@ -5368,10 +6077,65 @@ function paintQueue(container, items, emptyText){
           qDel.setAttribute('data-leaving', '1');
           if (sprReduce() || !qDel.animate) { wrap.removeChild(qDel); continue; }
           (function(qEl){
-            var qAnim = qEl.animate([{ opacity: 1 }, { opacity: 0, transform: 'translateY(-4px)' }], { duration: 150, easing: 'ease-in' });
+            var qAnim = qEl.animate([{ opacity: 1 }, { opacity: 0, transform: 'translateY(-4px)' }], { duration: 220, easing: 'ease-in' });   /* v49d：150→220 */
             qAnim.onfinish = function(){ if (qEl.parentNode) qEl.parentNode.removeChild(qEl); };
           })(qDel);
           break;
+        }
+        return;
+      }
+    }
+    /* v46b：队首/中部移除（发言完毕移出队列）——此前前缀不吻合走整列重建=闪。
+       old 去掉前 diff 个后与 items 完全对齐时：保留项原地定点更新（序号连锁微弹生效）
+       + FLIP 平滑补位；移除项脱流原位淡出。真删交给 onfinish，另有 400ms 双保险。 */
+    if (old.length > items.length && items.length > 0) {
+      var diff = old.length - items.length;
+      var sufOk = true;
+      for (var sq = 0; sq < items.length; sq++) {
+        if (old[diff + sq].getAttribute('data-del') !== items[sq].delId) { sufOk = false; break; }
+      }
+      if (sufOk) {
+        var animQ = !sprReduce() && !!wrap.animate;
+        var posQ = null;
+        if (animQ) {
+          var vhQ = window.innerHeight + 80;
+          posQ = [];
+          for (var fq = diff; fq < old.length; fq++) {
+            var rq = old[fq].getBoundingClientRect();
+            posQ.push(rq.top > vhQ ? null : { l: rq.left, t: rq.top });
+          }
+        }
+        for (var dq = 0; dq < diff; dq++) {
+          var qA = old[dq];
+          if (qA.getAttribute('data-leaving')) continue;
+          qA.setAttribute('data-leaving', '1');
+          if (!animQ || !qA.animate) { if (qA.parentNode) qA.parentNode.removeChild(qA); continue; }
+          var ar = qA.getBoundingClientRect(), br = wrap.getBoundingClientRect();
+          qA.style.position = 'absolute';
+          qA.style.left = (ar.left - br.left) + 'px';
+          qA.style.top = (ar.top - br.top) + 'px';
+          qA.style.width = ar.width + 'px';
+          qA.style.margin = '0';
+          qA.style.pointerEvents = 'none';
+          qA.style.zIndex = '1';
+          (function(qEl){
+            var qa = qEl.animate([{ opacity: 1, transform: 'none' }, { opacity: 0, transform: 'scale(.94)' }],
+              { duration: 200, easing: 'ease-in', fill: 'forwards' });
+            qa.onfinish = function(){ if (qEl.parentNode) qEl.parentNode.removeChild(qEl); };
+            setTimeout(function(){ if (qEl.parentNode) qEl.parentNode.removeChild(qEl); }, 400);
+          })(qA);
+        }
+        if (animQ) wrap.style.position = 'relative';   /* 脱流项定位锚；.gr-items 常驻 relative 无副作用 */
+        for (var kp = 0; kp < items.length; kp++) paintQueueItem(old[diff + kp], items[kp], kp);
+        if (animQ) {
+          for (var fp = 0; fp < items.length; fp++) {
+            if (posQ[fp] === null || !old[diff + fp].animate) continue;
+            var r2 = old[diff + fp].getBoundingClientRect();
+            var dx = posQ[fp].l - r2.left, dy = posQ[fp].t - r2.top;
+            if (Math.abs(dx) > 0.5 || Math.abs(dy) > 0.5) old[diff + fp].animate(
+              [{ transform: 'translate(' + dx + 'px,' + dy + 'px)' }, { transform: 'none' }],
+              { duration: 240, easing: 'cubic-bezier(.22,1,.36,1)' });
+          }
         }
         return;
       }
@@ -5520,35 +6284,42 @@ function renderSpeakers(m){
   }
   var box = document.getElementById('spkCurrent');
   if (box) {
+    /* v45-idem：与 renderGsl 同款——先构建目标 html，内容签名一致则 DOM 纹丝不动 */
+    var np = cs ? null : nextPendingInSpkList(m);
+    var tagS = cs ? 'spk:' + cs.delId : (np ? 'pend:' + np.delId : 'none');
+    var htmlS;
     if (cs) {
-      box.innerHTML = '<div class="speaker-current"><div style="flex:1;min-width:180px;"><div class="sc-name">' + esc(delName(m, cs.delId)) + '</div>'
+      htmlS = '<div class="speaker-current"><div style="flex:1;min-width:180px;"><div class="sc-name">' + esc(delName(m, cs.delId)) + '</div>'
         + '<div class="sc-meta">' + t('正在发言') + ' · ' + cs.seconds + 's'
         + (active ? ' · ' + t('磋商剩余') + ' <span id="spkCurRem">' + fmtSec(c.remainingSec) + '</span>' : '') + '</div></div>'
         + '<button class="btn btn-lg" id="btnSpkEnd">' + t('结束发言') + '</button></div>';
-      document.getElementById('btnSpkEnd').onclick = function(){ endSpeech(m, false); };
+    } else if (np) {
+      htmlS = '<div class="speaker-current"><div style="flex:1;min-width:180px;"><div class="sc-name">' + t('下一位') + '：' + esc(delName(m, np.delId)) + '</div>'
+        + '<div class="sc-meta">' + t('等待开始发言') + ' · ' + speakerSeconds(m, np.seconds) + 's</div></div>'
+        + '<button class="btn btn-primary btn-lg" id="btnSpkStart">' + t('开始发言') + '</button></div>';
+    } else if (active) {
+      /* 发言名单走完但磋商仍有剩余时长：提示可追加 */
+      var canAppend = caucusAppendable(m);
+      htmlS = '<div class="card"><p class="hint">' + t('发言名单已全部发言完毕') + '，' + t('磋商剩余') + ' '
+        + fmtSec(c.remainingSec) + '。'
+        + (canAppend
+          ? t('可追加发言名单，追加国家数 = 剩余总时长 ÷ 每位代表发言时长（向下取整）=') + ' <b>' + canAppend + '</b> ' + t('国。')
+            + '<button class="btn btn-sm" id="btnSpkAppend" style="margin-left:8px;">' + t('按名额加入待选国家') + '</button>'
+          : t('剩余时长不足一位代表发言，磋商即将结束。')) + '</p></div>';
     } else {
-      var np = nextPendingInSpkList(m);
-      if (np) {
-        box.innerHTML = '<div class="speaker-current"><div style="flex:1;min-width:180px;"><div class="sc-name">' + t('下一位') + '：' + esc(delName(m, np.delId)) + '</div>'
-          + '<div class="sc-meta">' + t('等待开始发言') + ' · ' + speakerSeconds(m, np.seconds) + 's</div></div>'
-          + '<button class="btn btn-primary btn-lg" id="btnSpkStart">' + t('开始发言') + '</button></div>';
-        document.getElementById('btnSpkStart').onclick = function(){ startNextInSpkList(m); };
-      } else if (active) {
-        /* 发言名单走完但磋商仍有剩余时长：提示可追加 */
-        var canAppend = caucusAppendable(m);
-        box.innerHTML = '<div class="card"><p class="hint">' + t('发言名单已全部发言完毕') + '，' + t('磋商剩余') + ' '
-          + fmtSec(c.remainingSec) + '。'
-          + (canAppend
-            ? t('可追加发言名单，追加国家数 = 剩余总时长 ÷ 每位代表发言时长（向下取整）=') + ' <b>' + canAppend + '</b> ' + t('国。')
-              + '<button class="btn btn-sm" id="btnSpkAppend" style="margin-left:8px;">' + t('按名额加入待选国家') + '</button>'
-            : t('剩余时长不足一位代表发言，磋商即将结束。')) + '</p></div>';
-        var ab = document.getElementById('btnSpkAppend');
-        if (ab) ab.onclick = function(){ appendSpkList(m); };
-      } else {
-        box.innerHTML = '<div class="card"><p class="hint">' + t('发言名单为空：由有主持核心磋商或个人演讲动议通过后进入本栏目，也可在上方手动加入国家。') + '</p></div>';
-      }
+      htmlS = '<div class="card"><p class="hint">' + t('发言名单为空：由有主持核心磋商或个人演讲动议通过后进入本栏目，也可在上方手动加入国家。') + '</p></div>';
     }
-    swapFlash(box, cs ? 'spk:' + cs.delId : (typeof np !== 'undefined' && np ? 'pend:' + np.delId : 'none'));
+    var sigS = tagS + '|' + (cs ? cs.seconds + (active ? '|' + fmtSec(c.remainingSec) : '')
+      : (np ? np.seconds : (active ? '|' + fmtSec(c.remainingSec) + '|' + canAppend : ''))) + '|' + LANG;
+    if (box.getAttribute('data-sig') !== sigS) {
+      var ghostSpk = crossCapture(box);
+      box.innerHTML = htmlS;
+      box.setAttribute('data-sig', sigS);
+      if (cs) document.getElementById('btnSpkEnd').onclick = function(){ endSpeech(m, false); };
+      else if (np) document.getElementById('btnSpkStart').onclick = function(){ startNextInSpkList(m); };
+      else if (active) { var ab = document.getElementById('btnSpkAppend'); if (ab) ab.onclick = function(){ appendSpkList(m); }; }
+      swapFlash(box, tagS, ghostSpk);
+    }
   }
   /* 磋商发言队列：走 paintQueue 定点渲染。
      与 GSL 队列不同，本队列保留已发言项（done 类）与当前发言项（now 类），
@@ -6178,8 +6949,7 @@ function toDocVoteRound2(m){
     + t('仅第一轮投「过」者') + '），' + t('第一轮') + ' ' + c.y + ' ' + t('票赞成') + '、' + c.n + ' ' + t('票反对') + '、'
     + c.ab + ' ' + t('票弃权') + t('已直接计入计票') + '；' + t('第二轮仅可投赞成或反对'));
   m.updatedAt = nowStr(); saveMeetings(); renderDocVote(m); renderMinutes(m);
-  /* v33：第二轮切换提示——投票区轻淡入一次（opacity .35 起点，消空窗帧思路），标记阶段切换 */
-  if (!sprReduce()) { var dvPane = document.getElementById('tab-docvote'); if (dvPane && dvPane.animate) dvPane.animate([{ opacity: .35 }, { opacity: 1 }], { duration: 260, easing: 'ease-out' }); }
+  /* v49f（用户要求）：第二轮切换提示的整面板透明度淡入已移除（纯 opacity 动画无可保留的位移，直接删除）——表决区瞬时呈现 */
 }
 function finishDocVote(m){
   var dv = m.docVote; if (!dv || dv.status !== 'voting') return;
@@ -6256,8 +7026,7 @@ function motionName(type){ return t(MOTION_NAMES[type] || type || ''); }
 function isTimedMotion(type){ return type === 'unmod' || type === 'free' || type === 'speech'; }
 /* 结束辩论必须三分之二多数通过 */
 function forcedRule(type){ return type === 'close' ? 'twothirds' : null; }
-/* 安理会满席数（宪章第 23 条：15 个理事国）与宪章第 27 条的固定赞成票门槛 */
-var SC_SEATS = 15;
+/* 宪章第 27 条的固定赞成票门槛 */
 var SC_PASS_VOTES = 9;
 /* 三分之二多数：以「有表决权且出席的国家数」（投票池规模）为基数向上取整。
    弃权与未表态均计入分母，故弃权会实质提高通过难度。
@@ -6664,27 +7433,73 @@ function renderMotions(m){
   var list = (m && m.motions) || [];
   var emptyHtml = '<div class="card"><div class="empty">' + esc(t('暂无动议记录')) + '</div></div>';
   /* 快速路径：数量一致且 data-mid 顺序吻合 → 逐卡比对签名 */
-  if (list.length > 0 && box.children.length === list.length) {
+  var kids = crossLiveKids(box);
+  if (list.length > 0 && kids.length === list.length) {
     var same = true, v;
     for (v = 0; v < list.length; v++) {
-      if (box.children[v].getAttribute('data-mid') !== list[v].id) { same = false; break; }
+      if (kids[v].getAttribute('data-mid') !== list[v].id) { same = false; break; }
     }
     if (same) {
       for (var i = 0; i < list.length; i++) {
         var sig = motionCardSig(m, list[i]);
-        var cur = box.children[i];
+        var cur = kids[i];
         if (cur.getAttribute('data-msig') === sig) continue;      /* 幂等：未变化则完全不动 */
         var tmp = document.createElement('div');
         tmp.innerHTML = motionCardHtml(m, list[i]);
         var fresh = tmp.firstChild;
         fresh.setAttribute('data-msig', sig);
-        box.replaceChild(fresh, cur);                            /* 只换这一张 */
+        crossSwapCard(box, kids, i, fresh);                       /* v43-cross2：旧卡定格交叉淡出，下方卡 FLIP 让位 */
       }
       return;
     }
   }
-  /* 整体重建兜底 */
-  if (!list.length) { box.innerHTML = emptyHtml; return; }
+  /* 整体重建兜底：清空为空态时旧卡交叉淡出，不再瞬间消失；
+     v49g：空态→空态（切入重渲染）内容完全相同 → 短路，不重建不播幽灵，杜绝同文字叠影渐隐的字体闪 */
+  if (!list.length) {
+    var probeM = document.createElement('div');
+    probeM.innerHTML = emptyHtml;
+    if (kids.length === 1 && kids[0].querySelector('.empty') && kids[0].textContent === probeM.textContent) return;
+    for (var ei = 0; ei < kids.length; ei++) box.removeChild(kids[ei]);
+    box.innerHTML = emptyHtml;
+    if (kids.length) crossPlayAll(box, kids);
+    return;
+  }
+  /* v43-cross2：头部插入（新动议走 unshift）——旧卡原地 FLIP 平滑让位，新卡 rowInR 入场，整列不消失不重建 */
+  var headIns = kids.length > 0 && list.length > kids.length;
+  if (headIns) {
+    var shiftN = list.length - kids.length;
+    for (var hv = 0; hv < kids.length; hv++) {
+      if (kids[hv].getAttribute('data-mid') !== list[hv + shiftN].id) { headIns = false; break; }
+    }
+  }
+  if (headIns) {
+    var vh2 = window.innerHeight + 80, beforeTops = [];
+    for (var bi = 0; bi < kids.length; bi++) {
+      var bRect = kids[bi].getBoundingClientRect();
+      beforeTops.push(bRect.top > vh2 ? null : bRect.top);
+    }
+    var frag = document.createDocumentFragment();
+    for (var hi = 0; hi < shiftN; hi++) {
+      var tmpH = document.createElement('div');
+      tmpH.innerHTML = motionCardHtml(m, list[hi]);
+      var nCard = tmpH.firstChild;
+      nCard.setAttribute('data-msig', motionCardSig(m, list[hi]));
+      frag.appendChild(nCard);
+    }
+    box.insertBefore(frag, kids[0]);
+    for (var fi = 0; fi < kids.length; fi++) {
+      if (beforeTops[fi] === null || !kids[fi].animate) continue;
+      var dy2 = beforeTops[fi] - kids[fi].getBoundingClientRect().top;
+      if (Math.abs(dy2) > 0.5) kids[fi].animate(
+        [{ transform: 'translateY(' + dy2 + 'px)' }, { transform: 'none' }],
+        { duration: 240, easing: 'cubic-bezier(.22,1,.36,1)' });
+    }
+    try { syncLiveChips(); updateDockBadges(); } catch (e) { /* DOM 未就绪时跳过 */ }
+    return;
+  }
+  /* 其余情况（删除/重排）：交叉淡化整体重建——旧列表定格为覆盖层淡出，新列表 rowInR 其下入场 */
+  var olds = kids;
+  for (var ri = 0; ri < olds.length; ri++) box.removeChild(olds[ri]);
   var html = '';
   for (var j = 0; j < list.length; j++) html += motionCardHtml(m, list[j]);
   box.innerHTML = html;
@@ -6692,6 +7507,7 @@ function renderMotions(m){
   for (var s2 = 0; s2 < box.children.length; s2++) {
     box.children[s2].setAttribute('data-msig', motionCardSig(m, list[s2]));
   }
+  if (olds.length) crossPlayAll(box, olds);
   /* v29：动议增删改后同步状态栏灯与角标（pending 数即待裁定数） */
   try { syncLiveChips(); updateDockBadges(); } catch (e) { /* DOM 未就绪时跳过 */ }
 }
@@ -7033,11 +7849,8 @@ function paintTimerAt(T){
     /* 幂等写入：值未变则不动 DOM，避免每秒强制样式失效打断进度条过渡 */
     var dispTxt = fmtSec(T.remaining);
     if (el.textContent !== dispTxt) {
+      /* 计时翻牌微动已按用户要求移除：大号数字每秒一次的上滑淡入即「计时的时候一闪一闪」的来源 */
       el.textContent = dispTxt;
-      /* v32-detail：计时翻牌微动——秒变时数字轻微上滑淡入（纯 transform/opacity，合成器路径） */
-      if (!sprReduce() && el.animate && T.running) el.animate(
-        [{ transform: 'translateY(3px)', opacity: .35 }, { transform: 'none', opacity: 1 }],
-        { duration: 140, easing: 'cubic-bezier(.22,1,.36,1)' });
     }
     el.classList.toggle('warn', T.remaining <= 10 && T.running);
     el.classList.toggle('run', T.running);
@@ -7071,7 +7884,7 @@ function paintTimerChrome(){
     if (sbT.style.display !== sbDisp) {
       sbT.style.display = sbDisp;
       /* v34：芯片出现时淡入（消失保持瞬时，避免布局占位问题） */
-      if (sbDisp === '' && !sprReduce() && sbT.animate) sbT.animate([{ opacity: 0, transform: 'scale(.92)' }, { opacity: 1, transform: 'none' }], { duration: 180, easing: 'ease-out' });
+      if (sbDisp === '' && !sprReduce() && sbT.animate) sbT.animate([{ transform: 'scale(.92)' }, { transform: 'none' }], { duration: 180, easing: 'ease-out' });
     }
     /* v34：剩余≤10s 且运行中——状态栏芯片联动主面板警告（红底缓呼吸见 CSS chipBreath） */
     sbT.classList.toggle('warn', !paused && T.running && T.remaining <= 10);
@@ -7339,31 +8152,78 @@ function renderDocs(m){
     items.push({ key: d.id, sig: docCardSig(m, d), html: docCardHtml(m, d) });
   }
   if (drListOf(m).length) items.push({ key: '__seq__', sig: docSeqSig(m), html: docSeqHtml(m) });
-  if (!items.length) { box.innerHTML = emptyHtml; return; }
+  if (!items.length) {
+    /* v43-cross2：清空为空态时旧卡交叉淡出，不再瞬间消失；
+       v49g：空态→空态（切入重渲染）内容完全相同 → 短路，不重建不播幽灵，杜绝同文字叠影渐隐的字体闪 */
+    var oldsE = crossLiveKids(box);
+    var probeE = document.createElement('div');
+    probeE.innerHTML = emptyHtml;
+    if (oldsE.length === 1 && oldsE[0].querySelector('.empty') && oldsE[0].textContent === probeE.textContent) return;
+    for (var ei = 0; ei < oldsE.length; ei++) box.removeChild(oldsE[ei]);
+    box.innerHTML = emptyHtml;
+    if (oldsE.length) crossPlayAll(box, oldsE);
+    return;
+  }
   /* 快速路径：数量一致且 data-docid 顺序吻合 → 逐卡比对签名，只替换变化项 */
-  if (box.children.length === items.length) {
+  var kids = crossLiveKids(box);
+  if (kids.length === items.length) {
     var same = true, v;
     for (v = 0; v < items.length; v++) {
-      if (box.children[v].getAttribute('data-docid') !== items[v].key) { same = false; break; }
+      if (kids[v].getAttribute('data-docid') !== items[v].key) { same = false; break; }
     }
     if (same) {
       for (var k = 0; k < items.length; k++) {
-        var cur = box.children[k];
+        var cur = kids[k];
         if (cur.getAttribute('data-docsig') === items[k].sig) continue;   /* 幂等：未变化完全不动 */
         var tmp = document.createElement('div');
         tmp.innerHTML = items[k].html;
         var fresh = tmp.firstChild;
         fresh.setAttribute('data-docsig', items[k].sig);
-        box.replaceChild(fresh, cur);
+        crossSwapCard(box, kids, k, fresh);   /* v43-cross2：旧卡定格交叉淡出，下方卡 FLIP 让位 */
       }
       return;
     }
   }
-  /* 整体重建兜底 */
+  /* v43-cross2：头部插入（新文件走 unshift）——旧卡原地 FLIP 平滑让位，新卡 rowInR 入场，整列不消失不重建 */
+  var headIns = kids.length > 0 && items.length > kids.length;
+  if (headIns) {
+    var shiftN = items.length - kids.length;
+    for (var hv = 0; hv < kids.length; hv++) {
+      if (kids[hv].getAttribute('data-docid') !== items[hv + shiftN].key) { headIns = false; break; }
+    }
+  }
+  if (headIns) {
+    var vh2 = window.innerHeight + 80, beforeTops = [];
+    for (var bi = 0; bi < kids.length; bi++) {
+      var bRect = kids[bi].getBoundingClientRect();
+      beforeTops.push(bRect.top > vh2 ? null : bRect.top);
+    }
+    var frag = document.createDocumentFragment();
+    for (var hi = 0; hi < shiftN; hi++) {
+      var tmpH = document.createElement('div');
+      tmpH.innerHTML = items[hi].html;
+      var nCard = tmpH.firstChild;
+      nCard.setAttribute('data-docsig', items[hi].sig);
+      frag.appendChild(nCard);
+    }
+    box.insertBefore(frag, kids[0]);
+    for (var fi = 0; fi < kids.length; fi++) {
+      if (beforeTops[fi] === null || !kids[fi].animate) continue;
+      var dy2 = beforeTops[fi] - kids[fi].getBoundingClientRect().top;
+      if (Math.abs(dy2) > 0.5) kids[fi].animate(
+        [{ transform: 'translateY(' + dy2 + 'px)' }, { transform: 'none' }],
+        { duration: 240, easing: 'cubic-bezier(.22,1,.36,1)' });
+    }
+    return;
+  }
+  /* 整体重建兜底（删除/重排）：交叉淡化——旧列表定格为覆盖层淡出，新列表 rowInR 其下入场 */
+  var olds = kids;
+  for (var ri = 0; ri < olds.length; ri++) box.removeChild(olds[ri]);
   var htmlAll = '';
   for (var j = 0; j < items.length; j++) htmlAll += items[j].html;
   box.innerHTML = htmlAll;
   for (var s2 = 0; s2 < box.children.length; s2++) box.children[s2].setAttribute('data-docsig', items[s2].sig);
+  if (olds.length) crossPlayAll(box, olds);
 }
 function findDoc(m, id){ for (var i = 0; i < m.docs.length; i++) if (m.docs[i].id === id) return m.docs[i]; return null; }
 function openDocFile(id, preview){
@@ -7587,26 +8447,28 @@ function minLineEl(mi){
 /* 会议纪要渲染：增量 prepend。
    纪要只会 push 新条目（全站无 pop/splice/shift），故常见情形是「末尾追加一条」，
    倒序显示即「顶部插入一条」——只需 prepend，已有条目节点原地保留。
-   四重签名校验（会议 id / 条数 / 语言 / 最旧条目内容），任一不符即整体重建：
+   三重签名校验（会议 id / 条数 / 最旧条目内容），任一不符即整体重建：
      · 会议 id：防止切换会议时把 B 会议的纪要拼到 A 会议的残留节点上
      · 条数：撤销会整体恢复快照使纪要变短，此时必须重建
-     · 语言：空态文案「暂无纪要」需重译
-     · 最旧条目内容：DOM 末位（最旧）与数据 list[0] 必须吻合，兜住任何数组改写 */
+     · 最旧条目内容：DOM 末位（最旧）与数据 list[0] 必须吻合（两侧均经标点归一化，
+       英文模式下 renderTab 的 normalizeDomPunct 会把中文历史纪要的全角标点转为半角显示，
+       裸比对会恒不等 → 每次切入都整列重建+幽灵交叉 = 用户看到的重绘卡顿），兜住任何数组改写
+     · 语言不再作为强制重建条件：纪要按写入时语言定稿，内容与 LANG 无关；空态文案单独重译 */
 function renderMinutes(m){
   var box = document.getElementById('minutesList');
   if (!box) return;
   var list = (m && m.minutes) || [];
   var owner = (m && m.id) || '';
   var prevOwner = box.getAttribute('data-mowner');
-  var prevLang = box.getAttribute('data-mlang');
   var prevCount = parseInt(box.getAttribute('data-mcount') || '-1', 10);
-  if (prevOwner !== owner || prevLang !== LANG) prevCount = -1;   /* 换会议或换语言 → 强制重建 */
+  if (prevOwner !== owner) prevCount = -1;   /* 仅换会议 → 强制重建；换语言不再重建（见上方签名说明） */
   box.setAttribute('data-mowner', owner);
-  box.setAttribute('data-mlang', LANG);
   /* 空态 */
   if (!list.length) {
+    var emptyTxt = t('暂无纪要');
     var alreadyEmpty = prevCount === 0 && box.children.length === 1
-      && box.firstChild && box.firstChild.className === 'empty';
+      && box.firstChild && box.firstChild.className === 'empty'
+      && box.firstChild.textContent === emptyTxt;   /* 文本不匹配（切语言后）才重建空态重译 */
     if (!alreadyEmpty) {
       box.innerHTML = '';
       var em = document.createElement('div');
@@ -7617,35 +8479,57 @@ function renderMinutes(m){
     box.setAttribute('data-mcount', '0');
     return;
   }
+  /* v48d（用户裁决）：等数快速路径——切入面板时条数未变（常见切页场景）且最旧条目吻合，
+     内容就没变，DOM 纹丝不动直接返回；消除此前每次切入都走的「摘出重建 + ghost 交叉」
+     （旧列表定格淡出 + 新列表重播）造成的整体浮出感。真变化（新增/撤销/换会议）仍走原路径 */
+  if (prevCount >= 0 && list.length === prevCount && box.children.length === prevCount
+      && box.lastChild && box.lastChild.className === 'min-line') {
+    var oldestEq = list[0];
+    if (box.lastChild.textContent === normalizePunct(oldestEq.t + oldestEq.text)) {
+      return;
+    }
+  }
   /* 增量路径：现有 DOM 条数与上次渲染一致、新条数更多，且最旧一条内容吻合 */
   if (prevCount >= 0 && list.length > prevCount && box.children.length === prevCount
       && box.lastChild && box.lastChild.className === 'min-line') {
     var oldest = list[0];
-    var wantTail = oldest.t + oldest.text;
+    var wantTail = normalizePunct(oldest.t + oldest.text);
     if (box.lastChild.textContent === wantTail) {
       /* 从 list[prevCount] 到末尾是新增条目（数组尾部 = 最新 = 显示在最上方） */
       var frag = document.createDocumentFragment();
       for (var i = list.length - 1; i >= prevCount; i--) frag.appendChild(minLineEl(list[i]));
+      /* v48r（用户裁决，终极修复）：删除增量路径全部动画（FLIP 滑动 + 新行淡入）——
+         真实会议中其他栏目操作期间纪要持续自动记录，每次切回都有新条目，
+         此动画每次切页必触发（240ms 整列滑动，纪要独有）= 用户始终看到的「原样子从下往上浮出」。
+         新条目直接就位，入场与其他栏目完全一致（仅窗口统一动画，见 setTab） */
       box.insertBefore(frag, box.firstChild);
-      /* v33：仅增量新增条目淡入（最新一条先落定）；全量重建（换会议/换语言）不播，避免整列闪动 */
-      if (!sprReduce()) {
-        var addN = list.length - prevCount;
-        for (var fi = addN - 1; fi >= 0; fi--) {
-          var nEl = box.children[fi];
-          if (nEl && nEl.animate) nEl.animate(
-            [{ opacity: 0, transform: 'translateY(-4px)' }, { opacity: 1, transform: 'none' }],
-            { duration: 240, easing: 'cubic-bezier(.22,1,.36,1)', delay: (addN - 1 - fi) * 40, fill: 'backwards' });
-        }
-      }
       box.setAttribute('data-mcount', String(list.length));
       return;
     }
   }
+  /* v49h（用户要求）：语言性重建静默化——切语言后首次切入时，数据内容与 DOM 逐条标点等价
+     （仅显示形态不同：英文半角↔中文全角），直接一次性静默重灌文本，
+     跳过「摘出+幽灵交叉」动画 —— 切换语言后的首次点开不再有任何重绘感 */
+  var sigNew = '';
+  for (var sk = 0; sk < list.length; sk++) sigNew += punctKey(list[sk].t + list[sk].text) + '\u0001';
+  if (box.getAttribute('data-msig') === sigNew) {
+    var frag3 = document.createDocumentFragment();
+    for (var sj = list.length - 1; sj >= 0; sj--) frag3.appendChild(minLineEl(list[sj]));
+    box.innerHTML = '';
+    box.appendChild(frag3);
+    box.setAttribute('data-mcount', String(list.length));
+    box.setAttribute('data-msig', sigNew);
+    return;
+  }
+  box.setAttribute('data-msig', sigNew);
   /* 整体重建兜底（首次渲染 / 撤销截断 / 切换会议 / 形态不符） */
+  /* v43-cross2：旧列表摘出定格为覆盖层交叉淡出，新列表其下入场的，消除整列消失重建的闪动（首次渲染旧列表为空自动跳过） */
+  var olds3 = crossLiveKids(box);
+  for (var rj = 0; rj < olds3.length; rj++) box.removeChild(olds3[rj]);
   var frag2 = document.createDocumentFragment();
   for (var j = list.length - 1; j >= 0; j--) frag2.appendChild(minLineEl(list[j]));
-  box.innerHTML = '';
   box.appendChild(frag2);
+  if (olds3.length) crossPlayAll(box, olds3);
   box.setAttribute('data-mcount', String(list.length));
 }
 /* SECTION: js-sync — 存档导出 / 导入（patch90） */
@@ -7713,7 +8597,7 @@ function exportArchive(){
     var blob = new Blob([json], { type: 'application/json;charset=utf-8' });
     var a = document.createElement('a');
     a.href = URL.createObjectURL(blob);
-    a.download = 'THSMUN-存档-' + nowStr().replace(/[: ]/g, '-') + '.json';
+    a.download = (LANG === 'en' ? 'THSMUN-Archive-' : 'THSMUN-存档-') + nowStr().replace(/[: ]/g, '-') + '.json';
     document.body.appendChild(a); a.click();
     setTimeout(function(){ URL.revokeObjectURL(a.href); a.remove(); }, 500);
     syncStat(tfmt(att.count ? '已导出 {n} 场会议，含 {f} 个附件 · {size}' : '已导出 {n} 场会议 · {size}',
@@ -7927,11 +8811,6 @@ function docCountByHay(hay, country){
   for (i = 0; i < hay.length; i++) if (hay[i] !== null && hay[i].indexOf(cn) >= 0) n++;
   return n;
 }
-/* 取代表参与文件数，口径与 renderStats 表格「赞助文件」列逐字一致。
-   保留原签名以兼容既有调用；批量场景请用 docHaystacks + docCountByHay，避免重复拼 haystack。 */
-function chartDocCount(m, d){
-  return docCountByHay(docHaystacks(m), d ? d.country : '');
-}
 function topByValue(arr, n){
   arr.sort(function(a, b){ return b.value - a.value || String(a.label).localeCompare(String(b.label)); });
   return arr.slice(0, n);
@@ -7986,17 +8865,8 @@ function renderCharts(m){
   html += panelHtml('参与表决次数', t('前 {n} 位').replace('{n}', 8), barsHtml(topByValue(vo, 8), 'var(--ok)'));
   html += panelHtml('赞助文件数', t('前 {n} 位').replace('{n}', 8), barsHtml(topByValue(dc, 8), 'var(--gold)'));
   box.innerHTML = html;
-  /* v34：环形图生长——条形有 barIn 从零长出，环图补上同语言（沿自身角度扫入一圈）。
-     仅在 renderCharts 真正重建时播放（renderStats 签名守卫保证不闹屏） */
-  var dCircles = box.querySelectorAll('.c-donut circle[stroke-dashoffset]');
-  for (var dc2 = 0; dc2 < dCircles.length; dc2++) {
-    (function(dEl){
-      if (sprReduce() || !dEl.animate) return;
-      var endOff = parseFloat(dEl.getAttribute('stroke-dashoffset')) || 0;
-      var circ = 2 * Math.PI * (parseFloat(dEl.getAttribute('r')) || 48);
-      dEl.animate([{ strokeDashoffset: (endOff - circ * 1.05) + 'px' }, { strokeDashoffset: endOff + 'px' }], { duration: 700, easing: 'cubic-bezier(.22,1,.36,1)' });
-    })(dCircles[dc2]);
-  }
+  /* v49c（用户要求）：统计页一点开直接显现——移除环形图 700ms 描边生长动画，
+     SVG 静态属性即为最终形态，写入即完整呈现；表决页图表动画不受影响 */
 }
 /* SECTION: js-theme — 深浅主题切换（写法沿用既有 applyProjector/toggleProjector） */
 var THEME_KEY = LS_KEY + '.theme';
@@ -8012,11 +8882,25 @@ function applyTheme(dark){
 }
 function toggleTheme(){
   var dark = !document.body.classList.contains('dark');
-  /* v34：切换瞬间临时启用全局颜色过渡（320ms 后移除，不常驻、零持续开销） */
-  var themeRoot = document.documentElement;
-  themeRoot.classList.add('theme-fade');
-  applyTheme(dark);
-  setTimeout(function(){ themeRoot.classList.remove('theme-fade'); }, 320);
+  /* v48：View Transitions API 整页快照交叉替代 theme-fade 全局过渡。
+     旧方案切换瞬间给每个元素挂颜色 transition（数百节点全部在主线程建动画=卡顿根源）；
+     新方案整页快照交由合成器交叉渲染，主线程零过渡；不支持的浏览器直接切换（瞬间生效，不劣化）。
+     v48b：按钮/卡片自带常驻颜色 transition，切换时仍会跑主线程过渡并与新快照竞争、
+     交叉结束后继续渐变（拖泥带感）——vt-lock 在快照捕获前将其临时禁用，颜色直接落定，
+     过渡结束后解锁（finished 回调 + 600ms 兜底双保险，窗口内零动画） */
+  var rootEl = document.documentElement;
+  var go = function(){
+    rootEl.classList.add('vt-lock');
+    applyTheme(dark);
+  };
+  if (document.startViewTransition) {
+    var vt = document.startViewTransition(go);
+    var unlock = function(){ rootEl.classList.remove('vt-lock'); };
+    vt.finished.then(unlock, unlock);
+    setTimeout(unlock, 600);
+  } else {
+    applyTheme(dark);
+  }
   try { localStorage.setItem(THEME_KEY, dark ? '1' : '0'); } catch (e) {}
   toast(dark ? t('已切换深色模式') : t('已切换浅色模式'));
 }
@@ -8033,7 +8917,7 @@ function toggleTheme(){
 })();
 document.getElementById('btnMinutesExport').onclick = function(){
   var m = cur(); if (!m) return;
-  var lines = ['天中模联 · ' + m.name, t('委员会') + '：' + (m.committee || '-'), t('议题') + '：' + (m.topic || '-'),
+  var lines = [t('天中模联 · THSMUN') + ' · ' + m.name, t('委员会') + '：' + (m.committee || '-'), t('议题') + '：' + (m.topic || '-'),
     t('会期') + '：' + (meetingDateTxt(m) || '-'), t('导出时间') + '：' + nowStr(), '----------------------------------------']
     .map(normalizePunct);
   for (var i = 0; i < m.minutes.length; i++) lines.push('[' + m.minutes[i].t + '] ' + m.minutes[i].text);
@@ -8252,7 +9136,43 @@ function renderStats(m){
   var stBox = document.getElementById('statsTable');
   if (stBox) {
     var stSig = sig113;   /* patch113：复用函数开头已算的签名，省一次百项字符串拼接 */
-    if (!renderGuardSame('statsTable', m, stSig)) { stBox.innerHTML = rows; renderGuardPut('statsTable', m, stSig); }
+    if (!renderGuardSame('statsTable', m, stSig)) {
+      /* v43-cross2：统计表交叉淡化——旧行摘出定格为覆盖表淡出，新行 fadeUp stagger 在其下交叉入场，消除全表消失重建的闪动；
+         v49h（用户要求）：语言性重建静默化——签名仅语言位变化（数据完全相同，如切换语言后表头重译）时，
+         直接静默替换不摘出不交叉，切换语言后的首次切入不再有任何重绘感（表头/点名状态列文字瞬时变译） */
+      var prevSigSt = _rgSig['statsTable'];
+      var langOnlySt = !!prevSigSt && prevSigSt.indexOf(';') >= 0 &&
+        prevSigSt.slice(prevSigSt.indexOf(';')) === stSig.slice(stSig.indexOf(';'));
+      var oldsTr = null;
+      if (!langOnlySt && !sprReduce() && stBox.animate && stBox.rows && stBox.rows.length > 1) {
+        oldsTr = [];
+        while (stBox.firstChild) oldsTr.push(stBox.removeChild(stBox.firstChild));   /* 摘走（含隐式 tbody），否则 firstChild 恒定死循环 */
+      }
+      stBox.innerHTML = rows;
+      renderGuardPut('statsTable', m, stSig);
+      if (oldsTr) {
+        var wrapEl = stBox.parentNode;
+        if (wrapEl) {
+          var gt = document.createElement('table');
+          gt.className = stBox.className;
+          for (var gi = 0; gi < oldsTr.length; gi++) gt.appendChild(oldsTr[gi]);
+          crossGhostify(gt);   /* v44-bglock：定格表只留文字，白卡底色恒定 */
+          var gtc = gt.querySelectorAll('th,td');
+          for (var gj = 0; gj < gtc.length; gj++) gtc[gj].style.background = 'transparent';
+          var bRect = wrapEl.getBoundingClientRect(), tRect = stBox.getBoundingClientRect();
+          gt.style.cssText = 'position:absolute;left:' + (tRect.left - bRect.left) + 'px;top:' + (tRect.top - bRect.top)
+            + 'px;width:' + tRect.width + 'px;margin:0;pointer-events:none;z-index:0;';
+          var rp2 = wrapEl.style.position === '';
+          wrapEl.style.position = 'relative';
+          wrapEl.appendChild(gt);
+          var cl2 = function(){ if (gt.parentNode) gt.parentNode.removeChild(gt); if (rp2) wrapEl.style.position = ''; };
+          var ga2 = gt.animate([{ opacity: 1, transform: 'none' }, { opacity: 0, transform: 'translateY(-3px)' }],
+            { duration: 240, easing: 'ease-in', fill: 'forwards' });   /* v49d：150→240 从容让位 */
+          if (ga2 && ga2.onfinish !== undefined) ga2.onfinish = cl2;
+          setTimeout(cl2, 400);   /* 双保险：容器被切走（display:none）冻结动画时也能清场，cl2 幂等 */
+        }
+      }
+    }
   }
   var html = '';   /* patch113：下拉刷新已提到函数开头的快速返回之前，此处不再重复调用 */
   for (var q = 0; q < m.awards.length; q++) {
@@ -8264,7 +9184,15 @@ function renderStats(m){
   if (awBox) {
     var awSig = sig113;   /* patch113：同上，复用签名 */
     if (!renderGuardSame('awardList', m, awSig)) {
+      /* v43-cross2：奖项列表交叉淡化（与统计表同工艺），旧内容定格淡出兜底新行 stagger 入场 */
+      /* v49h：同上——仅语言位变化时奖项列表静默替换，不播幽灵交叉 */
+      var prevSigAw = _rgSig['awardList'];
+      var langOnlyAw = !!prevSigAw && prevSigAw.indexOf(';') >= 0 &&
+        prevSigAw.slice(prevSigAw.indexOf(';')) === awSig.slice(awSig.indexOf(';'));
+      var oldsAw = (!langOnlyAw && !sprReduce() && awBox.animate && awBox.firstElementChild) ? crossLiveKids(awBox) : null;
+      for (var ai = 0; oldsAw && ai < oldsAw.length; ai++) awBox.removeChild(oldsAw[ai]);
       awBox.innerHTML = html || '<p class="hint">' + t('暂无奖项记录') + '</p>';
+      if (oldsAw && oldsAw.length) crossPlayAll(awBox, oldsAw);
       renderGuardPut('awardList', m, awSig);
       renderCharts(m);
     }
@@ -8451,10 +9379,6 @@ function sprStep(now){
   if (live) sprWake();
 }
 /* --- 各场景的 apply：只写 opacity + transform，done 时清空交回 CSS --- */
-function sprClamp01(x){ return x < 0 ? 0 : (x > 1 ? 1 : x); }
-/* 入场模糊量：投屏模式下为 0——亮底叠加 6px 模糊会糊成白雾，投影幕上文字必须锐利。
-   SECTION: js-spring-noblur-v15 */
-function sprBlurAmt(c, max){ return document.body.classList.contains('projector') ? 0 : (1 - c) * max; }
 function sprApplyBump(el, x, done){
   if (done) { el.style.transform = ''; return; }
   var sc = x < 0.85 ? 0.85 : (x > 1.32 ? 1.32 : x);   /* clamp，防脉冲叠加过大 */
