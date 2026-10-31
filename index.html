@@ -1780,8 +1780,8 @@ body.projector .modal-mask.on .modal{ animation-name:cssModalInP; }
 .sb-chip.warn{ background:rgba(192,57,43,.92); color:#fff; animation:chipBreath 1.8s ease-in-out infinite; }
 body.dark .sb-chip.warn{ background:rgba(239,122,108,.85); color:#1a0505; }
 @keyframes chipBreath{ 0%,100%{ opacity:1; } 50%{ opacity:.76; } }
-/* ③ 投屏进行中：投屏按钮轻呼吸提示当前处于投屏态（再次点击即恢复） */
-body.projector #sbProject{ animation:chipBreath 2.2s ease-in-out infinite; }
+/* 用户要求移除（v79）：投屏进行中投屏按钮的轻呼吸提示。投屏态下按钮静态常态显示；
+   chipBreath 关键帧仍被 ② 状态栏计时芯片警告使用，保留不动 */
 /* v48c 深浅主题切换：View Transitions API 快照交叉（合成器线程完成，主线程零过渡开销）。
    采用 UA 原生双向交叉：旧快照淡出 + 新快照淡入，plus-lighter 混合保证交叉全程总不透明度恒为 1
    （无底色透出、无空窗白屏）。实测教训：对 old 设 animation:none 会让旧快照直接消失=切换闪白屏。
