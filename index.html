@@ -1088,18 +1088,9 @@ html.force-fill{ scrollbar-gutter:auto; scrollbar-width:none; -ms-overflow-style
 html.force-fill::-webkit-scrollbar{ width:0; height:0; display:none; }
 html.force-fill body{ width:100vw; }
 /* SECTION: styles-projector-v69 — 投屏增强包（用户拍板 ①-⑬） */
-/* ① 状态栏放大：阶段牌/时钟/会议名是观众抬头最常看的会程信息（顶栏高度不变，零布局联动） */
-body.projector .statusbar{ font-size:16px; }
-body.projector .sb-title{ font-size:16.5px; }
-body.projector .sb-chip{ font-size:15.5px; padding:3px 12px; }
-body.projector .sb-clock{ font-size:15.5px; }
-body.projector .sb-exit{ font-size:12.5px; padding:4px 11px; }
-@media (max-width:820px){
-  body.projector .statusbar{ font-size:13px; }
-  body.projector .sb-title{ font-size:13px; }
-  body.projector .sb-chip{ font-size:12.5px; padding:2px 9px; }
-  body.projector .sb-clock{ font-size:12.5px; }
-}
+/* 用户要求移除（v80）：投屏下状态栏放大（原：statusbar 16px / sb-title 16.5px /
+   sb-chip 15.5px / sb-clock 15.5px / sb-exit 12.5px，及 820px 窄屏收敛段）。
+   投屏态状态栏与常态完全同渲染，其余投屏增强项（dock/toast/弹窗/大字等）不受影响 */
 /* ⑦ 快捷键提示区：观众看大屏时属操作杂讯 */
 /* ⑩ dock 栏目名放大（188px 宽内不换行；不改 --dock-w，零布局联动） */
 body.projector .dock button{ font-size:15px; }
