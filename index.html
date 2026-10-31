@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="zh-CN">
 <head>
 <meta charset="UTF-8">
@@ -126,9 +126,10 @@ input,select,textarea{font-family:inherit; font-size:14px; color:var(--ink);}
    .window 已有 position:relative 作为包含块；打印走独立 #printReport 不受影响 */
 /* v31-perf：contain:paint 渲染隔离——本面板内部任何重绘不再波及其他面板；已确认 9 面板内无 fixed 后代（modal/toast/dock/顶栏均在面板外） */
 /* v32-perf：全面板常驻合成层——9 面板终身各持一层，切页退化为纯合成器显隐（不再建层/销毁层） */
+#paneHost{ position:relative; } /* v73：九栏常驻叠放宿主——高度由 syncPaneH() 同步为当前面板高度 */
 .tabpane{ display:block; padding:2px 0 6px; visibility:hidden; position:absolute; top:0; left:0; width:100%;
   opacity:0; pointer-events:none; contain:paint; will-change:transform,opacity; }
-.tabpane.on{ visibility:visible; position:static; opacity:1; pointer-events:auto; will-change:transform,opacity; } /* v30-perf：预建合成层，cssPaneIn 首帧零建层开销 */
+.tabpane.on{ visibility:visible; opacity:1; pointer-events:auto; will-change:transform,opacity; background:var(--card); } /* v73：常驻叠放——.on 不再 position:static：九栏永久同几何绝对叠放，切换仅 visibility/opacity 翻转，零布局翻转＝零层失效，光栅化缓存跨切换存活（真机冷缓存 50~130ms 上屏延迟从机制上消除）；不透明底色与窗口同值（防御性遮蔽任何下层滞留）。v30-perf：预建合成层，cssPaneIn 首帧零建层开销 */
 /* SECTION: styles-cards-forms */
 .card{background:var(--card); border:1px solid var(--line); border-radius:12px; padding:18px; margin-bottom:16px;}
 .card h3{font-size:15px; color:var(--un-deep); margin-bottom:12px;}
@@ -375,7 +376,8 @@ table.stats th{background:#eef6fc; color:var(--un-deep);}
 .dock-glide{ position:absolute; left:10px; right:10px; top:0; height:46px; border-radius:9px;
   background:transparent; box-shadow:none;
   pointer-events:none; z-index:0; opacity:0;
-  transition:transform .26s cubic-bezier(.22,1,.36,1), opacity .2s; }
+  /* v60：滑块与面板同节奏（.45s 长尾缓出）同步落定——指示与内容齐上齐落 */
+  transition:transform .45s cubic-bezier(.16,1,.3,1), opacity .2s; }
 .dock-glide.no-anim{ transition:none; }
 .dock button .dk-ico{ font-size:15px; width:20px; text-align:center; flex:none; filter:saturate(.9); }
 /* 计时器 Dock 标签每秒追加剩余秒数，等宽数字避免标签宽度每秒跳动 */
@@ -837,7 +839,8 @@ table.stats td,table.stats th{ transition:background .16s var(--spring-soft); }
   /* 每秒等步长推进，过渡时长必须等于刷新间隔（1000ms）才能连续流动：
      时长短于间隔会「动半秒停半秒」形成步进感；曲线须为 linear 才能匀速，
      ease-out 被每秒重设宽度反复打断重启会产生「快-慢-快」脉冲式抖动 */
-  transition:width 1s linear, background .3s;
+  /* v60：width→clip-path（inset 右侧裁剪）——与计时器主条同款合成友好方案，消除最后一处每秒 layout 动画 */
+  transition:clip-path 1s linear, background .3s;
 }
 .pool-bar.hot i{ background:linear-gradient(90deg,#e06a5c,var(--no)); }
 /* 27) 按钮涟漪高光：按下时从中心扩散，比单纯缩放更有实体反馈 */
@@ -1079,8 +1082,48 @@ body.projector .dv-roster{ grid-template-columns:repeat(auto-fill,minmax(300px,1
   .modal-mask{ transition:none !important; }
   .modal-mask.on .modal{ animation:none !important; }
 }
+/* SECTION: styles-forcefill — 强制占满（仿 SAMUN OS）：隐藏滚动条与边缘留白，页面铺满浏览器视口。
+   仅改滚动条 UI 与宽度口径，不裁切内容：长内容（首页/纪要）仍可滚轮滚动，再点开关即还原 */
+html.force-fill{ scrollbar-gutter:auto; scrollbar-width:none; -ms-overflow-style:none; }
+html.force-fill::-webkit-scrollbar{ width:0; height:0; display:none; }
+html.force-fill body{ width:100vw; }
+/* SECTION: styles-projector-v69 — 投屏增强包（用户拍板 ①-⑬） */
+/* ① 状态栏放大：阶段牌/时钟/会议名是观众抬头最常看的会程信息（顶栏高度不变，零布局联动） */
+body.projector .statusbar{ font-size:16px; }
+body.projector .sb-title{ font-size:16.5px; }
+body.projector .sb-chip{ font-size:15.5px; padding:3px 12px; }
+body.projector .sb-clock{ font-size:15.5px; }
+body.projector .sb-exit{ font-size:12.5px; padding:4px 11px; }
+@media (max-width:820px){
+  body.projector .statusbar{ font-size:13px; }
+  body.projector .sb-title{ font-size:13px; }
+  body.projector .sb-chip{ font-size:12.5px; padding:2px 9px; }
+  body.projector .sb-clock{ font-size:12.5px; }
+}
+/* ⑦ 快捷键提示区：观众看大屏时属操作杂讯 */
+/* ⑩ dock 栏目名放大（188px 宽内不换行；不改 --dock-w，零布局联动） */
+body.projector .dock button{ font-size:15px; }
+body.projector .dock .dk-ico{ font-size:16px; }
+body.projector .dock .dk-label{ font-size:11.5px; }
+/* ⑫ toast 放大 */
+body.projector #toast{ font-size:17px; padding:12px 26px; }
+/* ⑨ 弹窗放大 */
+body.projector .modal h4{ font-size:19px; }
+body.projector .modal-msg{ font-size:16px; }
+body.projector .modal input, body.projector .modal select, body.projector .modal textarea{ font-size:15px; }
+body.projector .modal .btn{ font-size:15px; }
+/* ⑤ 发言中卡片强调（仅投屏；sc-live 由渲染层标记，"下一位"卡不带） */
+body.projector .speaker-current.sc-live{ box-shadow:0 0 0 2.5px var(--un-blue), 0 6px 26px rgba(8,54,90,.28); }
+body.projector .speaker-current.sc-live .sc-name{ font-size:38px; }
+/* ⑬ 关键文字加粗一档（投影灰阶损失下保持可辨） */
+body.projector .roll-row .country{ font-weight:700; }
+body.projector .dv-name{ font-weight:700; }
+body.projector .speaker-current .sc-name{ font-weight:800; }
+body.projector .stat-chip b{ font-weight:800; }
+/* ⑥ 鼠标静止 3 秒隐藏光标（仅投屏；动鼠标即恢复） */
+body.projector.cursor-idle, body.projector.cursor-idle *{ cursor:none !important; }
 /* SECTION: styles-projector — 投屏模式（patch95）：主席台投影时放大关键显示、提高对比度 */
-body.projector{ --ink:#0a1520; --muted:#33465a; --line:#b3c7dd; --bg:#e6edf5; }
+body.projector{ --ink:#0a1520; --muted:#33465a; --line:#9db4cf; --bg:#f3f7fb; } /* v69④：底色提亮/边线加深，抗投影发灰 */
 body.projector .timer-display{ font-size:150px; }
 body.projector .pt-display{ font-size:96px; }
 body.projector .speaker-current .sc-name{ font-size:34px; }
@@ -1229,7 +1272,7 @@ body.dark .timer-display::after, body.dark .pt-display::after{ background:rgba(2
 /* .btn-primary 某状态用 #1669a9 作文字色，深色下对比不足 */
 body.dark .btn-primary:focus{ color:#fff; }
 /* 投影模式下深色仍需生效（投影主要放大字号，配色跟随主题） */
-body.dark.projector{ --ink:#eaf2f9; --muted:#a8bbcd; --line:#33485e; --bg:#0b1621; }
+body.dark.projector{ --ink:#eaf2f9; --muted:#a8bbcd; --line:#33485e; --bg:#060d15; } /* v69④：底色更深 */
 /* 主结构面 */
 body.dark .window{ background:var(--card); border-color:var(--line);
   box-shadow:0 10px 34px rgba(0,0,0,.44), 0 2px 6px rgba(0,0,0,.30); }
@@ -1564,7 +1607,7 @@ body.projector .dv-cell{
 .timer-display::before{ transition:clip-path 1s linear !important; }
 .pt-display::before{ transition:clip-path 1s linear !important; }
 /* 磋商时间池填充：恢复被锁死的 width 过渡，1s linear 与每秒 tick 对齐，连续消耗 */
-.pool-bar i{ transition:width 1s linear, background .3s var(--spring-soft) !important; }
+.pool-bar i{ transition:clip-path 1s linear, background .3s var(--spring-soft) !important; }
 /* 归零/暂停/重置时进度瞬间跳变（非每秒递进），此时不应有 1s 拖尾——
    .idle 为「满格未运行」态，暂停由 JS 停 tick 后 --tp 不再变，均无副作用。 */
 .timer-display.idle::before,.pt-display.idle::before{ transition:none !important; }
@@ -1620,7 +1663,7 @@ body.dark #syncCard{ background:rgba(255,255,255,.025); border-color:rgba(255,25
 @keyframes cssPaneIn{ from{ transform:translateY(6px); }
   to{ transform:none; } } /* v50e（用户要求细腻舒适）：回归「微微浮动」本意——6px 小位移替代 (56) 的 14px 大动作；v49f 零透明度红线不变——不透明度恒 1，文字全程不闪 */
 @keyframes cssWinIn{ from{ transform:translateY(14px) scale(.985); }
-  to{ transform:none; } } /* v31-perf：起点同步微透明，消空窗（理由同 cssPaneIn） */
+  to{ transform:none; } } /* v31-perf：视差编排（窗口 +14px 对面板形成前后景深）；v60 注：v49f 零透明度红线后起点不含透明度，原"微透明消空窗"方案已废弃，注释同步修正 */
 @keyframes cssModalIn{ from{ filter:blur(4px); transform:scale(.94) translateY(12px); }
   62%{ filter:blur(0); transform:scale(1.014) translateY(0); }
   to{ filter:blur(0); transform:none; } }
@@ -1631,26 +1674,33 @@ body.dark #syncCard{ background:rgba(255,255,255,.025); border-color:rgba(255,25
    仅时长 .62s → .16s：0.62s 超过人眼交互基准（150-250ms），是「切换延迟感」的主要来源；
    .16s 后动画依旧平滑（同一条 cubic-bezier(.22,1,.36,1) 弹性曲线），但落定快 3.9 倍。
    内容区 .dv-* 入场（.30-.42s）节奏不变，外层先落定、内容再优雅淡入，层次更清晰。 */
-.tabpane.on{ animation:cssPaneIn .45s cubic-bezier(.16,1,.3,1) backwards; } /* v50e（用户要求细腻舒适）：.62s→.45s（(56) 的 620ms 用户也不喜欢——过拖）；长尾缓出曲线（起步轻收尾极柔，丝绸感核心）；6px 微浮；零透明度红线不变 */
-@keyframes cssViewIn{ from{ filter:blur(4px); transform:translateY(10px) scale(.995); }
-  to{ filter:blur(0); transform:none; } }
-/* SECTION: fix-dock-v24：视图级入场仅限 home/setup（其内无 fixed 元素）；
-   会议视图不参与——dock(position:fixed) 在 #view-meeting 内，祖先带 transform/filter
-   会劫持 fixed 定位，导致快捷键与 dock 在入场期间错位、延后显示（v22 漏改的祖先层）。 */
-/* v57（用户反馈"退出会议/返回首页动画特别慢，要与其他动画一致"）：.92s→.62s 对齐家族节奏——
-   窗口 cssWinIn、弹窗 cssModalIn 均为 .62s cubic-bezier(.22,1,.36,1)，视图入场是全系统唯一 0.92s
-   的异类（v23 古老参数，从未被拍板认可）；曲线/blur 质感与弹窗家族保持一致，仅时长归队 */
-/* v58（用户反馈"退出会议/返回首页动画特别特别慢，要与其他动画一致"）：.62s→.45s 归队
-   面板动画节奏（.45s cubic-bezier(.16,1,.3,1) 家族）——视图入场是全屏大转场，0.62s 的
-   blur 浮入体感拖沓（v57 只归队过窗口/弹窗家族的 .62s，从未对齐 450ms 面板家族）；
-   曲线同步换用面板同款长尾缓出，退出/返回首页与切栏节奏完全一致 */
-#view-home.active, #view-setup.active{ animation:cssViewIn .45s cubic-bezier(.16,1,.3,1) backwards; }
+.tabpane.on{ animation:cssPaneIn .45s cubic-bezier(.39,.575,.565,1) backwards; } /* v70m（用户裁决全局统一）：与 setTab WAAPI 通道同曲线，消除首次进会议走 CSS 通道时「唰地蹦到位」的生硬感；时长/位移/backwards 不变 */
+/* v62（用户裁决：新建会议/返回首页/退出会议的转场与继续会议完全一致）：
+   继续会议的入场感 = 视图级零动画 + 会议窗口 620ms cssWinIn 浮入（v25 起本就如此）；
+   三视图就此同构——视图级一律归零，入场感由内容容器承担同款 620ms 浮入：
+   setup 的内容容器本就是 .window（与会议窗口同容器同参数）；home 无窗口容器，
+   由整页内容（.desktop 即视图本体，其内无 fixed 元素已核）承担同款浮入。
+   全屏 blur 转场（cssViewIn 0.92s→.62s→.45s 演进）就此退役；投屏无模糊诉求天然满足 */
+/* v62：@keyframes cssViewIn 已随视图级转场归零成为死代码，删除 */
+#view-setup.active{ animation:none; }
+#view-setup.active .window{ animation:cssWinIn .62s cubic-bezier(.22,1,.36,1) backwards; }
+#view-home.active{ animation:cssWinIn .62s cubic-bezier(.22,1,.36,1) backwards; }
 .window.swap{ animation:cssWinIn .62s cubic-bezier(.22,1,.36,1) backwards; }
 .modal-mask.on .modal{ animation:cssModalIn .62s cubic-bezier(.22,1,.36,1) backwards; }
+/* v60（承诺兑现）：投屏下入场不做模糊——投影仪放大后 blur(4px) 尤为明显；
+   位移/时长/曲线/backwards 全部保留，仅去掉 filter 段（与使用指引承诺一致，默认非投屏路径零改动） */
+@keyframes cssViewInP{ from{ transform:translateY(10px) scale(.995); }
+  to{ transform:none; } }
+@keyframes cssModalInP{ from{ transform:scale(.94) translateY(12px); }
+  62%{ transform:scale(1.014) translateY(0); }
+  to{ transform:none; } }
+/* v62：视图级转场已统一归零（cssWinIn 本身无 blur），投屏视图覆盖随之退场；
+   弹窗的无模糊版（cssModalInP）继续生效 */
+body.projector .modal-mask.on .modal{ animation-name:cssModalInP; }
 /* ===== SECTION: motion-parity-v20 — 交互内核对标（参数来自 samunos 实测计算值）===== */
 /* 统一缓动令牌：其全站按钮 0.15s cubic-bezier(0.4,0,0.2,1)；外壳 0.9s cubic-bezier(0,0,0.2,1) */
 :root{ --ease-ui:cubic-bezier(0.4,0,0.2,1); --ease-shell:cubic-bezier(0,0,0.2,1); }
-/* ② 视图级入场已并入 cssViewIn 定义（v23），此处不再需要覆盖时长 */
+/* ② 视图级入场已并入窗口容器动画（v62 统一为 cssWinIn），此处不再需要覆盖时长 */
 /* ③ 按钮颜色/边框过渡对齐 0.15s 标准缓动（transform 保留 spring 回弹，手感更活） */
 .btn,.vote-btn,.btn-icon,.seg button,.preset-row .btn,.timer-ctrl .btn,.pt-ctrl .btn{
   transition:transform .14s var(--spring), background .15s var(--ease-ui),
@@ -1691,7 +1741,7 @@ body.dark #syncCard{ background:rgba(255,255,255,.025); border-color:rgba(255,25
    dock(statusbar/dock 均为 fixed)位于 #view-meeting 内；v10 的 paneInR 与 v19 的 cssPaneIn
    只要命中 .view.active 就会让祖先带 transform，劫持 fixed 定位（快捷键延后显示的根因）。
    会议视图的入场感由 .window 自带的 cssWinIn 承担，视图级动画此处归零。
-   home/setup 两个视图仍保留 cssViewIn（其内无 fixed 元素）。 */
+   v62 起三视图同构：home/setup 视图级同样归零，入场感由内容容器承担同款 cssWinIn。 */
 #view-meeting.active{ animation:none; }
 /* ===== SECTION: styles-touch-v24 — 触控目标下限（移动端可用性）===== */
 @media (pointer:coarse){
@@ -1800,6 +1850,9 @@ body.dark .sb-chip.live.ph-roll{ background:rgba(67,201,138,.88); color:#06170f;
     <button class="sb-exit" id="sbUndo" style="display:none;" data-i18n-title="回退上一步（Ctrl+Z）" title="回退上一步（Ctrl+Z）"><span class="sb-ico">↩</span><span class="sb-txt"></span></button>
     <button class="sb-exit" id="sbProject" data-i18n-title="投屏模式（放大计时、点名与表决显示）" title="投屏模式（放大计时、点名与表决显示）"><span class="sb-ico">🖥</span><span class="sb-txt" data-i18n="投屏">投屏</span></button>
     <button class="sb-exit" id="sbTheme" data-i18n-title="切换深色/浅色主题" title="切换深色/浅色主题"><span class="sb-ico">🌙</span><span class="sb-txt">深色</span></button>
+    <button class="sb-exit" id="sbFull" data-i18n-title="进入 / 退出浏览器全屏（快捷键 F4）" title="进入 / 退出浏览器全屏（快捷键 F4）"><span class="sb-ico">⛶</span><span class="sb-txt">全屏</span></button>
+    <button class="sb-exit" id="sbFill" data-i18n-title="强制页面铺满浏览器视口（隐藏滚动条与边缘留白，再点取消）" title="强制页面铺满浏览器视口（隐藏滚动条与边缘留白，再点取消）"><span class="sb-ico">▣</span><span class="sb-txt">占满：关</span></button>
+    <button class="sb-exit" id="sbSound" data-i18n-title="开启 / 关闭会议提示音（计时归零与临期滴答）" title="开启 / 关闭会议提示音（计时归零与临期滴答）"><span class="sb-ico">🔊</span><span class="sb-txt">提示音：开</span></button>
     <button class="sb-exit" id="sbLang" title="切换语言 / Switch language">EN</button>
     <button class="sb-exit" id="sbExit" style="display:none;" data-nav="home"><span class="sb-ico">⌂</span><span class="sb-txt" data-i18n="退出会议">退出会议</span></button>
   </div>
@@ -1937,7 +1990,7 @@ body.dark .sb-chip.live.ph-roll{ background:rgba(67,201,138,.88); color:#06170f;
     <button data-tab="docs"><span class="dk-ico">📄</span><span class="dk-txt">文件</span><span class="dk-badge" id="badge-docs"></span></button>
     <button data-tab="minutes"><span class="dk-ico">🗒️</span><span class="dk-txt">会议纪要</span></button>
     <button data-tab="stats"><span class="dk-ico">🏆</span><span class="dk-txt">统计与评奖</span></button>
-    <div class="dk-foot"><span data-i18n="快捷键">快捷键</span> <kbd>1</kbd>–<kbd>9</kbd> <span data-i18n="切换面板">切换面板</span><br><kbd>Space</kbd> <span data-i18n="计时开始/暂停">计时开始/暂停</span><br><kbd>Ctrl</kbd>+<kbd>Z</kbd> <span data-i18n="回退上一步">回退上一步</span></div>
+    <div class="dk-foot"><span data-i18n="快捷键">快捷键</span> <kbd>1</kbd>–<kbd>9</kbd> <span data-i18n="切换面板">切换面板</span><br><kbd>Space</kbd> <span data-i18n="计时开始/暂停">计时开始/暂停</span><br><kbd>Ctrl</kbd>+<kbd>Z</kbd> <span data-i18n="回退上一步">回退上一步</span><br><kbd>F4</kbd> <span data-i18n="全屏">全屏</span> · <kbd>P</kbd> <span data-i18n="投屏">投屏</span></div>
     <button type="button" id="dockCollapse" data-i18n-title="收起侧边栏" title="收起侧边栏">« <span data-i18n="收起">收起</span></button>
   </nav>
   <div class="window" id="meetingWindow">
@@ -1948,6 +2001,7 @@ body.dark .sb-chip.live.ph-roll{ background:rgba(67,201,138,.88); color:#06170f;
     </div>
     <div class="win-body">
     <div id="meetingBanner"></div>
+    <div id="paneHost">
     <section id="tab-roll" class="tabpane"><div id="rollSummary" class="summary-strip"></div><div class="card"><h3 data-i18n="逐国点名">逐国点名</h3><div id="rollList"></div><div class="row" style="margin-top:12px;"><button class="btn btn-primary" id="btnRollDone" data-i18n="完成点名并宣布法定人数">完成点名并宣布法定人数</button></div></div></section>
     <section id="tab-gsl" class="tabpane">
       <div class="card"><h3 data-i18n="主发言名单（GSL）">主发言名单（GSL）</h3>
@@ -2083,7 +2137,7 @@ body.dark .sb-chip.live.ph-roll{ background:rgba(67,201,138,.88); color:#06170f;
           <input id="timerCustom" type="number" min="5" max="7200" data-i18n-ph="自定义秒数" placeholder="自定义秒数" style="width:110px;padding:6px 8px;border:1px solid var(--line);border-radius:6px;">
           <button class="btn btn-sm" id="btnTimerCustom" data-i18n="设定">设定</button>
         </div>
-        <p class="hint" style="margin-top:14px;" data-i18n="归零时将发出提示音并自动写入会议纪要。">归零时将发出提示音并自动写入会议纪要。</p>
+        <p class="hint" style="margin-top:14px;" data-i18n="计时剩 10 秒时轻响一声、归零时发出提示音并自动写入会议纪要，提示音可用状态栏「提示音」开关关闭。">计时剩 10 秒时轻响一声、归零时发出提示音并自动写入会议纪要，提示音可用状态栏「提示音」开关关闭。</p>
       </div>
     </section>
     <section id="tab-docs" class="tabpane">
@@ -2140,6 +2194,7 @@ body.dark .sb-chip.live.ph-roll{ background:rgba(67,201,138,.88); color:#06170f;
       <div class="card"><h3 data-i18n="数据可视化">数据可视化</h3><p class="hint" style="margin:-2px 0 10px;" data-i18n="以下图表按当前会议存档实时计算，数据为空时不显示图形。">以下图表按当前会议存档实时计算，数据为空时不显示图形。</p><div id="statsCharts" class="c-grid"></div>
       </div>
     </section>
+    </div><!-- /paneHost (v73：九栏常驻叠放宿主) -->
     </div>
   </div>
   </div>
@@ -2370,12 +2425,27 @@ function flushSave(){
   }
 }
 function saveMeetings(){
+  dataVer62++;
+  try { rearmPanes(); } catch (e) { /* 函数未就绪时跳过（脚本前段调用） */ }
   try { updateDockBadges(); syncLiveChips(); } catch (e) { /* DOM 未就绪时跳过 */ }
   markMeetingDirty();
   if (saveTimer) clearTimeout(saveTimer);
   saveTimer = setTimeout(flushSave, 260);
 }
 window.addEventListener('beforeunload', flushSave);
+/* v70k：软保存——写存档（markDirty+防抖 flushSave）但【不】递增面板数据版本、不触发
+   后台重灌。适用场景：保存的是「刷新恢复用」状态且面板显示已就地更新（如计时器
+   每 5 秒的 timerState 持久化，paintTimerAt 已把剩余时间画在界面上，没有任何面板
+   内容变化）。此前 persistTimer 走 saveMeetings 会使全部面板版本过期：发言/磋商
+   计时运行中每 5 秒过期一次，用户此刻在发言名单/主发言名单间切换即撞「切入时
+   守卫误判过期→双 rAF 动画中重灌」——面板大重灌重，起步卡顿+内容重排，表现为
+   「这两栏切页经常卡/视觉与其他栏不一样，且计时运行时经常、停止时偶然」。
+   软保存消除该误判，切入守卫稳定命中零重灌。存档落盘与刷新恢复不受影响 */
+function saveMeetingsSoft(){
+  markMeetingDirty();
+  if (saveTimer) clearTimeout(saveTimer);
+  saveTimer = setTimeout(flushSave, 260);
+}
 /* SECTION: js-idb — 上传文件的本地存储（IndexedDB，仅存于本机浏览器） */
 var IDB_NAME = 'thsmun_files', IDB_STORE = 'files', idbStatus = null;
 function idbOpen(){
@@ -2809,7 +2879,7 @@ var I18N = {
   '弃权已达简单多数':'Abstentions reached the simple majority',
   '弃权已达简单多数，文件未通过':'Abstentions reached the simple majority; document failed',
   '弃权阻断线':'Abstention cap',
-  '归零时将发出提示音并自动写入会议纪要。':'A chime sounds at zero and the event is written into the minutes automatically.',
+  '计时剩 10 秒时轻响一声、归零时发出提示音并自动写入会议纪要，提示音可用状态栏「提示音」开关关闭。':'A soft tick sounds at the ten-second mark and a chime sounds at zero; the event is written into the minutes automatically. Use the Sound toggle in the top bar to silence both.',
   '当前已延置的决议草案':'Currently tabled draft resolutions',
   '当前投票顺序':'Current voting order',
   '当前没有进行中的有主持核心磋商':'No moderated caucus in progress',
@@ -3112,7 +3182,7 @@ Object.assign(I18N, {
   '发言时长（秒）':'Speech length (sec)',
   '按加入顺序依序发言，不分轮次；已发言完毕的国家自动移出待发言队列。名单为空也可开启，关闭名单不会清空尚未发言的国家，关闭后仍可继续加入国家。':'Delegations speak in the order they were added, with no rounds; those who finish are removed from the pending queue automatically. An empty list can be opened. Closing the list keeps delegations that have not spoken, and you can still add delegations afterwards.',
   '演讲国（个人演讲仅限 1 国）':'Speaker (Individual Speech: 1 delegation only)',
-  '归零时将发出提示音并自动写入会议纪要。':'A tone sounds at zero and the event is logged automatically.',
+  '计时剩 10 秒时轻响一声、归零时发出提示音并自动写入会议纪要，提示音可用状态栏「提示音」开关关闭。':'A soft tick sounds at the ten-second mark and a tone sounds at zero; the event is logged automatically. Use the Sound toggle in the top bar to silence both.',
   '决议草案 (DR)':'Draft Resolution (DR)','修正案 (AM)':'Amendment (AM)','工作文件 (WP)':'Working Paper (WP)',
   '如：DR1.1 关于建立反恐情报共享机制':'e.g. DR1.1 Counter-terrorism intelligence sharing',
   '如：法国、德国':'e.g. France, Germany','如：加纳、巴西':'e.g. Ghana, Brazil',
@@ -3598,9 +3668,23 @@ function setLang(l){
   if (typeof syncP5Marks === 'function' && document.getElementById('delRows')) syncP5Marks();
   var m = cur();
   if (m) { renderAll(); paintTimer(); }
+  /* v70g：语言切换使全部面板失效并后台静默重灌——applyI18n 只刷新 data-i18n 静态文案，
+     renderXxx 动态拼接文本（当前发言人卡/计时行/空态卡等）须整面板重灌才能换语言；
+     此前其余面板切入时版本守卫判定「最新」而零重灌，动态文本残留切换前语言（实测复现：
+     EN 后切入发言名单，「无进行中磋商」等仍为中文）。paneVer 清空后由 rearmPanes 后台
+     重灌（隐藏态零视觉影响，切入零重灌零闪变）；非会议视图下 rearmPanes 自行空转，
+     进会时 warmPanes 全量渲染并重新记录版本 */
+  paneVer = {};
+  rearmPanes();
   syncStatusBar();
   toast(LANG === 'en' ? 'Language: English' : '语言：中文');
+  if (typeof __syncViewBtns === 'function') __syncViewBtns();  /* 全屏/占满按钮文案随语言刷新 */
 }
+/* SECTION: js-projector — 投屏模式开关（patch95） */
+Object.assign(I18N, {
+  ' · 建议配合全屏（F4）':' · Tip: pair with fullscreen (F4)',
+  '再点一次确认退出会议':'Click again to confirm exit'
+});
 /* SECTION: js-projector — 投屏模式开关（patch95） */
 var PROJECTOR_KEY = LS_KEY + '.projector';
 function applyProjector(on){
@@ -3610,13 +3694,149 @@ function toggleProjector(){
   var on = !document.body.classList.contains('projector');
   applyProjector(on);
   try { on ? localStorage.setItem(PROJECTOR_KEY, '1') : localStorage.removeItem(PROJECTOR_KEY); } catch (e) {}
-  toast(on ? t('已开启投屏模式') : t('已关闭投屏模式'));
+  if (on) {
+    /* v69③⑥：开投屏 → 启动光标静止计时 + 未全屏则提示配合全屏 */
+    if (window.armCursorIdle) window.armCursorIdle();
+    var inFs = !!(document.fullscreenElement || document.webkitFullscreenElement);
+    toast(t('已开启投屏模式') + (inFs ? '' : t(' · 建议配合全屏（F4）')));
+  } else {
+    /* v69⑥：关投屏 → 恢复光标 */
+    document.body.classList.remove('cursor-idle');
+    clearTimeout(window.cursorIdleT);
+    toast(t('已关闭投屏模式'));
+  }
 }
 (function(){
   var b = document.getElementById('sbProject');
   if (b) b.onclick = toggleProjector;
   var saved = null; try { saved = localStorage.getItem(PROJECTOR_KEY); } catch (e) {}
   applyProjector(saved === '1');
+  /* v69⑥：投屏下鼠标静止 3 秒隐藏光标（动鼠标即恢复；仅投屏生效） */
+  window.armCursorIdle = function(){
+    document.body.classList.remove('cursor-idle');
+    clearTimeout(window.cursorIdleT);
+    window.cursorIdleT = setTimeout(function(){
+      if (document.body.classList.contains('projector')) document.body.classList.add('cursor-idle');
+    }, 3000);
+  };
+  document.addEventListener('mousemove', function(){
+    if (document.body.classList.contains('projector')) window.armCursorIdle();
+  });
+  if (saved === '1') window.armCursorIdle();
+  /* v69②：P 键快速开关投屏（过滤输入态与组合键，Ctrl+P 打印不受影响；任何视图可用） */
+  document.addEventListener('keydown', function(e){
+    if (e.key !== 'p' && e.key !== 'P') return;
+    if (e.ctrlKey || e.metaKey || e.altKey) return;
+    var tag = (e.target && e.target.tagName) || '';
+    if (tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT' || (e.target && e.target.isContentEditable)) return;
+    e.preventDefault();
+    toggleProjector();
+  });
+})();
+/* SECTION: js-fullfill — 全屏与强制占满（仿 SAMUN OS；写法沿用 js-projector 的 apply/toggle/IIFE 三段式） */
+Object.assign(I18N, {
+  '全屏':'Fullscreen',
+  '退出全屏':'Exit fullscreen',
+  '占满：开':'Fill: On',
+  '占满：关':'Fill: Off',
+  '已强制占满：滚动条与边缘留白已隐藏':'Force-fill on: scrollbars and edge gaps hidden',
+  '已取消强制占满':'Force-fill off',
+  '当前浏览器不支持全屏':'Fullscreen is not supported here',
+  '浏览器拒绝了全屏请求':'The browser blocked the fullscreen request'
+});
+var FILL_KEY = LS_KEY + '.forcefill';
+function applyForceFill(on){
+  document.documentElement.classList.toggle('force-fill', !!on);
+  setSbTxt('sbFill', t(on ? '占满：开' : '占满：关'));
+  var b = document.getElementById('sbFill');
+  if (b) b.classList.toggle('on', !!on);
+}
+function toggleForceFill(){
+  var on = !document.documentElement.classList.contains('force-fill');
+  applyForceFill(on);
+  try { on ? localStorage.setItem(FILL_KEY, '1') : localStorage.removeItem(FILL_KEY); } catch (e) {}
+  toast(on ? t('已强制占满：滚动条与边缘留白已隐藏') : t('已取消强制占满'));
+}
+function applyFullText(){
+  var full = !!(document.fullscreenElement || document.webkitFullscreenElement);
+  setSbTxt('sbFull', t(full ? '退出全屏' : '全屏'));
+  var b = document.getElementById('sbFull');
+  if (b) b.classList.toggle('on', full);
+}
+function toggleFullscreen(){
+  var doc = document;
+  if (doc.fullscreenElement || doc.webkitFullscreenElement) {
+    (doc.exitFullscreen || doc.webkitExitFullscreen || function(){}).call(doc);
+    return;
+  }
+  var el = doc.documentElement;
+  var req = el.requestFullscreen || el.webkitRequestFullscreen;
+  if (!req) { toast(t('当前浏览器不支持全屏')); return; }
+  try {
+    var p = req.call(el);
+    if (p && p.catch) p.catch(function(){ toast(t('浏览器拒绝了全屏请求')); });
+  } catch (e) { toast(t('浏览器拒绝了全屏请求')); }
+}
+(function(){
+  var f = document.getElementById('sbFull');
+  if (f) f.onclick = toggleFullscreen;
+  var fb = document.getElementById('sbFill');
+  if (fb) fb.onclick = toggleForceFill;
+  var saved = null; try { saved = localStorage.getItem(FILL_KEY); } catch (e) {}
+  applyForceFill(saved === '1');
+  document.addEventListener('fullscreenchange', applyFullText);
+  document.addEventListener('webkitfullscreenchange', applyFullText);
+  applyFullText();
+  /* F4 快捷键切换全屏（系统快捷键：1-9 切面板 / Space 计时 / Ctrl+Z 回退 / P 投屏（v69），与本键互不冲突） */
+  document.addEventListener('keydown', function(e){
+    if (e.key === 'F4') { e.preventDefault(); toggleFullscreen(); }
+  });
+  /* 语言切换后同步两个按钮文案（setLang 末尾调用） */
+  window.__syncViewBtns = function(){
+    applyFullText();
+    applyForceFill(document.documentElement.classList.contains('force-fill'));
+  };
+})();
+/* SECTION: js-sound — 提示音总开关（v70；写法沿用 js-fullfill 的 apply/toggle/IIFE 三段式） */
+Object.assign(I18N, {
+  '提示音：开':'Sound: On',
+  '提示音：关':'Sound: Off',
+  '提示音已开启':'Sound on',
+  '提示音已关闭':'Sound off',
+  '开启 / 关闭会议提示音（计时归零与临期滴答）':'Toggle meeting chime (timer end & last-10s ticks)',
+  '进入 / 退出全屏':'Enter / exit fullscreen',
+  '切换投屏模式':'Toggle projector mode',
+  '进入 / 退出浏览器全屏（快捷键 F4）':'Enter / exit browser fullscreen (shortcut F4)',
+  '强制页面铺满浏览器视口（隐藏滚动条与边缘留白，再点取消）':'Force the page to fill the viewport (hides scrollbars and edge gaps; click again to cancel)',
+  '投屏模式：点击状态栏「🖥 投屏」或按 P 键进入，供主席台投影使用。放大计时器、发言人、点名国名与三态选项、逐国表决国名与投票键，状态栏、侧栏、弹窗与提示条字号一并放大，当前发言人卡片加蓝色光晕、姓名放大加粗，并提高整体对比度；鼠标闲置 3 秒自动隐藏光标，移动即恢复；投屏下退出会议需 2.5 秒内再点一次确认，防止误触。放大仅在宽屏生效，手机与平板显示不受影响；投屏下入场动画不做模糊处理，保证投出的文字始终锐利。再次点击即恢复，该偏好会记住，刷新后保持。':'Projector mode: click "🖥 Projector" in the top bar or press P. Built for the dais projector: it enlarges the timer, speakers, roll-call country names and the three vote buttons, per-country vote names and keys, plus the top bar, sidebar, dialogs and toasts; the current speaker card gains a blue glow with a larger, bolder name, and overall contrast is raised. The cursor hides after 3 idle seconds and returns as soon as the mouse moves, and exiting a meeting requires a second click within 2.5 seconds to prevent accidents. Enlargement applies on wide screens only — phones and tablets are unaffected; entrance animations skip blur in this mode so projected text stays crisp. Click again to leave; the preference is remembered across refreshes.',
+  '全屏与占满：点击状态栏「⛶ 全屏」或按 F4 进入浏览器全屏（进入后按钮变为「退出全屏」）；「▣ 占满」开关隐藏滚动条与边缘留白，让页面铺满整个视口，长页面仍可正常滚动。两项偏好都会记住，刷新后保持。':'Fullscreen & fill: click "⛶ Fullscreen" in the top bar or press F4 to go fullscreen (the button then reads "Exit fullscreen"); the "▣ Fill" toggle hides scrollbars and edge gaps so the page fills the viewport, while long pages still scroll normally. Both preferences are remembered across refreshes.',
+  '提示音：点击状态栏「🔊 提示音」一键开关会议提示音——关闭后计时最后 10 秒的临期轻响与计时归零的结束音都不再播放，开关状态会记住，刷新后保持。':'Sound: click "🔊 Sound" in the top bar to toggle meeting chimes. When off, the last-10-second ticks and the end-of-time chime are both silenced; the preference is remembered across refreshes.'
+});
+var SND_KEY = LS_KEY + '.sound';
+function soundOn(){ try { return localStorage.getItem(SND_KEY) !== '0'; } catch (e) { return true; } }
+function applySoundBtn(){
+  var on = soundOn();
+  setSbIco('sbSound', on ? '🔊' : '🔇');
+  setSbTxt('sbSound', t(on ? '提示音：开' : '提示音：关'));
+  var b = document.getElementById('sbSound');
+  if (b) b.classList.toggle('on', on);
+}
+function toggleSound(){
+  var on = !soundOn();
+  try { on ? localStorage.removeItem(SND_KEY) : localStorage.setItem(SND_KEY, '0'); } catch (e) {}
+  applySoundBtn();
+  toast(on ? t('提示音已开启') : t('提示音已关闭'));
+}
+(function(){
+  var sb = document.getElementById('sbSound');
+  if (sb) sb.onclick = toggleSound;
+  applySoundBtn();
+  /* 语言切换后同步文案：链式挂到 __syncViewBtns（v68 在 js-fullfill 中先定义，此处包装保留） */
+  var prevSync = window.__syncViewBtns;
+  window.__syncViewBtns = function(){
+    if (typeof prevSync === 'function') prevSync();
+    applySoundBtn();
+  };
 })();
 /* SECTION: js-undo */
 /* 快照式撤销栈：回退后该操作产生的纪要一并消失 */
@@ -3741,7 +3961,7 @@ function undoStep(){
   }
   toast(t('已回退：') + undoLabel(step.label || ''));
 }
-function show(view){ var vs = document.querySelectorAll('.view'); for (var i = 0; i < vs.length; i++) vs[i].classList.remove('active'); document.getElementById('view-' + view).classList.add('active'); window.scrollTo(0, 0); syncStatusBar(); syncUndoBtn(); }
+function show(view){ var vs = document.querySelectorAll('.view'); for (var i = 0; i < vs.length; i++) vs[i].classList.remove('active'); document.getElementById('view-' + view).classList.add('active'); window.scrollTo(0, 0); syncStatusBar(); syncUndoBtn(); if (view === 'meeting') syncPaneH(); } /* v73：进会议视图时同步 paneHost 高度（无 RO 老浏览器的调用点兜底） */
 var TAB_NAMES = { roll:'点名', gsl:'主发言名单', speakers:'发言名单', motions:'动议与表决', docvote:'实质性表决文件', timer:'计时器', docs:'文件', minutes:'会议纪要', stats:'统计与评奖' };
 function tabName(k){ return t(TAB_NAMES[k] || k || ''); }
 /* 刷新 Dock 各栏目文案（语言切换或计时运行时调用） */
@@ -3980,18 +4200,22 @@ document.getElementById('modalMask').addEventListener('click', function(e){ if (
 document.addEventListener('keydown', function(e){
   if (e.key === 'Escape' && document.getElementById('modalMask').classList.contains('on')) closeModal();
 });
-document.addEventListener('click', function(e){ var nav = e.target.closest ? e.target.closest('[data-nav]') : null; if (nav) { persistTimer(); stopTimer(); renderHome(); show(nav.getAttribute('data-nav')); } });
+document.addEventListener('click', function(e){ var nav = e.target.closest ? e.target.closest('[data-nav]') : null; if (nav) { /* v69⑧：投屏下退出会议二次确认，防大屏前误触（数据自动存档不丢，纯防当众尴尬） */ if (document.body.classList.contains('projector') && typeof viewActive === 'function' && viewActive('meeting') && nav.getAttribute('data-nav') === 'home' && !nav._pendExit69) { nav._pendExit69 = true; toast(t('再点一次确认退出会议')); setTimeout(function(){ nav._pendExit69 = null; }, 2500); return; } persistTimer(); stopTimer(); renderHome(); show(nav.getAttribute('data-nav')); } });
 /* SECTION: js-audio */
 var audioCtx = null;
-function beep(){
+function beep(gainV, freq, times){
+  /* v69⑪：可选参数（默认值 = 原归零三响，现有 beep() 调用零改动） */
+  /* v70：提示音总开关（顶栏 sbSound 按钮；关闭后临期滴答与归零提示音均静音） */
+  if (!soundOn()) return;
+  gainV = gainV || 0.35; freq = freq || 880; times = times || 3;
   try {
     if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
     var t0 = audioCtx.currentTime;
-    for (var i = 0; i < 3; i++) {
+    for (var i = 0; i < times; i++) {
       var o = audioCtx.createOscillator(), g = audioCtx.createGain();
-      o.frequency.value = 880; o.type = 'sine';
+      o.frequency.value = freq; o.type = 'sine';
       g.gain.setValueAtTime(0.0001, t0 + i * 0.35);
-      g.gain.exponentialRampToValueAtTime(0.35, t0 + i * 0.35 + 0.03);
+      g.gain.exponentialRampToValueAtTime(gainV, t0 + i * 0.35 + 0.03);
       g.gain.exponentialRampToValueAtTime(0.0001, t0 + i * 0.35 + 0.28);
       o.connect(g); g.connect(audioCtx.destination);
       o.start(t0 + i * 0.35); o.stop(t0 + i * 0.35 + 0.3);
@@ -4958,6 +5182,10 @@ function openMeeting(id){
   /* v32-perf：面板空闲预热——浏览器空闲时把其余面板在后台各渲染一遍，
      之后首次切任何面板都是热路径（JIT/字体/DOM 全部就绪，首切不再偏慢）；
      visibility 常驻渲染下隐藏面板保留布局，后台渲染零副作用 */
+  /* v70i：重置预热守卫——第二次及以后进入会议同样要全量重灌+合成层预热；
+     否则仅首场会议有热缓存，换会后其余面板仍是上一场 DOM，切入时
+     靠版本守卫双 rAF 重灌（慢一拍且首点无预热层） */
+  warmPanesDone = false;
   warmPanes();
 }
 /* v32-perf：空闲预热器——requestIdleCallback 逐个后台渲染，不占用主线程连续时间片；
@@ -4977,35 +5205,154 @@ function warmPanes(){
     if (i < ids.length){
       if ('requestIdleCallback' in window) requestIdleCallback(step, {timeout: 4000});
       else setTimeout(step, 60);
-    }
+    } else { try { preheatLayers(); } catch (e) {} } /* v70i：DOM 预热完成即接着预热合成层（首点零建层开销） */
   }
   if ('requestIdleCallback' in window) requestIdleCallback(step, {timeout: 4000});
   else setTimeout(step, 60);
 }
+/* v70i：合成层预热——warmPanes 只预热了 DOM/JIT/字体，但「从未显示过」的面板既没有
+   合成层也没有光栅化缓存：首次点击时「建层+光栅化整个 713px 面板」全部撞在动画
+   第一帧上，表现为首点那一下顿挫（后续切换的层常驻 v70h 已修，唯独首点仍冷）。
+   此处在空闲时段把每个隐藏面板无感地「闪现」约 2 帧：visibility 置 visible、
+   opacity 0.01（绕过合成器对纯透明层的绘制剔除，肉眼不可察）+ pointer-events:none，
+   强制合成器建层并完成首次光栅化，随后立即恢复隐藏——光栅化缓存随常驻
+   will-change（v70h）跨隐藏存活，用户任何时候首切任何面板都命中热缓存。
+   逐面板串行+间隔，避免同帧连建多层造成 GPU 瞬时峰值；动画参数零改动 */
+var preheatSeq70i = 0;
+function preheatLayers(){
+  if (sprReduce()) return;
+  var seq = ++preheatSeq70i;                                       /* 新调用使旧序列自灭（防重入） */
+  var panes = document.querySelectorAll('.tabpane');
+  var i = 0;
+  var step = function () {
+    if (seq !== preheatSeq70i) return;
+    if (!viewActive('meeting') || i >= panes.length) return;
+    var p = panes[i++];
+    if (p && !p.classList.contains('on')) {
+      p.style.willChange = 'transform';                            /* 层声明常驻（与 v70h 语义一致） */
+      p.style.visibility = 'visible';
+      p.style.opacity = '0.01';
+      p.style.pointerEvents = 'none';
+      requestAnimationFrame(function () { requestAnimationFrame(function () {
+        p.style.visibility = ''; p.style.opacity = ''; p.style.pointerEvents = '';
+        /* willChange 故意保留——层与光栅化缓存跨 hidden 存活（v70h 已验证） */
+        setTimeout(step, 48);
+      }); });
+    } else { setTimeout(step, 0); }
+  };
+  requestAnimationFrame(step);
+}
 var TAB_KEYS = ['roll','gsl','speakers','motions','docvote','timer','docs','minutes','stats'];
+var _tabScrollMem = {}, _lastPaneAnim = null, _lastWinAnim = null;
+/* v73：常驻叠放布局高度同步——paneHost 高度恒等于当前激活面板高度。
+   九栏永久绝对叠放后 win-body 内无流内面板，窗口高度改由此器维护；
+   ResizeObserver 监听全部面板盒变化（重灌/断点/字体/首渲），回调在当帧绘制前触发，
+   不会出现可见的高度滞后；无 RO 的老浏览器回落 resize 监听+调用点同步 */
+function syncPaneH(){
+  var host = document.getElementById('paneHost');
+  if (!host) return;
+  var act = document.querySelector('.tabpane.on');
+  var h = 0;
+  if (act) { try { h = act.offsetHeight; } catch (e) { h = 0; } }
+  host.style.height = h + 'px';
+}
+(function(){
+  var host = document.getElementById('paneHost');
+  if (!host) return;
+  if ('ResizeObserver' in window) {
+    try {
+      var __ro73 = new ResizeObserver(function(){ syncPaneH(); });
+      var __ps73 = document.querySelectorAll('.tabpane');
+      for (var __qi = 0; __qi < __ps73.length; __qi++) __ro73.observe(__ps73[__qi]);
+    } catch (e) { window.addEventListener('resize', syncPaneH); }
+  } else {
+    window.addEventListener('resize', syncPaneH);
+  }
+})();
 function setTab(t){
   /* SECTION: fix-dock-v24：无效值（null/未登记键）回落到当前有效面板，
      绝不允许把 state.tab 置空并清空所有 .on（曾导致收起时窗口内容消失） */
   if (TAB_KEYS.indexOf(t) < 0) t = (TAB_KEYS.indexOf(state.tab) >= 0 ? state.tab : TAB_KEYS[0]);
+  /* v78（用户裁决）：滚动记忆只保留在会议纪要栏——纪要长文翻到中部切走再切回原位接上；
+     其余栏目切走即忘（清旧值防串栏），重新切入回到顶部初始状态 */
+  if (state.tab && state.tab !== t) {
+    if (state.tab === 'minutes') _tabScrollMem[state.tab] = (window.pageYOffset || document.documentElement.scrollTop || 0);
+    else delete _tabScrollMem[state.tab];
+    /* v64b：切走的面板若守卫失效（显示期间被就地更新），此刻已隐藏，后台补灌 */
+    scheduleRearmOne(state.tab);
+  }
   state.tab = t;
   var bs = document.querySelectorAll('#tabs button');
   for (var i = 0; i < bs.length; i++) bs[i].classList.toggle('on', bs[i].getAttribute('data-tab') === t);
   var ps = document.querySelectorAll('.tabpane');
   for (var j = 0; j < ps.length; j++) ps[j].classList.toggle('on', ps[j].id === 'tab-' + t);
+  /* v73：切换后立即同步 paneHost 高度——窗口动画的 winH59 在其后读取，量到的必须是已同步高度 */
+  syncPaneH();
   /* v31-fix：visibility 常驻渲染下 CSS animation 不会随显隐重启（与 display:none 不同），
      面板入场动画必须在切页时显式重播——参数与 cssPaneIn keyframes 一字不差（v50e 起为 .45s 长尾缓出 / 同位移），
      细腻感与原版完全一致；仅首次进会议时由 CSS animation 自然播放，此后每次切页由 WAAPI 接管。
      同样尊重系统「减少动画」偏好 */
   if (!sprReduce()) {
     var onPane = document.getElementById('tab-' + t);
+    /* v70i：清预热闪现残留——若用户恰在预热 2 帧闪现窗口内切入本面板，
+       inline opacity:0.01 会压住 .on 的 opacity:1 使面板近透明数帧；
+       先行无条件清理（visibility/opacity/pointerEvents 交还 CSS 规则），
+       预热恢复回调稍后到达时重复清理同值，幂等无害 */
+    if (onPane) { onPane.style.visibility = ''; onPane.style.opacity = ''; onPane.style.pointerEvents = ''; }
     /* v48d3（用户裁决最终版）：纪要面板浮现动画恢复，与计时器/发言名单等全部面板一致——
        用户指认的「突兀」是当初切入时叠加的整列重建交叉（已由等数幂等路径根除），
        面板浮现本身是舒缓渐显，保留；等数幂等路径继续保留防整列闪动 */
     if (onPane && onPane.animate) {
-      /* v48n：位移与其他栏目完全一致——全部面板同一套 cssPaneIn，不做任何特判；
-         v50e（用户要求细腻舒适）：时长 620→450ms，位移 14px→6px 微浮，长尾缓出曲线 */
-      onPane.animate([{ transform: 'translateY(6px)' }, { transform: 'none' }],
-        { duration: 450, easing: 'cubic-bezier(.16,1,.3,1)', fill: 'backwards' });
+      /* v60：连点打断时主动 cancel 上一条面板动画——合成器不再同时维护多条同参动画。
+         v63：cancel 前先解绑其 onfinish/oncancel（cancel 事件为异步派发，若不解绑，
+         旧回调会在本栏兜底 transform 设置完成后才执行，把新动画的兜底清掉）；
+         旧面板已被隐藏，其 inline 样式由下次 setTab 统一重设，无需回调清理 */
+      if (_lastPaneAnim) { try { _lastPaneAnim.onfinish = null; _lastPaneAnim.oncancel = null; _lastPaneAnim.cancel(); } catch (e) {} }
+      /* v63（用户报「总感觉每次切换动画都不一样」根修）：原 CSS+WAAPI 双通道存在
+         随机相位差——CSS 动画从样式重算起跑、WAAPI 从首帧合成起跑，冷面板首次
+         光栅化会把两条通道错开 0~2 帧（每次渲染负载不同），WAAPI 接管瞬间画面
+         从「CSS 已推进的位置」跳回起点，构成肉眼可见的顿挫且程度每次随机。
+         根治=切栏场景单通道化：CSS 通道以 inline animation:none 退出（cssPaneIn
+         keyframes 定义原样保留，切栏入场一律由 WAAPI 完整播放），WAAPI 独跑；
+         animate 创建到首帧之间的 pending 期以 inline transform 兜底 from 态，
+         消除「先原位闪现再跳回 6px」的起步跳变。动画参数一字不动：
+         6px / 450ms / cubic-bezier(.16,1,.3,1) / backwards（v50e 拍板值）。
+         打断时 cancel 后立即重设兜底再播——无论何时打断，新动画都从标准 6px
+         起点完整 450ms 播放，正常切栏与快速连切的行为从此完全一致 */
+      onPane.style.animation = 'none';
+      onPane.style.transform = 'translateY(6px)';
+      /* v70h：面板合成层提升。此前面板动画无独立合成层，transform 每帧走主线程
+         重绘整个面板——speakers/gsl 面板大（内容多），逐帧 paint 在真机/低性能
+         环境每帧 50~70ms = 有效帧率约 15fps，肉眼即「切页一顿一顿」（4x CPU
+         降速实测位移序列成组重复：13.6×6 → 10.47×3 → 6.67×3）。提升后动画由
+         合成器执行，层内容不变只做 composite，帧率与窗口动画（本就有
+         will-change，v31-perf）一致。动画参数一字不动；动画结束即释放层显存 */
+      onPane.style.willChange = 'transform';
+      /* v70m（用户裁决「最后切页的显现效果和其他栏目一样」）：面板浮入曲线全局统一为
+         匀滑减速 ease-out-sine（cubic-bezier(.39,.575,.565,1)）。演进：v50e 丝绸感曲线
+         （.16,1,.3,1）起步极猛——450ms 中前 64ms 砸完位移一半、160ms 完成 80%，大块面
+         内容（发言名单/主发言名单的巨型计时数字+大卡片）放大为「唰地蹦到位」的生硬感，
+         细字栏目无感；v70l 先对两栏单独换曲线，用户随即要求全局一致，遂统一。新曲线
+         起步柔、中段匀、收尾缓，全程可见缓动。450ms 时长/6px 位移/打断完整重播/inline
+         兜底逻辑一字不动；窗口浮入（620ms/17px 行程）为全栏共享金标准，未动 */
+      var __easePane70m = 'cubic-bezier(.39,.575,.565,1)';
+      _lastPaneAnim = onPane.animate([{ transform: 'translateY(6px)' }, { transform: 'none' }],
+        { duration: 450, easing: __easePane70m, fill: 'backwards' });
+      /* v71：记录面板入场起跑时刻，供 paintQueue 判断「面板是否正在浮入」。
+         队列是面板后代，面板位移时队列天然跟随；此刻若再播一层同向位移，
+         两层在几何上叠加为 12px 行程，这两栏首次进入便比其他栏目多浮一倍 */
+      if (_lastPaneAnim) _lastPaneAnim.__startAt = Date.now();
+      _lastPaneAnim.onfinish = _lastPaneAnim.oncancel = function () {
+        /* v63：只清 transform——animation:'none' 必须常驻 inline：清掉它会使
+           .tabpane.on 的 cssPaneIn 规则重新生效并「再启动一次」CSS 动画（animation
+           属性值变化即重启动画），面板落定后会被偷偷重滑一次。'none' 由下次
+           setTab 重设（恒定值，无漂移） */
+        onPane.style.transform = '';
+        /* v70h：willChange 故意不清理——若动画完即拆层，gsl↔speakers 快速互切时每次
+           切入都要重建合成层+重新光栅化整个大面板（实测 4x 降速下首次切入流畅、
+           后续切入起步定格逐次变长即源于此）；保留提升让层与光栅化缓存跨切换存活，
+           同一时刻至多 1 个 on 面板层（约 3-4MB 显存，固定可控） */
+      };
     }
     /* v32-detail：面板落定后侧栏图标微弹——生命感反馈，纯 transform 合成器动画 */
     if (!sprReduce() && onPane) {
@@ -5067,7 +5414,14 @@ function setTab(t){
     if (win.animate) {
       /* v31-perf：动画参数一字不动（时长 620ms / 位移 / 缩放 / 缓动 / 填充全部保持原状——细腻感完整保留）。
          动画期间动态 will-change 预建合成层，避免首帧光栅化大子树；结束即释放显存 */
+      /* v31-perf：动画参数一字不动（时长 620ms / 位移 / 缩放 / 缓动 / 填充全部保持原状——细腻感完整保留）。
+         动画期间动态 will-change 预建合成层，避免首帧光栅化大子树；结束即释放显存 */
       win.style.willChange = 'transform, opacity';
+      /* v60：连点打断时主动 cancel 上一条窗口动画（onfinish 不会触发，willChange 就地清理）。
+         v63：同面板——cancel 前解绑旧回调（cancel 事件异步派发，否则旧 clearWC 会在
+         新兜底 transform 设置后异步执行将其清掉）；窗口 inline 样式由新动画的
+         clearWC（onfinish/oncancel）统一收尾 */
+      if (_lastWinAnim) { try { _lastWinAnim.onfinish = null; _lastWinAnim.oncancel = null; _lastWinAnim.cancel(); } catch (e) {} win.style.willChange = 'transform, opacity'; }
       /* v48o（用户最终裁决）：纪要保留位移，但幅度与其他栏目观感一致——
          实测：同样 14px 在计时器（408px 小卡）上是轻微浮现，在纪要（1799px 满屏文字）上
          就是整页从下往上浮（顶边行程含缩放达 27px vs 17px）。故纪要位移等比收敛
@@ -5084,11 +5438,20 @@ function setTab(t){
       var winH59 = win.offsetHeight;
       var wTy59 = Math.max(3, 17 - winH59 * 0.0045);
       var wSlide = 'translateY(' + wTy59.toFixed(1) + 'px) scale(.991)';
-      var wAn = win.animate([{ transform: wSlide }, { transform: 'none' }],
+      /* v63（与面板同根修）：窗口动画本就 WAAPI 单通道（无 CSS 竞争），但 animate
+         创建到首帧之间的 pending 期窗口会先以基态（原位）显示、首帧才跳到起点——
+         冷面板光栅化拉长 pending 期时这个「原位→起点」跳变肉眼可见且每次随机。
+         inline transform 兜底 from 态后，无论 pending 多久，窗口始终稳定显示在
+         标准起点，动画从首帧无缝接管。参数 620ms / 动态位移 / .991 /
+         cubic-bezier(.22,1,.36,1) 一字不动 */
+      win.style.transform = wSlide;
+      var wAn = _lastWinAnim = win.animate([{ transform: wSlide }, { transform: 'none' }],
         { duration: 620, easing: 'cubic-bezier(.22,1,.36,1)', fill: 'backwards' });
       if (wAn) {
-        var clearWC = function(){ win.style.willChange = ''; };
-        if (wAn.onfinish !== undefined) wAn.onfinish = clearWC;
+        /* v70h：willChange 不随动画结束清理（层常驻，切栏免重建合成层+光栅化缓存跨切换存活，
+           显存成本固定约 4MB）；transform 必须清理（窗口落位） */
+        var clearWC = function(){ win.style.transform = ''; };
+        if (wAn.onfinish !== undefined) { wAn.onfinish = clearWC; wAn.oncancel = clearWC; }
         else if (wAn.finished) wAn.finished.then(clearWC, clearWC);
         else setTimeout(clearWC, 300);
       }
@@ -5096,19 +5459,67 @@ function setTab(t){
       win.classList.remove('swap'); void win.offsetWidth; win.classList.add('swap');
     }
   }
-  window.scrollTo(0, 0);
+  /* v78：只有会议纪要栏恢复滚动位置，其余栏目一律回顶部初始状态 */
+  window.scrollTo(0, t === 'minutes' ? (_tabScrollMem[t] || 0) : 0);
   syncStatusBar();
 }
 /* v30-perf：切页渲染去抖器。用 setTimeout(0)（宏任务）而非 rAF：
    rAF 回调与首次渲染在同一帧内按注册顺序执行，重灌仍会阻塞首帧；
    宏任务在 paint 完成后才跑，真正做到「先让动画首帧出去，再重灌数据」 */
-var pendingRenderTab = null;
+var pendingRenderTab = null, paneVer = {}, dataVer62 = 0;
+/* v64（用户报「切入瞬间内容闪一下/跳变」根修）：v62b 的全局数据版本守卫在任意数据
+   操作后使全部面板失效，此后每栏首切都会整栏 innerHTML 重建（新 DOM 树的布局+光栅化
+   落在切入动画帧内）=可感的闪变卡顿，且「做过操作才闪、没做不闪」=偶然出现。
+   根治=失效面板后台静默重灌：数据变更后 150ms（防抖，连续操作只排一次）起，在浏览器
+   空闲分片把所有「非当前显示」的失效面板逐个 renderTab——面板此刻隐藏（visibility:
+   hidden），重灌零视觉影响；用户随后切栏时 paneVer 已恢复最新，切入零重灌零闪变。
+   分片每 3 栏让出主线程一次（renderTab 内部各栏守卫继续生效，内容未变栏近乎零成本）。
+   与切栏重灌路径互斥：循环内实时跳过当前面板，集合不相交；renderTab 抛错逐栏吞掉
+   （与 warmPanes 同策略）。重灌窗口内（操作后约 0.15~1s）立即切栏仍走原双 rAF 路径 */
+var rearmTimer64 = null;
+function rearmPanes(){
+  if (rearmTimer64) clearTimeout(rearmTimer64);
+  /* v70k：防抖 150ms→0——150ms 窗口正是「操作后立刻切栏撞过期」的根因：操作→切栏
+     间隔常小于 150ms，切入时守卫误判过期走双 rAF 动画中重灌（卡顿+内容重排）。
+     归零后同一宏任务内的连续调用仍合并（clearTimeout），idle 分片节流保留（不阻塞
+     主线程），重灌一律在切入之前的后台隐藏态完成。此为数据调度参数，动画零改动 */
+  rearmTimer64 = setTimeout(function(){
+    rearmTimer64 = null;
+    if (!viewActive('meeting') || !cur()) return;
+    var idle = window.requestIdleCallback || function (f){ return setTimeout(f, 50); };
+    var i = 0;
+    var step = function () {
+      while (i < TAB_KEYS.length) {
+        var t = TAB_KEYS[i++];
+        if (t !== state.tab && paneVer[t] !== dataVer62) { try { renderTab(t); } catch (e) {} }
+        if (i % 3 === 0) { idle(step); return; }
+      }
+      /* v70i：重灌完成后重预热合成层——重灌产生的是新 DOM 节点，旧光栅化缓存作废 */
+      try { preheatLayers(); } catch (e) {}
+    };
+    idle(step);
+  }, 150);
+}
+/* v64b：就地更新缝隙兜底——点名逐国点击等 patch111 路径直接改数据与行样式、
+   不经过 renderTab，paneVer 仍记旧版本；该面板被切走转为隐藏的瞬间后台补灌
+   （零视觉影响），下次切入零重灌零闪变 */
+function scheduleRearmOne(t){
+  var idle = window.requestIdleCallback || function (f){ return setTimeout(f, 50); };
+  idle(function(){ if (t && t !== state.tab && paneVer[t] !== dataVer62) { try { renderTab(t); } catch (e) {} } });
+}
 function scheduleTabRender(t){
   /* v49c（用户要求）：面板尚无内容（新建会议首次切入）时同步渲染——
      空面板先入场、下一帧才灌内容，观感即「先加载一下再显示」；
      同步路径只命中空面板首切，已缓存面板维持 v30-perf 缓存入场机制不变 */
   var pane0 = document.getElementById('tab-' + t);
   if (pane0 && !pane0.firstElementChild) { renderTab(t); return; }
+  /* v62b（用户报「点击实质性表决文件栏目显示抖一下」根修）：v62 曾把重灌后移到 620ms，
+     内容突变落在动画刚结束的静止画面上——预热快照与实际界面差异最大的 docvote 抖感最明显。
+     根治：数据版本签名守卫。面板渲染时记录 paneVer=当前数据版本（saveMeetings 即版本++），
+     切栏时数据没变 → 面板快照就是最新，直接零重灌（零阻塞零突变，首切冷开销一并消失）；
+     数据真变了 → 回双 rAF（v56 已验证范式：重灌藏在动画启动早期，被入场运动掩盖，
+     首帧先出去、第二帧才重灌）。连续快切仍由 pendingRenderTab 防抖只渲染最后目标 */
+  if (paneVer[t] === dataVer62) return;
   pendingRenderTab = t;
   /* v56（用户裁决：性能根修、动画参数零改动）：重灌从 setTimeout(0) 改为双 rAF——
      setTimeout 宏任务会在首帧渲染之前被抢先执行，重面板（纪要长列表全文扫描+满屏
@@ -5157,6 +5568,10 @@ function renderTab(t){
   updateDockBadges(); syncLiveChips();
   /* 英文模式下统一归一化拼接串中残留的中文标点；v30-perf：只扫刚重灌的目标面板，不再全窗口遍历 */
   normalizeDomPunct(document.getElementById('tab-' + t));
+  /* v62b：记录本面板渲染时的数据版本——切栏时版本相同即快照最新，零重灌 */
+  paneVer[t] = dataVer62;
+  /* v73：当前面板重灌后高度可能变化——立即同步 paneHost（RO 兜底之外的同步路径） */
+  if (t === state.tab) syncPaneH();
 }
 function renderAll(){
   var m = cur(); if (!m) return;
@@ -5529,6 +5944,7 @@ function renderRoll(m){
       renderGuardPut('rollList', m, rlSig);
     }
   }
+  paneVer['roll'] = dataVer62;  /* v70g：同 renderGsl，就地渲染后同步版本守卫 */
 }
 document.getElementById('rollList').addEventListener('click', function(e){
   var b = e.target.closest('[data-roll]'); if (!b) return;
@@ -5553,6 +5969,7 @@ document.getElementById('rollList').addEventListener('click', function(e){
   updateRollSummary(m);
   updateDockBadges(); syncLiveChips();
   m.updatedAt = nowStr(); saveMeetings(); syncUndoBtn();
+  paneVer['roll'] = dataVer62;  /* v70g：patch111 直改路径（改行 class+汇总）后同步版本守卫；scheduleRearmOne 兜底保留无害 */
 });
 document.getElementById('btnRollDone').onclick = function(){
   var m = cur(); if (!m) return;
@@ -5839,7 +6256,7 @@ function renderGsl(m){
     var tagG = csGsl ? 'spk:' + csGsl.delId : (np ? 'pend:' + np.delId : 'none');
     var htmlG;
     if (csGsl) {
-      htmlG = '<div class="speaker-current"><div style="flex:1;min-width:180px;"><div class="sc-name">' + esc(delName(m, csGsl.delId)) + '</div>'
+      htmlG = '<div class="speaker-current sc-live"><div style="flex:1;min-width:180px;"><div class="sc-name">' + esc(delName(m, csGsl.delId)) + '</div>'
         + '<div class="sc-meta">' + t('正在发言') + ' · ' + csGsl.seconds + 's</div></div>'
         + '<button class="btn btn-lg" id="btnGslEnd">' + t('结束发言') + '</button></div>';
     } else if (np) {
@@ -5874,6 +6291,17 @@ function renderGsl(m){
     }
     paintQueue(rb, gItems, t('待发言队列为空'));
   }
+  /* v70g：就地渲染后同步版本守卫——「操作→saveMeetings(数据版本++)→renderXxx 就地刷新」后
+     paneVer 仍记旧版本，失效窗口（rearmPanes 150ms 防抖+空闲分片，约 0.15~1s）内切栏/切回，
+     该面板会在切入动画起步帧被整栏重灌（双 rAF 路径），真机性能不足时即「偶发生硬」。
+     同步后该面板被记为最新，切入零重灌零闪变；renderTab 路径末尾本就再记一次，同值无冲突。
+     同步行置于函数最末：此前任一语句抛异常时本行不执行，版本不会被误标为最新。以下各渲染函数同理 */
+  paneVer['gsl'] = dataVer62;
+  /* v70k：gsl/speakers 数据联动（currentSpeaker 双栏共显）——本栏渲染完成不代表另一栏
+     版本同步（多数 gsl 操作只调 renderGsl 不调 renderSpeakers）。安排另一栏 idle 后台
+     补灌（v64b 既有机制：隐藏态零视觉影响，版本已同步则自动跳过），使「操作后立刻
+     切栏」也命中零重灌，重灌只发生在切入之前的后台隐藏态 */
+  scheduleRearmOne('speakers');
 }
 /* 加入名单：名单未开启或已关闭时同样允许加入 */
 document.getElementById('btnGslAdd').onclick = function(){
@@ -6207,8 +6635,34 @@ function paintQueue(container, items, emptyText){
   container.appendChild(frag);
   /* v51：形态切换（empty→列表 / 成员替换重建）整列轻浮现——纯位移零透明度，
      与尾部弹入同语言，消除首次加入名单时的瞬跳 */
-  if (!sprReduce() && frag.animate) frag.animate([{ transform: 'translateY(5px)' }, { transform: 'none' }],
-    { duration: 300, easing: 'cubic-bezier(.16,1,.3,1)' });
+  /* v65（用户版合并）：整列浮现参数与面板入场（cssPaneIn / setTab WAAPI）一字对齐 ——
+     6px / 450ms / 同曲线 / fill:backwards。原 5px/300ms 与面板 6px/450ms 不同步，
+     首次切入时队列少走 1px 且提前 150ms 落定，中途相对面板上跳 → 生硬。
+     对齐后两层同向同参，视觉上合成整片一次浮入。增量路径（加入国家弹入 /
+     发言完毕移出）参数不变，手感维持原样 */
+  /* v71（用户裁决「一次性避免掉」）：面板正在浮入时，队列不再播自己的整列浮现。
+     几何依据：#gslRounds / #spkQueue 均为 .tabpane 后代，面板 translateY(6px)→none
+     时队列已随之整体浮入；再叠一层同参同向位移，合成结果是 12px 行程 + 两层各自
+     光栅化，视觉上队列比面板「多跳一下」，与其他栏目（仅面板单层 6px）不一致。
+     故：面板入场进行中 → 队列静默跟随；面板静止（已在栏内加入国家触发 empty→列表
+     形态切换）→ 保留 v51 整列浮现以消除瞬跳。两种场景各得其所，参数不再需要
+     与面板「保持同步」，从根上消除两处参数漂移导致的不一致 */
+  var paneAnimRef = (typeof _lastPaneAnim !== 'undefined' && _lastPaneAnim) ? _lastPaneAnim : null;
+  var paneFloating = !!(paneAnimRef && paneAnimRef.__startAt && (Date.now() - paneAnimRef.__startAt) < 470);
+  if (!sprReduce() && frag.animate && !paneFloating) {
+    /* v70h→v70j：整列浮现合成层提升且【常驻不拆】——跨栏对照实测（4x 节流真实合成帧）
+       五栏切入帧率无差异（speakers 53-59ms 甚至优于 roll 61-67ms），观感差异源在
+       speakers/gsl 独有的结构：全系统内容更新最频繁的面板（计时秒跳/进度条
+       clip-path/发言切换），无独立队列层时这些更新在面板大层内重光栅化并弄脏
+       框架缓存；v70h 曾在浮现动画结束后清理 willChange，拆建循环本身又是缓存丢失。
+       常驻后：更新只重绘队列层内部，切入动画期间队列与面板框架全部热缓存、
+       纯合成器位移。浮现参数一字不动（6px/450ms/同曲线/backwards） */
+    frag.style.willChange = 'transform';
+    /* v70l：跟随面板换匀滑减速曲线（paintQueue 仅服务 gsl/speakers 两栏），与面板入场
+       保持同参数对齐（v65 对齐精神不变：同参同步防相对滑动），450ms/6px 一字不动 */
+    frag.animate([{ transform: 'translateY(6px)' }, { transform: 'none' }],
+      { duration: 450, easing: 'cubic-bezier(.39,.575,.565,1)', fill: 'backwards' });
+  }
 }
 function paintCaucusRemaining(m){
   if (!m) return;
@@ -6234,8 +6688,10 @@ function paintCaucusRemaining(m){
   }
   var fill = document.getElementById('spkPoolFill');
   if (fill && (c.totalSec | 0) > 0) {
-    var wantW = Math.max(0, Math.min(100, Math.round((1 - rem / c.totalSec) * 100))) + '%';
-    if (fill.style.width !== wantW) fill.style.width = wantW;
+    /* v60：width→clip-path（inset 右侧裁剪百分比，填充效果与原 width 等价） */
+    var usedPct = Math.max(0, Math.min(100, Math.round((1 - rem / c.totalSec) * 100)));
+    var wantClip = 'inset(0 ' + (100 - usedPct) + '% 0 0)';
+    if (fill.style.clipPath !== wantClip) fill.style.clipPath = wantClip;
   }
   /* 栏目计时区与当前发言者信息条里的「磋商剩余」 */
   var rc = document.getElementById('spkRemCaucus');
@@ -6301,7 +6757,21 @@ function renderSpeakers(m){
     : t('用于有主持核心磋商与个人演讲的发言队列，按加入顺序依序发言。');
   /* 磋商信息区：议题 + 总时长 + 每人时长 + 剩余 */
   var info = document.getElementById('spkModInfo');
-  if (info) {
+  /* v71：磋商信息区加签名守卫（照 renderGsl 蓝卡 v45-idem 同款）。此前每次
+     renderSpeakers 都无条件 innerHTML 整块重建 —— 加国家 / 开始发言 / 结束发言
+     等操作都会作废本面板的光栅缓存，下次切入即「冷」：真机首次点击要把「建层 +
+     光栅化整个面板」全撞在动画起步帧上，表现为比其他栏目生硬。docs / stats 等
+     栏目内容几乎不变、缓存常驻热，故只有这两栏手感不一致（用户假设，代码实证）。
+     签名刻意不含 remainingSec：每秒变化的剩余时长由 paintCaucusRemaining 定点写入
+     #spkRemTotal / #spkPoolBar / #spkPoolFill，若入签名会让守卫每秒失效、
+     反而比现在更频繁地整块重建 */
+  var sigInfo = active
+    ? 'on|' + (c.topic || '') + '|' + (c.totalSec | 0) + '|' + (c.perSec | 0) + '|'
+      + (c.proposer || '') + '|' + ((c.remainingSec <= c.perSec) ? 1 : 0) + '|' + LANG
+    : 'off|' + LANG;
+  if (info && info.getAttribute('data-sig') === sigInfo) {
+    /* 结构未变：DOM 纹丝不动，定点更新宿主节点保持有效，光栅缓存不被作废 */
+  } else if (info) {
     if (active) {
       var low = c.remainingSec <= c.perSec;
       info.innerHTML = '<div class="mod-info"><div class="mi-head"><span class="badge blue">' + t('有主持核心磋商进行中') + '</span>'
@@ -6309,17 +6779,19 @@ function renderSpeakers(m){
         + '<div class="mi-grid">'
         + '<div class="mi-item"><small>' + t('磋商总时长') + '</small><b>' + fmtSec(c.totalSec) + '</b></div>'
         + '<div class="mi-item"><small>' + t('剩余总时长') + '</small><b id="spkRemTotal" class="' + (low ? 'low' : '') + '">' + fmtSec(c.remainingSec) + '</b>'
-        /* 时间池已用比例进度条：宽度由内联样式给出（CSS 无法做数值映射）；
+        /* 时间池已用比例进度条：v60 起用 clip-path inset 右侧裁剪（与每秒更新逻辑同口径；
+           若仍写 width 会与 clip-path 叠加导致双重缩短）；
            id 供 paintCaucusRemaining 每秒定点更新，避免整块重绘 */
-        + '<span class="pool-bar' + (low ? ' hot' : '') + '" id="spkPoolBar"><i id="spkPoolFill" style="width:'
-        + (c.totalSec > 0 ? Math.max(0, Math.min(100, Math.round((1 - c.remainingSec / c.totalSec) * 100))) : 0)
-        + '%"></i></span></div>'
+        + '<span class="pool-bar' + (low ? ' hot' : '') + '" id="spkPoolBar"><i id="spkPoolFill" style="clip-path:inset(0 '
+        + (c.totalSec > 0 ? (100 - Math.max(0, Math.min(100, Math.round((1 - c.remainingSec / c.totalSec) * 100)))) : 100)
+        + '% 0 0)"></i></span></div>'
         + '<div class="mi-item"><small>' + t('每位代表') + '</small><b>' + fmtSec(c.perSec) + '</b></div>'
         + '<div class="mi-item"><small>' + t('提出国') + '</small><b style="font-size:15px;">' + (c.proposer ? esc(delName(m, c.proposer)) : '—') + '</b></div>'
         + '</div></div>';
     } else {
       info.innerHTML = '';
     }
+    info.setAttribute('data-sig', sigInfo);
   }
   /* 栏目内计时：显示当前发言者与磋商剩余池 */
   var sWho = document.getElementById('spkTimerWho');
@@ -6327,11 +6799,18 @@ function renderSpeakers(m){
   if (sWho) sWho.textContent = cs ? delName(m, cs.delId)
     : (active ? t('待开始') : t('无进行中磋商'));
   var pool = document.getElementById('spkPoolBox');
-  if (pool) {
+  /* v71：同 B1 —— 此处原本也是无条件整块重建。签名只取结构性字段（是否磋商中、
+     每人时长、语言）；「磋商剩余」由 paintCaucusRemaining 定点写 #spkRemCaucus，
+     不入签名，避免每秒失效 */
+  var sigPool = active ? ('on|' + (c.perSec | 0) + '|' + LANG) : ('off|' + LANG);
+  if (pool && pool.getAttribute('data-sig') === sigPool) {
+    /* 结构未变，跳过重建 */
+  } else if (pool) {
     pool.innerHTML = active
       ? '<span>' + t('每人') + ' <b>' + fmtSec(c.perSec) + '</b></span>'
         + '<span>' + t('磋商剩余') + ' <b id="spkRemCaucus">' + fmtSec(c.remainingSec) + '</b></span>'
       : '';
+    pool.setAttribute('data-sig', sigPool);
   }
   paintTimerAt(timers.spk);
   /* 「结束名单」：有正在发言者、队列中仍有国家、或磋商仍在进行时可用 */
@@ -6347,7 +6826,7 @@ function renderSpeakers(m){
     var tagS = cs ? 'spk:' + cs.delId : (np ? 'pend:' + np.delId : 'none');
     var htmlS;
     if (cs) {
-      htmlS = '<div class="speaker-current"><div style="flex:1;min-width:180px;"><div class="sc-name">' + esc(delName(m, cs.delId)) + '</div>'
+      htmlS = '<div class="speaker-current sc-live"><div style="flex:1;min-width:180px;"><div class="sc-name">' + esc(delName(m, cs.delId)) + '</div>'
         + '<div class="sc-meta">' + t('正在发言') + ' · ' + cs.seconds + 's'
         + (active ? ' · ' + t('磋商剩余') + ' <span id="spkCurRem">' + fmtSec(c.remainingSec) + '</span>' : '') + '</div></div>'
         + '<button class="btn btn-lg" id="btnSpkEnd">' + t('结束发言') + '</button></div>';
@@ -6367,7 +6846,11 @@ function renderSpeakers(m){
     } else {
       htmlS = '<div class="card"><p class="hint">' + t('发言名单为空：由有主持核心磋商或个人演讲动议通过后进入本栏目，也可在上方手动加入国家。') + '</p></div>';
     }
-    var sigS = tagS + '|' + (cs ? cs.seconds + (active ? '|' + fmtSec(c.remainingSec) : '')
+    /* v71：cs（正在发言）分支剔除 remainingSec —— 蓝卡内的「磋商剩余」由
+       paintCaucusRemaining 每秒定点写入 #spkCurRem，入签名只会让蓝卡随时间流逝
+       反复整块重建并重播 swapFlash 交叉，属纯冗余且是闪烁源。
+       「名单走完」分支的剩余时长是纯文本（无定点宿主节点），故保留 */
+    var sigS = tagS + '|' + (cs ? cs.seconds
       : (np ? np.seconds : (active ? '|' + fmtSec(c.remainingSec) + '|' + canAppend : ''))) + '|' + LANG;
     if (box.getAttribute('data-sig') !== sigS) {
       var ghostSpk = crossCapture(box);   /* v53：流动接力需要旧字定格层 */
@@ -6394,6 +6877,9 @@ function renderSpeakers(m){
     }
     paintQueue(q, sItems, t('名单为空'));
   }
+  paneVer['speakers'] = dataVer62;  /* v70g：同 renderGsl，就地渲染后同步版本守卫 */
+  /* v70k：同上——联动补灌主发言名单，消除跨栏切入的重灌窗口 */
+  scheduleRearmOne('gsl');
 }
 document.getElementById('btnSpkAdd').onclick = function(){
   var m = cur(); if (!m) return;
@@ -6663,6 +7149,7 @@ function paintDocVote(m, delId){
     }
     break;
   }
+  paneVer['docvote'] = dataVer62;  /* v70g：票数定点更新后面板与数据一致，同步版本守卫 */
 }
 /* SECTION: js-dv-result-detail — 实质性表决结果区：历次表决记录、图表、逐国明细。
    只在结果态渲染，不参与投票中的定点刷新（paintDocVote）。数字一律取自 dv.final 历史快照，
@@ -6695,7 +7182,7 @@ function docVoteResultCharts(fv){
     bh += '<div class="c-bar-row"><span class="c-bar-lb" title="' + esc(rows[i].label) + '">' + esc(rows[i].label) + '</span>'
       + '<span class="c-bar-tr"><i style="width:' + pct.toFixed(1) + '%;background:' + rows[i].color
       + '"></i></span>'
-      + '<b class="c-bar-v">' + rows[i].value + '</b></div>';
+      + '<b class="c-bar-v" data-target="' + rows[i].value + '">0</b></div>';
   }
   bh += '</div>';
   s += panelHtml('门槛达成', need > 0 ? (y + ' / ' + need) : '', bh);
@@ -6839,6 +7326,7 @@ function renderDocVote(m){
   if (!dv) {
     box.innerHTML = '<div class="card"><div class="empty">' + t('暂无进行中的实质性表决文件') + '<br>'
       + t('请在「动议与表决」发起「实质性 · 表决文件」动议；动议通过后需重新点名，点名完成会自动进入本栏目。') + '</div></div>';
+    paneVer['docvote'] = dataVer62;  /* v70g：空态已写入，同步版本守卫 */
     return;
   }
   var doc = findDoc(m, dv.docId);
@@ -6923,6 +7411,8 @@ function renderDocVote(m){
   /* v32-detail：结果数字滚动——宣布后票数从 0 滚到实际值（rAF 插值，只改 textContent）。
      v32-fix：该段原先误贴在首页存档列表渲染后（该处永远不存在 .c-bar-v，动画从未生效），
      现移至本函数结果态渲染之后，宣布表决后图表票数从 0 平滑滚动到实际值。 */
+  /* v60：初始值改写 0（真值预埋 data-target），滚动路径 0→N 干净揭晓，不再先闪一帧真值；
+     sprReduce/无动画环境走下方兜底直接显示真值，不出现全 0 */
   if (!sprReduce() && box.querySelector('.c-bar-v')) {
     var counters = box.querySelectorAll('.c-bar-v');
     var t0c = performance.now(), durC = 700;
@@ -6937,6 +7427,9 @@ function renderDocVote(m){
       }
       if (k < 1) requestAnimationFrame(stepCount);
     })();
+  } else {
+    var cRest = box.querySelectorAll('.c-bar-v[data-target]');
+    for (var cr2 = 0; cr2 < cRest.length; cr2++) cRest[cr2].textContent = cRest[cr2].getAttribute('data-target');
   }
   var r2 = document.getElementById('btnDvRound2');
   if (r2) r2.onclick = function(){ toDocVoteRound2(m); };
@@ -6987,6 +7480,7 @@ function renderDocVote(m){
       mm.updatedAt = nowStr(); saveMeetings(); paintDocVote(mm, delId); renderMinutes(mm);
     };
   });
+  paneVer['docvote'] = dataVer62;  /* v70g：同 renderGsl，就地渲染后同步版本守卫 */
 }
 function toDocVoteRound2(m){
   var dv = m.docVote; if (!dv || dv.round !== 1) return;
@@ -7508,6 +8002,7 @@ function renderMotions(m){
         fresh.setAttribute('data-msig', sig);
         crossSwapCard(box, kids, i, fresh);                       /* v43-cross2：旧卡定格交叉淡出，下方卡 FLIP 让位 */
       }
+      paneVer['motions'] = dataVer62;  /* v70g：逐卡快速路径完成，DOM 与数据一致，同步版本守卫 */
       return;
     }
   }
@@ -7516,10 +8011,11 @@ function renderMotions(m){
   if (!list.length) {
     var probeM = document.createElement('div');
     probeM.innerHTML = emptyHtml;
-    if (kids.length === 1 && kids[0].querySelector('.empty') && kids[0].textContent === probeM.textContent) return;
+    if (kids.length === 1 && kids[0].querySelector('.empty') && kids[0].textContent === probeM.textContent) { paneVer['motions'] = dataVer62; return; }  /* v70g：空态短路内容一致，同步版本守卫 */
     for (var ei = 0; ei < kids.length; ei++) box.removeChild(kids[ei]);
     box.innerHTML = emptyHtml;
     if (kids.length) crossPlayAll(box, kids);
+    paneVer['motions'] = dataVer62;  /* v70g：空态已重建，同步版本守卫 */
     return;
   }
   /* v43-cross2：头部插入（新动议走 unshift）——旧卡原地 FLIP 平滑让位，新卡 rowInR 入场，整列不消失不重建 */
@@ -7568,6 +8064,7 @@ function renderMotions(m){
   if (olds.length) crossPlayAll(box, olds);
   /* v29：动议增删改后同步状态栏灯与角标（pending 数即待裁定数） */
   try { syncLiveChips(); updateDockBadges(); } catch (e) { /* DOM 未就绪时跳过 */ }
+  paneVer['motions'] = dataVer62;  /* v70g：同 renderGsl，就地渲染后同步版本守卫 */
 }
 /* 裁定动议结果：主席团依现场表决结果选择通过或未通过 */
 function ruleMotion(m, moId, passed){
@@ -7911,6 +8408,11 @@ function paintTimerAt(T){
       el.textContent = dispTxt;
     }
     el.classList.toggle('warn', T.remaining <= 10 && T.running);
+    /* v70 临期提醒：剩 10 秒时轻响一声（低音量不扰人），归零另有结束音；任何模式下生效，由提示音开关统一控制（v69 时仅投屏且每秒响，v70 改） */
+    if (T.running && T.remaining === 10 && T._tickSec !== T.remaining) {
+      T._tickSec = T.remaining;
+      beep(0.12, 660, 1);
+    }
     el.classList.toggle('run', T.running);
     /* 剩余比例（remaining / total）写入 CSS 变量，供进度条使用；纯视觉，不参与任何逻辑判断 */
     var tp = T.total > 0 ? Math.max(0, Math.min(1, T.remaining / T.total)) : 0;
@@ -7949,7 +8451,7 @@ function paintTimerChrome(){
   }
   paintDockLabels();
 }
-function paintTimer(){ paintTimerAt(timers.global); }
+function paintTimer(){ paintTimerAt(timers.global); paneVer['timer'] = dataVer62; }  /* v70g：同步版本守卫 */
 function setTimer(sec, remaining){ setTimerAt(timers.global, sec, remaining); }
 function stopTimer(writeLog){ stopTimerAt(timers.global, writeLog); }
 function runTimer(){ runTimerAt(timers.global); }
@@ -7987,7 +8489,9 @@ function persistTimer(){
   m.timerState = { total: timers.global.total, remaining: timers.global.remaining, paused: !!timers.global.paused };
   m.gslTimerState = { total: timers.gsl.total, remaining: timers.gsl.remaining, paused: !!timers.gsl.paused };
   m.spkTimerState = { total: timers.spk.total, remaining: timers.spk.remaining, paused: !!timers.spk.paused };
-  saveMeetings();
+  /* v70k：软保存——timerState 仅刷新恢复用，三个计时面板均由 paintTimerAt/setTimer
+     就地更新，无任何面板内容变化；走 saveMeetings 会误使全部面板过期（见上方说明） */
+  saveMeetingsSoft();
 }
 /* 归零处理：按实例来源决定是结束发言还是仅记录 */
 function onTimerZero(T){
@@ -8011,6 +8515,7 @@ function startTicking(T){
   if (guardSuspended(cur())) return;
   T.running = true;
   T.paused = false;   /* 开始或继续后不再是暂停态 */
+  T._tickSec = null;  /* v70：每轮启动重置临期提醒标记，保证每次计时到 10 秒都会响（否则首轮响过后标记残留，后续轮次静音） */
   /* P0 修复（deadline）：原实现靠 setInterval 次数递减，浏览器对后台标签
      节流 interval（节能模式可到 1 次/分钟），主席切出去查资料计时就走慢，
      归零提示音与纪要写入也随之延迟。改为 deadline 时间戳：每秒按
@@ -8281,6 +8786,7 @@ function renderDocs(m){
   box.innerHTML = htmlAll;
   for (var s2 = 0; s2 < box.children.length; s2++) box.children[s2].setAttribute('data-docsig', items[s2].sig);
   if (olds.length) crossPlayAll(box, olds);
+  paneVer['docs'] = dataVer62;  /* v70g：同 renderGsl，就地渲染后同步版本守卫 */
 }
 function findDoc(m, id){ for (var i = 0; i < m.docs.length; i++) if (m.docs[i].id === id) return m.docs[i]; return null; }
 function openDocFile(id, preview){
@@ -8534,6 +9040,7 @@ function renderMinutes(m){
       box.appendChild(em);
     }
     box.setAttribute('data-mcount', '0');
+    paneVer['minutes'] = dataVer62;  /* v70g：空态已写入，DOM 与数据一致，同步版本守卫 */
     return;
   }
   /* v48d（用户裁决）：等数快速路径——切入面板时条数未变（常见切页场景）且最旧条目吻合，
@@ -8543,6 +9050,7 @@ function renderMinutes(m){
       && box.lastChild && box.lastChild.className === 'min-line') {
     var oldestEq = list[0];
     if (box.lastChild.textContent === normalizePunct(oldestEq.t + oldestEq.text)) {
+      paneVer['minutes'] = dataVer62;  /* v70g：等数快速路径内容一致，同步版本守卫 */
       return;
     }
   }
@@ -8561,6 +9069,7 @@ function renderMinutes(m){
          新条目直接就位，入场与其他栏目完全一致（仅窗口统一动画，见 setTab） */
       box.insertBefore(frag, box.firstChild);
       box.setAttribute('data-mcount', String(list.length));
+      paneVer['minutes'] = dataVer62;  /* v70g：增量路径新行已就位，同步版本守卫 */
       return;
     }
   }
@@ -8588,6 +9097,7 @@ function renderMinutes(m){
   box.appendChild(frag2);
   if (olds3.length) crossPlayAll(box, olds3);
   box.setAttribute('data-mcount', String(list.length));
+  paneVer['minutes'] = dataVer62;  /* v70g：同 renderGsl，就地渲染后同步版本守卫 */
 }
 /* SECTION: js-sync — 存档导出 / 导入（patch90） */
 var ARCHIVE_MAGIC = 'thsmun-archive', ARCHIVE_VER = 1;
@@ -9226,6 +9736,7 @@ function renderStats(m){
       renderCharts(m);
     }
   } else { renderCharts(m); }
+  paneVer['stats'] = dataVer62;  /* v70g：同 renderGsl，就地渲染后同步版本守卫 */
 }
 document.getElementById('btnAwardAdd').onclick = function(){
   var m = cur(); if (!m) return;
@@ -9300,7 +9811,9 @@ document.getElementById('btnGuide').onclick = function(){
     + '<li>' + t('回退：误点后按状态栏「回退」或 Ctrl+Z 可撤销上一步，该操作产生的纪要条目一并移除。') + '</li>'
     + '<li>' + t('暂时休会不计时，由主席决定复会；复会后须重新点名，点名完成后自动进入「主发言名单」栏目（新建会议首次点名完成后同样自动进入）。') + '</li>'
     + '<li>' + t('永久休会后会议正式结束，首页显示「会议结束」，不再提供继续入口，但仍可查看全部内容与导出数据。') + '</li>'
-    + '<li>' + t('投屏模式：点击状态栏「🖥 投屏」放大计时器、发言人、点名国名与三态选项、逐国表决国名与投票键，并提高对比度，供主席台投影使用；放大仅在宽屏生效，手机与平板显示不受影响；投屏下入场动画不做模糊处理，保证投出的文字始终锐利。再次点击即恢复，该偏好会记住，刷新后保持。') + '</li>'
+    + '<li>' + t('投屏模式：点击状态栏「🖥 投屏」或按 P 键进入，供主席台投影使用。放大计时器、发言人、点名国名与三态选项、逐国表决国名与投票键，状态栏、侧栏、弹窗与提示条字号一并放大，当前发言人卡片加蓝色光晕、姓名放大加粗，并提高整体对比度；鼠标闲置 3 秒自动隐藏光标，移动即恢复；投屏下退出会议需 2.5 秒内再点一次确认，防止误触。放大仅在宽屏生效，手机与平板显示不受影响；投屏下入场动画不做模糊处理，保证投出的文字始终锐利。再次点击即恢复，该偏好会记住，刷新后保持。') + '</li>'
+    + '<li>' + t('全屏与占满：点击状态栏「⛶ 全屏」或按 F4 进入浏览器全屏（进入后按钮变为「退出全屏」）；「▣ 占满」开关隐藏滚动条与边缘留白，让页面铺满整个视口，长页面仍可正常滚动。两项偏好都会记住，刷新后保持。') + '</li>'
+    + '<li>' + t('提示音：点击状态栏「🔊 提示音」一键开关会议提示音——关闭后计时最后 10 秒的临期轻响与计时归零的结束音都不再播放，开关状态会记住，刷新后保持。') + '</li>'
     + '<li>' + t('打印存档：在「会议纪要」栏目点击「打印存档（PDF）」，生成含会议信息、点名统计、动议记录、文件与表决结果、代表参与统计、奖项与完整纪要的报告，再用浏览器「另存为 PDF」即可存档。') + '</li>'
     + '<li>' + t('多设备同步：在首页「多设备同步」导出存档文件，通过网盘或 U 盘拷到另一台设备导入，即可继续同一批会议。导入按每场会议的最后修改时间自动保留较新版本，已删除的会议不会复活，导入前会自动备份本机存档。') + '</li>'
     + '<li>' + t('回退仅在当前页面内有效：刷新或关闭页面后撤销记录清空，会议数据本身不受影响。') + '</li>'
@@ -9308,7 +9821,7 @@ document.getElementById('btnGuide').onclick = function(){
     + '<li>' + t('数据可视化：「统计与评奖」栏目底部按当前会议存档实时生成两张环形图（出席构成、动议裁定结果）与三张排行条形图（发言次数、参与表决次数、赞助文件数），全部数值实时计算，无数据时显示空态而非补零。') + '</li>'
     + '<li>' + t('侧边栏收起：宽屏下点击左侧面板底部「收起」可隐藏面板获得更大工作区，点击左上角悬浮按钮「»」展开；该偏好会记住。') + '</li>'
     + '<li>' + t('中英双语：点击状态栏 EN / 中文 即时切换。') + '</li></ul>'
-    + '<b>' + t('快捷键') + '</b><ul><li>' + t('数字键') + ' <b>1–9</b>' + colon() + t('切换左侧面板') + '</li><li><b>' + t('空格') + '</b>' + colon() + t('计时开始 / 暂停') + '</li><li><b>Ctrl</b>+<b>Z</b>' + colon() + t('回退上一步') + '</li><li><b>Esc</b>' + colon() + t('关闭弹窗') + '</li></ul>'
+    + '<b>' + t('快捷键') + '</b><ul><li>' + t('数字键') + ' <b>1–9</b>' + colon() + t('切换左侧面板') + '</li><li><b>' + t('空格') + '</b>' + colon() + t('计时开始 / 暂停') + '</li><li><b>Ctrl</b>+<b>Z</b>' + colon() + t('回退上一步') + '</li><li><b>Esc</b>' + colon() + t('关闭弹窗') + '</li><li><b>F4</b>' + colon() + t('进入 / 退出全屏') + '</li><li><b>P</b>' + colon() + t('切换投屏模式') + '</li></ul>'
     + '<b>' + t('数据说明') + '</b>' + colon() + t('所有会议与上传文件默认仅保存在当前浏览器本地，不会自动上传到任何外部服务；只有当你主动点击「导出全部存档」时，才会生成一个文件由你自行保管或传输。历次表决记录属于会议数据，会随存档保存并一同导出；撤销记录不写入存档，以节省本地空间。'));
 };
 document.getElementById('btnAbout').onclick = function(){
@@ -9316,7 +9829,7 @@ document.getElementById('btnAbout').onclick = function(){
     + t('立足天台 · 放眼世界。') + '<br><br>'
     + t('本系统（THSMUN OS）为社团会议量身打造，覆盖点名、主发言名单、动议裁定、实质性表决文件两轮投票（安理会门槛在新建会议时选定：宪章 9 票制或有表决权国家的三分之二多数，并含否决权）、计时、文件流转、表决结果图表化呈现与历次表决回看、纪要导出、打印存档、统计评奖、投屏模式、多设备存档同步与中英双语的完整流程，参照安理会等委员会的真实议事规则设计，供主席团与代表在会议中直接使用。'));
 };
-/* 面板快捷键：数字 1-9 切换，空格控制计时，Ctrl+Z 回退 */
+/* 面板快捷键：数字 1-9 切换，空格控制计时，Ctrl+Z 回退（另见 js-fullfill 的 F4 全屏、js-projector 的 P 投屏） */
 document.addEventListener('keydown', function(e){
   if (document.getElementById('modalMask').classList.contains('on')) {
     if (e.key === 'Escape') closeModal();
