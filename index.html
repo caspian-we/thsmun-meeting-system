@@ -29,6 +29,10 @@
   --spring-soft:cubic-bezier(.4,0,.2,1);
   --pop:cubic-bezier(.34,1.56,.64,1);
   --velvet:cubic-bezier(.22,1,.36,1); 
+  /* Tab面板切页统一动画参数：面板外壳与全部内部入场子元素共用；
+     仅在此处调整入场时长与手感，一处修改全局生效（防复发机制） */
+  --pane-dur:.45s;
+  --pane-curve:cubic-bezier(.39,.575,.565,1);
 }
 *{box-sizing:border-box; margin:0; padding:0;}
 html{-webkit-text-size-adjust:100%; scrollbar-gutter:stable; }
@@ -236,8 +240,6 @@ input,select,textarea{font-family:inherit; font-size:14px; color:var(--ink);}
 table.stats{width:100%; border-collapse:collapse; font-size:13px; background:#fff;}
 table.stats th,table.stats td{border:1px solid var(--line); padding:8px 10px; text-align:left;}
 table.stats th{background:#eef6fc; color:var(--un-deep);}
-#statsCharts .c-bar-row{ animation:none; }
-#tab-stats .award-row{ animation:none; }
 .award-row{display:flex; gap:10px; align-items:center; padding:8px 4px; border-bottom:1px solid #eef3f8; font-size:14px;}
 .modal-mask{position:fixed; inset:0; background:rgba(8,30,50,.45); display:flex; align-items:center; justify-content:center; z-index:60; padding:20px;
   opacity:0; visibility:hidden; transition:opacity .22s cubic-bezier(.2,.8,.2,1);}
@@ -355,11 +357,8 @@ table.stats th{background:#eef6fc; color:var(--un-deep);}
 /* 计时器 Dock 标签每秒追加剩余秒数，等宽数字避免标签宽度每秒跳动 */
 .dock button .dk-txt{ font-variant-numeric:tabular-nums; }
 @keyframes dvRise{ from{ transform:translateY(10px); } to{ transform:none; } }
-.dv-charts{ animation:dvRise .34s cubic-bezier(.22,1,.36,1) .05s backwards; }
-.c-bar-row{ animation:dvRise .3s cubic-bezier(.22,1,.36,1) backwards; }
-.c-bar-row:nth-child(1){ animation-delay:.12s; } .c-bar-row:nth-child(2){ animation-delay:.2s; }
-.c-bar-row:nth-child(3){ animation-delay:.28s; } .c-bar-row:nth-child(4){ animation-delay:.36s; }
-.dv-result{ animation:dvRise .34s cubic-bezier(.22,1,.36,1) .42s backwards; }
+.dv-charts{ animation:cssPaneIn var(--pane-dur) var(--pane-curve) backwards; }
+.c-bar-row{ animation:cssPaneIn var(--pane-dur) var(--pane-curve) backwards; }
 .dock button:hover{ background:rgba(26,117,187,.1); }
 .dock button.on{ background:linear-gradient(120deg,var(--un-blue),#2f88c9); color:#fff; }
 .dock button.on .dk-ico{ filter:none; }
@@ -854,23 +853,11 @@ table.stats td,table.stats th{ transition:background .16s var(--spring-soft); }
 .dv-charts{ display:grid; grid-template-columns:repeat(auto-fit,minmax(258px,1fr)); gap:12px; margin-top:10px; }
 .dv-roster-wrap{ margin-top:12px; }
 .dv-roster{ display:grid; grid-template-columns:repeat(auto-fill,minmax(212px,1fr)); gap:6px; }
-.dv-hist{ animation:scIn .3s var(--velvet) both; }
-.dv-result{ animation:scIn .34s var(--velvet) both; }
-.dv-detail{ animation:scIn .42s var(--velvet) both; }
-.dv-charts .c-panel{ animation:scIn .34s var(--velvet) both; }
-.dv-charts .c-panel:nth-child(2){ animation-delay:.06s; }
-.dv-charts .c-panel:nth-child(3){ animation-delay:.12s; }
-.dv-roster{ animation:rowInR .34s var(--velvet) both; }
+.dv-hist,.dv-result,.dv-detail,.dv-charts .c-panel,.dv-roster{ animation:cssPaneIn var(--pane-dur) var(--pane-curve) backwards; }
 /* ② 评奖揭晓：逐行上浮 stagger（奖项行数少；封顶 8 行后统一延迟，避免长列表并发） */
-.award-row{ animation:rowInR .3s var(--velvet) backwards; }
-.award-row:nth-child(2){ animation-delay:.06s; }
-.award-row:nth-child(3){ animation-delay:.12s; }
-.award-row:nth-child(4){ animation-delay:.18s; }
-.award-row:nth-child(5){ animation-delay:.24s; }
-.award-row:nth-child(6){ animation-delay:.3s; }
-.award-row:nth-child(n+7){ animation-delay:.36s; }
-.motion-card{ animation:rowInR .26s var(--velvet) backwards; }
-.doc-card{ animation:rowInR .26s var(--velvet) backwards; }
+.award-row{ animation:cssPaneIn var(--pane-dur) var(--pane-curve) backwards; }
+.motion-card{ animation:cssPaneIn var(--pane-dur) var(--pane-curve) backwards; }
+.doc-card{ animation:cssPaneIn var(--pane-dur) var(--pane-curve) backwards; }
 
 /* ⑤ 法定达标时刻：达标后 chip 绿描边亮起；border/box-shadow 已在既有 transition 内，
    颜色平滑过渡，配合 bump 脉冲一次到位 */
@@ -963,8 +950,12 @@ body.projector .dv-roster{ grid-template-columns:repeat(auto-fill,minmax(300px,1
    系统降级仅保留于装饰性动效（hover/涟漪/弹窗），切页主链路（视图/面板/卡片/dock滑块）恒常运行。 */
 @media (prefers-reduced-motion: reduce){
   .view.active{ animation:paneInR .30s var(--velvet) both !important; }
-  .tabpane.on{ animation:cssPaneIn .45s cubic-bezier(.39,.575,.565,1) backwards !important; }
-  .tabpane.on .speaker-current{ animation:scIn .28s var(--velvet) both !important; }
+  .tabpane.on{ animation:cssPaneIn var(--pane-dur) var(--pane-curve) backwards !important; }
+  .tabpane.on .speaker-current,
+  .motion-card,.doc-card,.archive-card,.award-row,
+  .dv-hist,.dv-result,.dv-detail,.dv-charts,.dv-charts .c-panel,.dv-roster,
+  .c-bar-row{ animation:cssPaneIn var(--pane-dur) var(--pane-curve) backwards !important; }
+  .c-bar-tr i{ animation:barIn var(--pane-dur) var(--pane-curve) both !important; }
   .dock-glide{ transition:transform .45s cubic-bezier(.22,1,.36,1), opacity .2s !important; }
 }
 /* 1) 外壳禁止选中文本 —— 真实系统中标题栏、Dock、按钮、徽标均不可选中，
@@ -1394,7 +1385,7 @@ body.dark .c-donut circle[stroke]:not([stroke^="var(--line"]) { filter:drop-shad
 .c-lg{ padding:3px 6px; margin:-1px -6px; border-radius:7px; transition:background .18s var(--spring-soft); }
 .c-lg:hover{ background:rgba(127,150,175,.12); }
 /* 条形：进入动画（transform 走 GPU，不触发 layout）+ 圆角端 */
-.c-bar-tr i{ transform-origin:left center; animation:barIn .5s var(--velvet) both; }
+.c-bar-tr i{ transform-origin:left center; animation:barIn var(--pane-dur) var(--pane-curve) both; }
 @keyframes barIn{ from{ transform:scaleX(0); } to{ transform:scaleX(1); } }
 .c-bar-row:hover .c-bar-lb{ color:var(--un-blue); }
 body.dark .c-bar-row:hover .c-bar-lb{ color:#8ecbf2; }
@@ -1447,7 +1438,7 @@ body.projector .dv-cell{
 
 /* 面板 / 视图 / 窗口：由纯淡入升级为 spring 位移（覆盖原 paneIn/winIn） */
 .view.active{ animation:paneInR .30s var(--velvet) both; }
-.archive-card{ animation:rowInR .26s var(--velvet) both; }
+.archive-card{ animation:cssPaneIn var(--pane-dur) var(--pane-curve) backwards; }
 /* 按压反馈：transform 换 spring 缓动，按下跟手、释放回弹；transition 天然可打断，
    快速连点时从当前进度平滑接管，不会像 animation 那样从头重播 */
 .btn,.vote-btn,.btn-icon,.seg button,.dock button,.preset-row .btn,.timer-ctrl .btn,.pt-ctrl .btn{
@@ -1474,9 +1465,9 @@ body.projector .dv-cell{
 @keyframes scIn{ from{ transform:translateY(6px); } to{ transform:none; } }
 @keyframes cssPaneIn{ from{ transform:translateY(6px); }
   to{ transform:none; } }
-.tabpane.on{ animation:cssPaneIn .45s cubic-bezier(.39,.575,.565,1) backwards; }
+.tabpane.on{ animation:cssPaneIn var(--pane-dur) var(--pane-curve) backwards; }
 .speaker-current{ animation:none; will-change:transform; }
-.tabpane.on .speaker-current{ animation:scIn .28s var(--velvet) both; }
+.tabpane.on .speaker-current{ animation:cssPaneIn var(--pane-dur) var(--pane-curve) backwards; }
 
 /* 计票/统计数字变动时的轻微强调走已有 popNum（.bump 类由 JS 控制），此处仅确保走 GPU 不抖 */
 .stat-chip b.bump,.tally b{ will-change:transform; }
