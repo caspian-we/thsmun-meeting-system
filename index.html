@@ -951,7 +951,7 @@ body.projector .dv-roster{ grid-template-columns:repeat(auto-fill,minmax(300px,1
 @media (prefers-reduced-motion: reduce){
   .view.active{ animation:paneInR .30s var(--velvet) both !important; }
   .tabpane.on{ animation:cssPaneIn var(--pane-dur) var(--pane-curve) backwards !important; }
-  .tabpane.on .speaker-current,
+  .speaker-current,
   .motion-card,.doc-card,.archive-card,.award-row,
   .dv-hist,.dv-result,.dv-detail,.dv-charts,.dv-charts .c-panel,.dv-roster,
   .c-bar-row{ animation:cssPaneIn var(--pane-dur) var(--pane-curve) backwards !important; }
@@ -1466,8 +1466,7 @@ body.projector .dv-cell{
 @keyframes cssPaneIn{ from{ transform:translateY(6px); }
   to{ transform:none; } }
 .tabpane.on{ animation:cssPaneIn var(--pane-dur) var(--pane-curve) backwards; }
-.speaker-current{ animation:none; will-change:transform; }
-.tabpane.on .speaker-current{ animation:cssPaneIn var(--pane-dur) var(--pane-curve) backwards; }
+.speaker-current{ will-change:transform; animation:cssPaneIn var(--pane-dur) var(--pane-curve) backwards; }
 
 /* 计票/统计数字变动时的轻微强调走已有 popNum（.bump 类由 JS 控制），此处仅确保走 GPU 不抖 */
 .stat-chip b.bump,.tally b{ will-change:transform; }
@@ -5176,10 +5175,6 @@ function setTab(t){
       if (t === 'gsl' || t === 'speakers') {
         _paneSeen85[t] = true;
         if (onPane.style.background) onPane.style.background = '';
-        var speechCards = onPane.querySelectorAll('.speaker-current');
-        for (var sci = 0; sci < speechCards.length; sci++) {
-          if (speechCards[sci].style.position !== 'absolute') speechCards[sci].style.animation = '';
-        }
       }
       onPane.removeAttribute('inert');
       onPane.removeAttribute('aria-hidden');
