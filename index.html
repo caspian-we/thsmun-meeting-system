@@ -3741,13 +3741,11 @@ function show(view){
   syncStatusBar();
   syncUndoBtn();
   if (view === 'meeting') {
-    /* 视图转场动画启动帧只跑动画：面板高度与 Dock 几何重算延后一帧，
-       布局负载不压转场首帧（进会转场卡顿根因之一） */
-    requestAnimationFrame(function(){
-      syncPaneH();
-      invalidateDockGeometry();
-      refreshDockGeometry();
-    });
+    /* 几何重算同步执行：在转场动画启动前付清，不进动画期
+       （延后一帧曾把布局负载推进动画时间窗，实测恶化转场慢帧） */
+    syncPaneH();
+    invalidateDockGeometry();
+    refreshDockGeometry();
   }
 }
 var TAB_NAMES = { roll:'点名', gsl:'主发言名单', speakers:'发言名单', motions:'动议与表决', docvote:'实质性表决文件', timer:'计时器', docs:'文件', minutes:'会议纪要', stats:'统计与评奖' };
@@ -4911,21 +4909,24 @@ function openMeeting(id){
   if (m.docVote && m.docVote.status === 'voting') initTab = 'docvote';
   else if (m.currentSpeaker && (m.currentSpeaker.src || 'gsl') === 'mod') initTab = 'speakers';
   else if (cc && cc.active) initTab = 'speakers';
-  /* 进会拆帧：initTab 面板在转场动画启动前一帧渲染完毕（渲染+布局一次性付清，
-     入场动画终结为完成态），下一帧才启动切页/视图转场动画——动画帧零渲染负载
-     （进会转场卡顿根因）。setTab 见首面板已就绪走同步激活路径，零延迟。 */
+  /* 进会预渲染：initTab 面板在转场动画启动前渲染完毕（渲染+布局一次性付清，
+     入场动画终结为完成态），随后同步启动动画——渲染/布局/几何全部在动画
+     启动前付清，转场时间窗内零负载（拆帧延后曾把几何与预热摊进动画期，
+     实测反而恶化转场慢帧，故回滚为同步启动） */
   try { renderTab(initTab); } catch (e) {}
   var __p0 = document.getElementById('tab-' + initTab);
   if (__p0) {
     finishPaneEntryAnims(__p0);
     try { void __p0.offsetHeight; } catch (e2) {}
   }
-  requestAnimationFrame(function(){
-    setTab(initTab);
-    show('meeting');
-    warmPanesDone = false;
-    warmPanes();
-  });
+  _panePreRendered = initTab;   /* 预渲染标记：紧随的 setTab 跳过过期重渲（双保险防重复渲染） */
+  setTab(initTab);
+  show('meeting');
+  warmPanesDone = false;
+  /* 预热延后：转场动画(620ms)完全结束+缓冲后才开始后台预热，
+     预热渲染不进转场窗口（曾致转场慢帧 4→31） */
+  if (_warmDelayT) { clearTimeout(_warmDelayT); }
+  _warmDelayT = setTimeout(function(){ if (viewActive('meeting')) warmPanes(); }, 900);
 }
 /* 每次进入会议只预热一轮；旧会议留下的回调通过序号自动失效。 */
 var warmPanesDone = false, _warmPanesSeq = 0;
@@ -5218,7 +5219,9 @@ function setTab(t){
          并行渲染抢帧，正是「首次切入一顿、再次切入流畅」的根因（speakers 渲染最重最明显） */
   var __p86 = document.getElementById('tab-' + t);
   var __cold = false;
-  if (__p86 && typeof renderTab === 'function' && (!__p86.firstElementChild || paneVer[t] !== dataVer62)) {
+  var __preRendered = (_panePreRendered === t);
+  _panePreRendered = null;
+  if (__p86 && typeof renderTab === 'function' && !__preRendered && (!__p86.firstElementChild || paneVer[t] !== dataVer62)) {
     try { renderTab(t); } catch (e) {}
     if (__p86) {
       finishPaneEntryAnims(__p86);
@@ -5295,6 +5298,10 @@ function setTab(t){
   if (__cold) requestAnimationFrame(activate); else activate();
 }
 var pendingRenderTab = null, paneVer = {}, dataVer62 = 0;
+/* 进会预渲染标记：openMeeting 预渲 initTab 后，紧随的 setTab 跳过该面板的过期重渲 */
+var _panePreRendered = null;
+/* 进会预热延迟定时器：预热延后到转场动画完全结束后再开始 */
+var _warmDelayT = null;
 var rearmTimer64 = null, _rearmSeq = 0;
 function rearmPanes(){
   if (rearmTimer64) clearTimeout(rearmTimer64);
