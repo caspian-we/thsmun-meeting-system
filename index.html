@@ -757,6 +757,10 @@ table.stats td,table.stats th{ transition:background .16s var(--spring-soft); }
 .timer-display::after,.timer-display::before{ bottom:-12px; width:min(300px,76%); }
 .pt-display::after,.pt-display::before{ bottom:-9px; width:min(200px,68%); height:3px; }
 .timer-display::after,.pt-display::after{ background:rgba(8,54,90,.10); }
+/* 切页动画期间冻结进度条 clip-path 过渡：过渡每帧重绘，与窗口/面板合成动画竞争会导致真机掉帧 */
+.window.frozen .pt-display::before,
+.window.frozen .timer-display::before,
+.window.frozen .pool-bar i{ transition:none !important; }
 .timer-display::before,.pt-display::before{
   background:linear-gradient(90deg,#3f95d3,var(--un-blue));
   box-shadow:0 0 10px rgba(26,117,187,.32);
@@ -3737,9 +3741,13 @@ function show(view){
   syncStatusBar();
   syncUndoBtn();
   if (view === 'meeting') {
-    syncPaneH();
-    invalidateDockGeometry();
-    refreshDockGeometry();
+    /* 视图转场动画启动帧只跑动画：面板高度与 Dock 几何重算延后一帧，
+       布局负载不压转场首帧（进会转场卡顿根因之一） */
+    requestAnimationFrame(function(){
+      syncPaneH();
+      invalidateDockGeometry();
+      refreshDockGeometry();
+    });
   }
 }
 var TAB_NAMES = { roll:'点名', gsl:'主发言名单', speakers:'发言名单', motions:'动议与表决', docvote:'实质性表决文件', timer:'计时器', docs:'文件', minutes:'会议纪要', stats:'统计与评奖' };
@@ -4903,28 +4911,65 @@ function openMeeting(id){
   if (m.docVote && m.docVote.status === 'voting') initTab = 'docvote';
   else if (m.currentSpeaker && (m.currentSpeaker.src || 'gsl') === 'mod') initTab = 'speakers';
   else if (cc && cc.active) initTab = 'speakers';
-  setTab(initTab);
-  renderAll();
-  show('meeting');
-  warmPanesDone = false;
-  warmPanes();
+  /* 进会拆帧：initTab 面板在转场动画启动前一帧渲染完毕（渲染+布局一次性付清，
+     入场动画终结为完成态），下一帧才启动切页/视图转场动画——动画帧零渲染负载
+     （进会转场卡顿根因）。setTab 见首面板已就绪走同步激活路径，零延迟。 */
+  try { renderTab(initTab); } catch (e) {}
+  var __p0 = document.getElementById('tab-' + initTab);
+  if (__p0) {
+    finishPaneEntryAnims(__p0);
+    try { void __p0.offsetHeight; } catch (e2) {}
+  }
+  requestAnimationFrame(function(){
+    setTab(initTab);
+    show('meeting');
+    warmPanesDone = false;
+    warmPanes();
+  });
 }
 /* 每次进入会议只预热一轮；旧会议留下的回调通过序号自动失效。 */
 var warmPanesDone = false, _warmPanesSeq = 0;
+/* 一体运动：立即终结面板内所有入场动画（卡片浮入/图表生长/队列浮现），
+   元素以完成态就位；首次切入与后续切入观感一致（满格随面板一体浮入），
+   预热与手快兜底两条渲染路径都调用它，保证结果完全一致。 */
+function finishPaneEntryAnims(pane){
+  if (!pane || !pane.querySelectorAll) return;
+  var els = pane.querySelectorAll('*');
+  for (var i = 0; i < els.length; i++) {
+    if (!els[i].getAnimations) continue;
+    var as = els[i].getAnimations();
+    for (var j = as.length - 1; j >= 0; j--) {
+      /* cancel：移除动画并清除填充，元素回到静态完成态（满格）；
+         fill:both 的 finished 动画会留在 getAnimations 列表，cancel 才真正清零 */
+      try { as[j].cancel(); } catch (e) { try { as[j].finish(); } catch (e2) {} }
+    }
+  }
+}
 function warmPanes(){
   if (warmPanesDone) return;
   warmPanesDone = true;
   var seq = ++_warmPanesSeq, i = 0;
+  /* 预热顺序：渲染最重的栏目优先（speakers 下拉框名单 / stats 表格图表最重），
+     用户最可能先点的栏目最早就绪，手快点入也不撞冷渲染 */
+  var order = ['speakers','stats','gsl','motions','docs','minutes','docvote','timer'];
+  var list = [];
+  for (var oi = 0; oi < order.length; oi++) if (TAB_KEYS.indexOf(order[oi]) >= 0) list.push(order[oi]);
+  for (var kj = 0; kj < TAB_KEYS.length; kj++) if (list.indexOf(TAB_KEYS[kj]) < 0) list.push(TAB_KEYS[kj]);
   function step(deadline){
     if (seq !== _warmPanesSeq || !viewActive('meeting') || !cur()) return;
     if (_tabSwitching || document.hidden) { runAfterTabCalm(step); return; }
-    while (i < TAB_KEYS.length){
-      var t = TAB_KEYS[i++];
-      if (t !== state.tab) { try { renderTab(t); } catch(e) {} }
-      if (deadline && deadline.timeRemaining() <= 4) break;
+    /* 每个空闲回调最多预热一个面板：单面板渲染成本一次付清，
+       避免原 while 连续渲染多个面板把空闲帧撑成 100ms 长帧 */
+    if (i < list.length){
+      var t = list[i++];
+      if (t === state.tab) { queueIdleTask(step); return; }
+      try {
+        renderTab(t);
+        finishPaneEntryAnims(document.getElementById('tab-' + t));
+      } catch (e) {}
+      if (i < list.length) queueIdleTask(step);
+      else { try { preheatLayers(); } catch (e) {} }
     }
-    if (i < TAB_KEYS.length) queueIdleTask(step);
-    else { try { preheatLayers(); } catch (e) {} }
   }
   runAfterTabCalm(step);
 }
@@ -5075,6 +5120,12 @@ function completeTabSwitch(seq){
   _tabSwitching = false;
   if (!_dockGeoValid && viewActive('meeting') && !document.hidden) refreshDockGeometry();
   flushTabCalmWaiters();
+  /* 切页动画结束：先恢复进度条过渡，再补绘冻结的计时器（--tp 从当前值平滑过渡到新值） */
+  if (win) win.classList.remove('frozen');
+  if (_paintPendingTimers) {
+    var _pts = _paintPendingTimers; _paintPendingTimers = null;
+    for (var _pi = 0; _pi < _pts.length; _pi++) { try { paintTimerAt(_pts[_pi]); } catch (e) {} }
+  }
 }
 function settleTabSwitch(){
   if (!_tabSwitching && !_lastWinAnim) return;
@@ -5160,69 +5211,88 @@ function setTab(t){
   state.tab = t;
   var bs = document.querySelectorAll('#tabs button');
   for (var i = 0; i < bs.length; i++) bs[i].classList.toggle('on', bs[i].getAttribute('data-tab') === t);
-  var ps = document.querySelectorAll('.tabpane');
-  for (var j = 0; j < ps.length; j++) ps[j].classList.toggle('on', ps[j].id === 'tab-' + t);
+  /* 拆帧渲染：两种情况都在动画启动前渲染完毕（渲染+布局在点击帧付清、
+     入场动画立即终结），动画晚一帧启动，动画时间窗内零渲染：
+       ① 面板空（首点冷渲染）
+       ② 面板数据过期（paneVer 落后 dataVer62）——原 scheduleTabRender 在动画期间
+         并行渲染抢帧，正是「首次切入一顿、再次切入流畅」的根因（speakers 渲染最重最明显） */
   var __p86 = document.getElementById('tab-' + t);
-  if (__p86 && !__p86.firstElementChild && typeof renderTab === 'function') { try { renderTab(t); } catch (e) {} }
-  /* 同一批次读取目标面板和容器高度，再写一次容器高度。 */
-  var host = document.getElementById('paneHost');
-  var targetH = __p86 ? __p86.offsetHeight : 0;
-  if (host) host.style.height = targetH + 'px';
-  {
-    var onPane = document.getElementById('tab-' + t);
-    if (onPane) { onPane.style.visibility = ''; onPane.style.opacity = ''; onPane.style.pointerEvents = ''; }
-    if (onPane) {
-      if (t === 'gsl' || t === 'speakers') {
-        _paneSeen85[t] = true;
-        if (onPane.style.background) onPane.style.background = '';
-      }
-      onPane.removeAttribute('inert');
-      onPane.removeAttribute('aria-hidden');
-      if (_lastPaneAnim) {
-        try { _lastPaneAnim.onfinish = null; _lastPaneAnim.oncancel = null; _lastPaneAnim.cancel(); } catch (e) {}
-        _lastPaneAnim = null;
-      }
-      onPane.style.animation = '';
-      onPane.style.transform = '';
-      var qLayers81 = onPane.querySelectorAll('.gr-items');
-      for (var qi81 = 0; qi81 < qLayers81.length; qi81++) {
-        var qLayer81 = qLayers81[qi81];
-        if (qLayer81.getAnimations) {
-          var qAnims81 = qLayer81.getAnimations();
-          for (var qa81 = 0; qa81 < qAnims81.length; qa81++) { try { qAnims81[qa81].cancel(); } catch (e) {} }
+  var __cold = false;
+  if (__p86 && typeof renderTab === 'function' && (!__p86.firstElementChild || paneVer[t] !== dataVer62)) {
+    try { renderTab(t); } catch (e) {}
+    if (__p86) {
+      finishPaneEntryAnims(__p86);
+      try { void __p86.offsetHeight; } catch (e2) {}
+    }
+    __cold = true;
+  }
+  function activate(){
+    var ps = document.querySelectorAll('.tabpane');
+    for (var j = 0; j < ps.length; j++) ps[j].classList.toggle('on', ps[j].id === 'tab-' + t);
+    /* 同一批次读取目标面板和容器高度，再写一次容器高度。 */
+    var host = document.getElementById('paneHost');
+    var targetH = __p86 ? __p86.offsetHeight : 0;
+    if (host) host.style.height = targetH + 'px';
+    {
+      var onPane = document.getElementById('tab-' + t);
+      if (onPane) { onPane.style.visibility = ''; onPane.style.opacity = ''; onPane.style.pointerEvents = ''; }
+      if (onPane) {
+        if (t === 'gsl' || t === 'speakers') {
+          _paneSeen85[t] = true;
+          if (onPane.style.background) onPane.style.background = '';
         }
-        qLayer81.style.transform = '';
+        onPane.removeAttribute('inert');
+        onPane.removeAttribute('aria-hidden');
+        if (_lastPaneAnim) {
+          try { _lastPaneAnim.onfinish = null; _lastPaneAnim.oncancel = null; _lastPaneAnim.cancel(); } catch (e) {}
+          _lastPaneAnim = null;
+        }
+        onPane.style.animation = '';
+        onPane.style.transform = '';
+        var qLayers81 = onPane.querySelectorAll('.gr-items');
+        for (var qi81 = 0; qi81 < qLayers81.length; qi81++) {
+          var qLayer81 = qLayers81[qi81];
+          if (qLayer81.getAnimations) {
+            var qAnims81 = qLayer81.getAnimations();
+            for (var qa81 = 0; qa81 < qAnims81.length; qa81++) { try { qAnims81[qa81].cancel(); } catch (e) {} }
+          }
+          qLayer81.style.transform = '';
+        }
       }
+      if (!sprReduce() && onPane) {
+        var tgtBtn = document.querySelector('#tabs button[data-tab="' + t + '"]');
+        var ico = tgtBtn && tgtBtn.querySelector('.dk-ico');
+        if (ico && ico.animate) ico.animate(
+          [{ transform: 'scale(1)' }, { transform: 'scale(1.14)' }, { transform: 'scale(1)' }],
+          { duration: 190, delay: 280, easing: 'cubic-bezier(.34,1.56,.64,1)' }); 
+      }
+      scheduleDockGlide(t);
     }
-    if (!sprReduce() && onPane) {
-      var tgtBtn = document.querySelector('#tabs button[data-tab="' + t + '"]');
-      var ico = tgtBtn && tgtBtn.querySelector('.dk-ico');
-      if (ico && ico.animate) ico.animate(
-        [{ transform: 'scale(1)' }, { transform: 'scale(1.14)' }, { transform: 'scale(1)' }],
-        { duration: 190, delay: 280, easing: 'cubic-bezier(.34,1.56,.64,1)' }); 
-    }
-    scheduleDockGlide(t);
-  }
-  if (win) {
-    if (!win.animate) {
-      _tabSwitching = true;
-      win.classList.remove('swap');
-      void win.offsetWidth;
-      win.classList.add('swap');
-      setTimeout(function(){ completeTabSwitch(seq); }, 620);
+    if (win) {
+      win.classList.add('frozen');   /* 动画期间冻结进度条过渡，避免每帧重绘与合成动画竞争 */
+      if (!win.animate) {
+        _tabSwitching = true;
+        win.classList.remove('swap');
+        void win.offsetWidth;
+        win.classList.add('swap');
+        setTimeout(function(){ completeTabSwitch(seq); }, 620);
+      } else {
+        win.style.willChange = 'transform';
+        /* v10 根治：窗口动画单一路径——任何节奏下都从标准 14px 完整重播 620ms，
+           删除打断短行程/近尾直接落定两条岔路，保证九栏每次切页最终效果完全一致 */
+        win.style.transform = 'translateY(14px)';
+        queueWindowAnimation(seq, t, win, 14, 620);
+      }
     } else {
-      win.style.willChange = 'transform';
-      /* v10 根治：窗口动画单一路径——任何节奏下都从标准 14px 完整重播 620ms，
-         删除打断短行程/近尾直接落定两条岔路，保证九栏每次切页最终效果完全一致 */
-      win.style.transform = 'translateY(14px)';
-      queueWindowAnimation(seq, t, win, 14, 620);
+      if (win) win.style.transform = '';
+      completeTabSwitch(seq);
     }
-  } else {
-    if (win) win.style.transform = '';
-    completeTabSwitch(seq);
+    window.scrollTo(0, t === 'minutes' ? (_tabScrollMem[t] || 0) : 0);
+    syncStatusBar();
   }
-  window.scrollTo(0, t === 'minutes' ? (_tabScrollMem[t] || 0) : 0);
-  syncStatusBar();
+  /* 冷渲染时动画启动延后一帧：渲染/布局与动画首帧分离，动画帧零渲染负载；
+     已预热面板（常态）动画同步启动零延迟 */
+  if (__cold) requestAnimationFrame(activate); else activate();
 }
 var pendingRenderTab = null, paneVer = {}, dataVer62 = 0;
 var rearmTimer64 = null, _rearmSeq = 0;
@@ -5236,12 +5306,17 @@ function rearmPanes(){
     function step(){
       if (seq !== _rearmSeq || !viewActive('meeting') || !cur()) return;
       if (_tabSwitching || document.hidden) { runAfterTabCalm(step); return; }
-      while (i < TAB_KEYS.length) {
+      /* 每批只重渲一个面板：单面板渲染成本一次付清，
+         避免连渲三个面板把空闲帧撑成 100ms 长帧（真机点击响应被推迟） */
+      if (i < TAB_KEYS.length) {
         var t = TAB_KEYS[i++];
-        if (t !== state.tab && paneVer[t] !== dataVer62) { try { renderTab(t); } catch (e) {} }
-        if (i % 3 === 0) { queueIdleTask(step); return; }
+        if (t === state.tab) { queueIdleTask(step); return; }
+        if (paneVer[t] !== dataVer62) {
+          try { renderTab(t); finishPaneEntryAnims(document.getElementById('tab-' + t)); } catch (e) {}
+        }
+        if (i < TAB_KEYS.length) queueIdleTask(step);
+        else { try { preheatLayers(); } catch (e) {} }
       }
-      try { preheatLayers(); } catch (e) {}
     }
     runAfterTabCalm(step);
   }, 0);
@@ -6386,6 +6461,7 @@ function paintQueue(container, items, emptyText){
 }
 function paintCaucusRemaining(m){
   if (!m) return;
+  if (_tabSwitching) return;   /* 切页动画期间冻结磋商剩余绘制，下一次 tick 自然刷新 */
   var c = m.modCaucus;
   if (!c || !c.active) return;
   var rem = Math.max(0, c.remainingSec | 0);
@@ -8026,7 +8102,15 @@ function timerEl(id){
   if (el) _timerElCache[id] = el;
   return el;
 }
+var _paintPendingTimers = null;
 function paintTimerAt(T){
+  /* 切页动画期间冻结每秒绘制：动画期内的 DOM 写与进度条过渡会让合成动画掉帧；
+     动画结束后 completeTabSwitch 统一补绘，计时精度不受影响（deadline 计算） */
+  if (_tabSwitching) {
+    if (!_paintPendingTimers) _paintPendingTimers = [];
+    if (_paintPendingTimers.indexOf(T) < 0) _paintPendingTimers.push(T);
+    return;
+  }
   var el = timerEl(T.disp);
   if (el) {
     /* 幂等写入：值未变则不动 DOM，避免每秒强制样式失效打断进度条过渡 */
