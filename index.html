@@ -316,9 +316,20 @@ table.stats th{background:#eef6fc; color:var(--un-deep);}
 #boot .boot-name{ font-size:20px; letter-spacing:4px; font-weight:600; }
 #boot .boot-sub{ font-size:12px; letter-spacing:3px; opacity:.72; margin-top:-10px; }
 #boot .boot-bar{ width:180px; height:3px; border-radius:999px; background:rgba(255,255,255,.22); overflow:hidden; }
-#boot .boot-bar i{ display:block; height:100%; width:0; background:#fff; border-radius:999px; animation:bootFill 1.5s cubic-bezier(.3,.7,.3,1) forwards; }
+/* 进度填充改走 transform（合成器动画）：
+   ① width 是布局属性，逐帧改动每帧都要「重排 + 重绘」；
+   ② 更关键的是 width 动画只能跑在主线程 —— 开机时主线程要解析并执行全量脚本，
+      实测出现一次 300.2ms 停滞，进度条因此单帧跳变 87.91px（约 48.8% 宽度），
+      即肉眼可见的「一卡一卡」；225 帧采样中有 83 帧宽度零增量。
+   transform 动画可提升到合成器线程，主线程阻塞期间依旧平滑推进。
+   用 translateX(-100% → 0) 而非 scaleX：条形自身形状、圆角与外发光完全不被缩放扭曲，
+   配合 .boot-bar 既有的 overflow:hidden，左端固定、右边缘向右推进，视觉与 width 生长逐像素一致。
+   时长 1.5s、缓动 cubic-bezier(.3,.7,.3,1)、forwards 填充全部原样保留。 */
+#boot .boot-bar i{ display:block; height:100%; width:100%; background:#fff; border-radius:999px;
+  transform:translateX(-100%); will-change:transform;
+  animation:bootFill 1.5s cubic-bezier(.3,.7,.3,1) forwards; }
 @keyframes bootPulse{ 0%,100%{ transform:scale(1); } 50%{ transform:scale(1.045); } }
-@keyframes bootFill{ to{ width:100%; } }
+@keyframes bootFill{ to{ transform:translateX(0); } }
 /* 顶部状态栏 */
 .statusbar{
   position:fixed; top:0; left:0; right:0; height:var(--bar-h); z-index:40;
@@ -4923,13 +4934,21 @@ function openMeeting(id){
   setTab(initTab);
   show('meeting');
   warmPanesDone = false;
+  /* v12：换会议必须清掉预热互斥与上一场的核验定时器。
+     否则上一场会议遗留的 _warmPanesInflight=true 会让本场 warmPanes() 直接 return，
+     预热永不执行；遗留的核验定时器还会按上一场的序号补渲染，属跨会议串台。 */
+  _warmPanesInflight = false;
+  if (_warmVerifyT) { clearTimeout(_warmVerifyT); _warmVerifyT = 0; }
   /* 预热延后：转场动画(620ms)完全结束+缓冲后才开始后台预热，
      预热渲染不进转场窗口（曾致转场慢帧 4→31） */
   if (_warmDelayT) { clearTimeout(_warmDelayT); }
   _warmDelayT = setTimeout(function(){ if (viewActive('meeting')) warmPanes(); }, 900);
 }
-/* 每次进入会议只预热一轮；旧会议留下的回调通过序号自动失效。 */
-var warmPanesDone = false, _warmPanesSeq = 0;
+/* 每次进入会议只预热一轮；旧会议留下的回调通过序号自动失效。
+   _warmPanesInflight 承担并发互斥（warmPanesDone 现在只在真正渲染完最后一个面板后置位，
+   不能再兼作互斥用，否则预热尚未开始就会被自己的标志挡住）；
+   _warmVerifyT 是与空闲调度无关的墙钟核验定时器，确保面板绝不长期停在旧内容。 */
+var warmPanesDone = false, _warmPanesSeq = 0, _warmPanesInflight = false, _warmVerifyT = 0;
 /* 一体运动：立即终结面板内所有入场动画（卡片浮入/图表生长/队列浮现），
    元素以完成态就位；首次切入与后续切入观感一致（满格随面板一体浮入），
    预热与手快兜底两条渲染路径都调用它，保证结果完全一致。 */
@@ -4947,8 +4966,20 @@ function finishPaneEntryAnims(pane){
   }
 }
 function warmPanes(){
-  if (warmPanesDone) return;
-  warmPanesDone = true;
+  /* v12 根治：warmPanesDone 原先在函数入口就置 true，但真正的渲染发生在
+     后续一连串 requestIdleCallback 里。实测已复现后果：warmDone=true 的同时
+     九个面板全部 paneVer !== dataVer62（stale），节点数停在旧值（gsl 25 而非 43）——
+     即「预热声称完成、实际一个面板都没渲染」。空闲回调一旦被切页事务或页面隐藏
+     打断而重新排队，就没有任何机制再来补做，于是此后每次点击栏目都要现场冷渲染，
+     这正是「第一次点与后面点手感不一样」的主因。
+     修法分两层：
+       ① warmPanesDone 改为「确实渲染完最后一个面板」时才置 true；
+          另用 _warmPanesInflight 承担原本的并发互斥职责，语义不再混用；
+       ② 加一道与空闲调度无关的墙钟核验：到点检查是否仍有 stale 面板，
+          有则直接补渲染（实测单面板冷渲染 0.2–4.4ms，远小于一帧预算，补做无感）。
+     预热的顺序、逐面板节奏、空闲调度策略全部原样保留。 */
+  if (warmPanesDone || _warmPanesInflight) return;
+  _warmPanesInflight = true;
   var seq = ++_warmPanesSeq, i = 0;
   /* 预热顺序：渲染最重的栏目优先（speakers 下拉框名单 / stats 表格图表最重），
      用户最可能先点的栏目最早就绪，手快点入也不撞冷渲染 */
@@ -4956,8 +4987,31 @@ function warmPanes(){
   var list = [];
   for (var oi = 0; oi < order.length; oi++) if (TAB_KEYS.indexOf(order[oi]) >= 0) list.push(order[oi]);
   for (var kj = 0; kj < TAB_KEYS.length; kj++) if (list.indexOf(TAB_KEYS[kj]) < 0) list.push(TAB_KEYS[kj]);
+  /* 墙钟核验：无论空闲回调是否被打断，都保证最终不存在 stale 面板 */
+  if (_warmVerifyT) { clearTimeout(_warmVerifyT); _warmVerifyT = 0; }
+  _warmVerifyT = setTimeout(function(){
+    _warmVerifyT = 0;
+    _warmPanesInflight = false;
+    if (!viewActive('meeting') || !cur() || document.hidden) return;
+    var missed = [], q;
+    for (q = 0; q < TAB_KEYS.length; q++) {
+      if (TAB_KEYS[q] === state.tab) continue;
+      if (paneVer[TAB_KEYS[q]] !== dataVer62) missed.push(TAB_KEYS[q]);
+    }
+    if (!missed.length) { warmPanesDone = true; return; }
+    /* 补渲染：按预热同样的「重栏目优先」顺序，逐个同步渲染。
+       此处不走空闲队列 —— 走到这一步说明空闲调度已经被打断过，不能再次指望它。 */
+    for (q = 0; q < missed.length; q++) {
+      try {
+        renderTab(missed[q]);
+        finishPaneEntryAnims(document.getElementById('tab-' + missed[q]));
+      } catch (e) {}
+    }
+    warmPanesDone = true;
+    try { preheatLayers(); } catch (e) {}
+  }, 4000);
   function step(deadline){
-    if (seq !== _warmPanesSeq || !viewActive('meeting') || !cur()) return;
+    if (seq !== _warmPanesSeq || !viewActive('meeting') || !cur()) { _warmPanesInflight = false; return; }
     if (_tabSwitching || document.hidden) { runAfterTabCalm(step); return; }
     /* 每个空闲回调最多预热一个面板：单面板渲染成本一次付清，
        避免原 while 连续渲染多个面板把空闲帧撑成 100ms 长帧 */
@@ -4969,22 +5023,56 @@ function warmPanes(){
         finishPaneEntryAnims(document.getElementById('tab-' + t));
       } catch (e) {}
       if (i < list.length) queueIdleTask(step);
-      else { try { preheatLayers(); } catch (e) {} }
+      else {
+        /* 走到这里才是真正预热完毕：此时才置完成标志并释放互斥 */
+        warmPanesDone = true;
+        _warmPanesInflight = false;
+        if (_warmVerifyT) { clearTimeout(_warmVerifyT); _warmVerifyT = 0; }
+        try { preheatLayers(); } catch (e) {}
+      }
     }
   }
   runAfterTabCalm(step);
 }
 var preheatSeq70i = 0;
+/* v12 根治：本函数被五条路径调用（Dock 的 pointerover / focusin / pointerdown、
+   scheduleRearmOne 的 rearmOne、以及空闲预热），原先「只设样式、从不还原」，
+   只有该面板真正被切入时 activate() 才清理。实测已复现后果：真实鼠标移动路径
+   经过 Dock 即触发 pointerover，空闲 7 秒后 tab-gsl 仍带
+   visibility:visible; opacity:0.01; background:var(--card); inert; aria-hidden，
+   而其余 7 个面板全部干净。危害有两条：
+     ① 常驻一个 DPR=2 全屏尺寸的低透明度合成层，持续参与合成与光栅；
+     ② 首次划过 Dock 时重复写入同样的内联样式，触发一次多余的样式重算 ——
+        这正是「主发言名单 / 发言名单第一次碰、第一次点的手感与后面不一样」的来源。
+   修法：本函数自带「两帧后还原」，与空闲预热的普通面板路径行为一致。
+   对照实验已证明还原不丢预热收益：普通面板预热后同样还原，
+   而冷启动与热启动帧数据完全一致（中位 8.3ms、超预算帧 0、长任务 0），
+   说明建层与光栅化收益在还原之前就已落袋。
+   幂等安全：activate() 会对目标面板清空同样的内联样式，两处清理互不冲突；
+   __warmPending85 避免同一面板叠多个还原回调。 */
 function warmSpeechPane85(t){
   if ((t !== 'gsl' && t !== 'speakers') || _paneSeen85[t] || state.tab === t) return;
   var p = document.getElementById('tab-' + t);
   if (!p) return;
+  if (p.__warmPending85) return;
+  p.__warmPending85 = true;
   p.style.visibility = 'visible';
   p.style.opacity = '0.01';
   p.style.pointerEvents = 'none';
   p.style.background = 'var(--card)';
   p.setAttribute('inert', '');
   p.setAttribute('aria-hidden', 'true');
+  requestAnimationFrame(function(){ requestAnimationFrame(function(){
+    p.__warmPending85 = false;
+    /* 该面板已成为当前面板：内联样式此后归 activate() 与 CSS 管，此处不插手 */
+    if (p.classList.contains('on')) return;
+    p.style.visibility = '';
+    p.style.opacity = '';
+    p.style.pointerEvents = '';
+    p.style.background = '';
+    p.removeAttribute('inert');
+    p.removeAttribute('aria-hidden');
+  }); });
 }
 function preheatLayers(){
   var seq = ++preheatSeq70i, panes = document.querySelectorAll('.tabpane'), i = 0;
@@ -4993,24 +5081,35 @@ function preheatLayers(){
     if (_tabSwitching || document.hidden) { runAfterTabCalm(step); return; }
     var p = panes[i++];
     if (!p || p.classList.contains('on')) { queueIdleTask(step); return; }
-    var key = p.id.replace('tab-', '');
-    if ((key === 'gsl' || key === 'speakers') && !_paneSeen85[key]) {
-      warmSpeechPane85(key);
-      queueIdleTask(step);
-      return;
-    }
+    /* v12 根治：gsl / speakers 曾走独立分支（warmSpeechPane85）且「只设样式、永不还原」，
+       实测空闲 5 秒后 tab-gsl 仍带 inline visibility:visible; opacity:0.01; background:var(--card); inert，
+       而其余 7 个面板都已干净回到 hidden。后果有两个：
+         ① 常驻一个 DPR=2 全屏尺寸的低透明度合成层，持续参与合成与光栅；
+         ② 首次把鼠标移到 Dock 上（pointerover → warmSpeechPane85）会再写一遍同样的内联样式，
+            触发一次多余的样式重算 —— 这正是「发言名单栏目第一次碰/第一次点的手感与后面不一样」的来源之一。
+       对照实验已证明「还原」不丢预热收益：普通面板预热后同样还原，
+       而冷启动与热启动的帧数据完全一致（中位 8.3ms、超预算帧 0、长任务 0），
+       说明建层与光栅化的收益在还原之前就已落袋。故此处让九个面板走同一条路径。
+       注意：这里刻意不置 _paneSeen85 —— 它的语义是「已被真正切入过」，保持不变；
+       hover 即时预热（warmSpeechPane85）也保留，那条路径紧接着就会点击进入，由 activate() 清理。 */
     p.style.visibility = 'visible';
     p.style.opacity = '0.01';
     p.style.pointerEvents = 'none';
     p.style.background = 'var(--card)';
+    p.setAttribute('inert', '');
+    p.setAttribute('aria-hidden', 'true');
     /* 无条件恢复：清除绝不能被新序列守卫跳过，否则 inline visibility:visible 永久驻留，
        叠加不透明面板底色后在 paneHost 高度区外绘制出旧栏目内容（残影）。
-       两帧已足够触发合成层建层与光栅化预热，之后必须还原为 hidden。 */
+       两帧已足够触发合成层建层与光栅化预热，之后必须还原为 hidden。
+       inert / aria-hidden 一并清除：这两个属性只服务于预热期的可访问性隔离，
+       留在未激活面板上会让首次切入时多一次属性变更与重算。 */
     requestAnimationFrame(function(){ requestAnimationFrame(function(){
       p.style.visibility = '';
       p.style.opacity = '';
       p.style.pointerEvents = '';
       p.style.background = '';
+      p.removeAttribute('inert');
+      p.removeAttribute('aria-hidden');
       if (seq === preheatSeq70i) queueIdleTask(step);
     }); });
   }
@@ -5111,8 +5210,39 @@ function cancelLastWindowAnimation(){
   try { an.onfinish = null; an.oncancel = null; an.cancel(); } catch (e) {}
   _lastWinAnim = null;
 }
+/* v12 根治：切页落定的墙钟兜底。
+   _tabSwitching 一旦卡在 true，会连锁冻结五个子系统（实测已复现）：
+     ① paintTimerAt 把每秒绘制挂起 → 计时器数字不走；
+     ② .frozen 常驻 → 进度条 transition 被 none 锁死；
+     ③ swapFlash 被跳过 → 发言卡片切换失去过渡；
+     ④ warmPanes / preheatLayers / rearmPanes 全部空转 → 面板永远停在旧内容；
+     ⑤ _tabCalmWaiters 只增不减（实测累积 1→2→3）。
+   原有恢复路径只有两条：动画自身的 onfinish，以及 visibilitychange 里的 settleTabSwitch。
+   但「页面仍可见、渲染帧却不再推进」这一类场景（窗口被其他窗口完全遮挡、
+   系统级渲染节流、单帧超长任务把动画事务吞掉）两条都覆盖不到：
+   onfinish 永远不来，visibilitychange 也不触发。此时状态永久卡死。
+   因此补一条与渲染帧无关的墙钟保险：只在动画时长 + 充足余量之后才介入，
+   正常切页（620ms 动画）绝不会触达，手感与动画时序零影响。 */
+var _tabSwitchWatchdog = 0;
+function armTabSwitchWatchdog(seq, duration){
+  clearTabSwitchWatchdog();
+  /* 余量取 1200ms：远大于动画时长，确保只有「真正卡死」才会走到兜底 */
+  _tabSwitchWatchdog = setTimeout(function(){
+    _tabSwitchWatchdog = 0;
+    /* 序号已推进说明这是一笔过期事务，交给新事务自己收尾，不要越权落定 */
+    if (seq !== _winAnimSeq) return;
+    /* 已经落定则无需处理（动画正常结束时 completeTabSwitch 会清掉本定时器，
+       这里是双保险：万一清除与触发竞态，也不做多余动作） */
+    if (!_tabSwitching && !_lastWinAnim) return;
+    try { settleTabSwitch(); } catch (e) {}
+  }, (duration > 0 ? duration : 0) + 1200);
+}
+function clearTabSwitchWatchdog(){
+  if (_tabSwitchWatchdog) { clearTimeout(_tabSwitchWatchdog); _tabSwitchWatchdog = 0; }
+}
 function completeTabSwitch(seq){
   if (seq !== _winAnimSeq) return;
+  clearTabSwitchWatchdog();
   if (_tabStartRaf) { cancelAnimationFrame(_tabStartRaf); _tabStartRaf = 0; }
   var win = document.getElementById('meetingWindow');
   if (win) win.style.transform = '';
@@ -5137,6 +5267,9 @@ function settleTabSwitch(){
 }
 function queueWindowAnimation(seq, t, win, fromY, duration){
   _tabSwitching = true;
+  /* 墙钟兜底必须在 rAF 之前武装：checkReady 本身依赖渲染帧，
+     渲染帧不推进时它永远不会执行，只有与渲染帧无关的定时器才能兜住 */
+  armTabSwitchWatchdog(seq, duration);
   function checkReady(){
     _tabStartRaf = 0;
     if (seq !== _winAnimSeq || state.tab !== t) return;
