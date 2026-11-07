@@ -24,15 +24,31 @@
   --e4:0 8px 16px rgba(8,54,90,.06), 0 26px 60px rgba(8,54,90,.17);
   /* 顶部内高光：让实体有厚度感 */
   --hair:inset 0 1px 0 rgba(255,255,255,.55);
-  /* 统一缓动：spring 用于位移，soft 用于颜色，pop 用于弹性反馈 */
+  /* 微交互：spring 用于位移反馈，soft 用于颜色/背景过渡（鸿蒙/Material 标准 .4,0,.2,1） */
   --spring:cubic-bezier(.22,.61,.36,1);
   --spring-soft:cubic-bezier(.4,0,.2,1);
-  --pop:cubic-bezier(.34,1.56,.64,1);
-  --velvet:cubic-bezier(.22,1,.36,1); 
   /* Tab面板切页统一动画参数：面板外壳与全部内部入场子元素共用；
      仅在此处调整入场时长与手感，一处修改全局生效（防复发机制） */
-  --pane-dur:.45s;
-  --pane-curve:cubic-bezier(.39,.575,.565,1);
+  --pane-dur:.46s;
+  /* v38 macOS+鸿蒙PC最终动效令牌：主曲线柔起(.33,.8)，前100ms缓浮不窜；
+     窗口聚焦=位移+缩放+透明度+阴影抬升；9个栏目统一用同一组起点，不再按面板高矮差异化；
+     窗口缩放原点固定 top center（顶部钉死，长面板也只从顶部展开，不整体上浮）。
+     调手感只改这一处，窗口/弹窗/卡片同步生效。 */
+  --ease-mac:cubic-bezier(.33,.8,.28,1);
+  --ease-focus:cubic-bezier(.33,.8,.28,1);
+  --dur-win:.46s;
+  --dur-focus:.46s;
+  --from-scale:.97;
+  --from-y:6px;
+  --from-op:.96;
+  --back-scale:.985;
+  --glass-blur:20px;
+  --depth-blur:16px;
+  --stagger-y:4px;
+  --stagger-gap:.03s;
+  /* hover 统一反馈：卡片轻抬 -2px，列表行/按钮不位移只变色，全系统共用 */
+  --hover-lift:-2px;
+  --hover-tr:.26s;
 }
 *{box-sizing:border-box; margin:0; padding:0;}
 html{-webkit-text-size-adjust:100%; scrollbar-gutter:stable; }
@@ -132,7 +148,10 @@ input,select,textarea{font-family:inherit; font-size:14px; color:var(--ink);}
 #paneHost{ position:relative; overflow:hidden; }
 .tabpane{ display:block; padding:2px 0 6px; visibility:hidden; position:absolute; top:0; left:0; width:100%;
   opacity:0; pointer-events:none; contain:paint; will-change:transform,opacity; }
-.tabpane.on{ visibility:visible; opacity:1; pointer-events:auto; will-change:transform,opacity; background:var(--card); z-index:2; }  
+.tabpane.on{ visibility:visible; opacity:1; pointer-events:auto; will-change:transform,opacity; background:var(--card); z-index:2; }
+/* C档自适应降级（v33）：检测到连续掉帧时给 body 加 motion-reduced。
+   只把运动过程压到 1ms，opacity/visibility/布局/终态一律不动，弱机不跑动画也不卡、不闪、不错位。 */
+body.motion-reduced *{ animation-duration:1ms !important; animation-delay:0s !important; }
 .card{background:var(--card); border:1px solid var(--line); border-radius:12px; padding:18px; margin-bottom:16px;}
 .card h3{font-size:15px; color:var(--un-deep); margin-bottom:12px;}
 .field{margin-bottom:12px;}
@@ -149,7 +168,9 @@ input,select,textarea{font-family:inherit; font-size:14px; color:var(--ink);}
 .fd-hint{ font-size:13px; color:var(--muted); }
 .file-drop .fd-picked{ font-size:13px; color:var(--un-deep); font-weight:600; }
 .file-drop .fd-size{ font-size:12px; color:var(--muted); margin-top:2px; }
-.doc-file{ display:flex; align-items:center; gap:10px; background:#f7fbfe; border:1px solid #e2eef8; border-radius:8px; padding:10px 12px; margin:10px 0; }
+.doc-file{ display:flex; align-items:center; gap:10px; background:#f7fbfe; border:1px solid #e2eef8; border-radius:8px; padding:10px 12px; margin:10px 0;
+  transition:transform .22s var(--spring-soft), box-shadow .22s var(--spring-soft), background .22s, border-color .22s; }
+.doc-file:hover{ transform:translateY(var(--hover-lift)); background:#eef6fc; border-color:#cfe4f5; box-shadow:0 2px 10px rgba(8,54,90,.08); }
 .doc-file .df-icon{ width:34px; height:34px; border-radius:7px; flex:none; display:flex; align-items:center; justify-content:center; font-size:11px; font-weight:700; color:#fff; }
 .df-icon.pdf{ background:#d9534f; } .df-icon.doc{ background:#2b579a; }
 .doc-file .df-name{ flex:1; min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; font-size:13px; }
@@ -216,7 +237,9 @@ input,select,textarea{font-family:inherit; font-size:14px; color:var(--ink);}
 .pt-pool span{
   font-size:12px; background:var(--un-pale); color:var(--un-deep);
   padding:3px 9px; border-radius:999px; font-variant-numeric:tabular-nums;
+  transition:transform .2s var(--spring-soft), box-shadow .2s var(--spring-soft), background .2s;
 }
+.pt-pool span:hover{ transform:translateY(var(--hover-lift)); box-shadow:var(--e1); background:#e3eef8; }
 .pt-pool span b{font-weight:700;}
 .pt-ctrl{display:flex; gap:8px; margin-top:12px; flex-wrap:wrap;}
 /* 有主持核心磋商信息区 */
@@ -263,7 +286,7 @@ table.stats th{background:#eef6fc; color:var(--un-deep);}
 
 
 
-@keyframes popNum{ 0%{ transform:scale(1); } 40%{ transform:scale(1.22); color:var(--un-blue); } 100%{ transform:scale(1); } }
+@keyframes popNum{ 0%{ transform:scale(1); } 40%{ transform:scale(1.15); color:var(--un-blue); } 100%{ transform:scale(1); } }
 /* 仅存档卡保留入场动画（低频渲染）；动议卡与文件卡因高频局部重绘，加入场动画会闪烁 */
 /* 按压触感调克制：原 scale(.94) + .09s ease 对小按钮过激且回弹过快，
    改为 scale(.97) + .12s ease-out，仅轻压暗示且回弹稍缓，消除「啪嗒」感 */
@@ -277,7 +300,7 @@ table.stats th{background:#eef6fc; color:var(--un-deep);}
 .archive-card,.motion-card,.doc-card,.card,.stat-chip{ transition:box-shadow .2s ease, border-color .2s ease, transform .2s ease; }
 .archive-card:hover,.motion-card:hover,.doc-card:hover{ box-shadow:0 5px 18px rgba(13,78,126,.10); border-color:#bcd8ec; }
 .roll-row,.min-line,.award-row{ transition:background .15s ease; }
-.roll-row:hover,.min-line:hover,.award-row:hover{ background:#f5f9fd; }
+.roll-row:hover,.min-line:hover,.award-row:hover{ background:#f5f9fd; box-shadow:inset 0 1px 0 #fff, 0 2px 8px rgba(8,54,90,.06); transform:translateY(var(--hover-lift)); }
 .stat-chip b.bump{ animation:popNum .38s ease; }
 #toast{ transition:opacity .3s cubic-bezier(.2,.8,.2,1), transform .3s cubic-bezier(.2,.8,.2,1); }
 *{ scrollbar-width:thin; scrollbar-color:#c3d4e4 transparent; }
@@ -362,14 +385,13 @@ table.stats th{background:#eef6fc; color:var(--un-deep);}
 .dock-glide{ position:absolute; left:10px; right:10px; top:0; height:46px; border-radius:9px;
   background:transparent; box-shadow:none;
   pointer-events:none; z-index:0; opacity:0;
-  transition:transform .45s cubic-bezier(.22,1,.36,1), opacity .2s; } 
+  transition:transform .45s cubic-bezier(.33,.8,.28,1), opacity .2s; } 
 .dock-glide.no-anim{ transition:none; }
 .dock button .dk-ico{ font-size:15px; width:20px; text-align:center; flex:none; filter:saturate(.9); }
 /* 计时器 Dock 标签每秒追加剩余秒数，等宽数字避免标签宽度每秒跳动 */
 .dock button .dk-txt{ font-variant-numeric:tabular-nums; }
-@keyframes dvRise{ from{ transform:translateY(10px); } to{ transform:none; } }
-.dv-charts{ animation:cssPaneIn var(--pane-dur) var(--pane-curve) backwards; }
-.c-bar-row{ animation:cssPaneIn var(--pane-dur) var(--pane-curve) backwards; }
+.dv-charts{ animation:none; }
+.c-bar-row{ animation:none; }
 .dock button:hover{ background:rgba(26,117,187,.1); }
 .dock button.on{ background:linear-gradient(120deg,var(--un-blue),#2f88c9); color:#fff; }
 .dock button.on .dk-ico{ filter:none; }
@@ -390,7 +412,10 @@ table.stats th{background:#eef6fc; color:var(--un-deep);}
 }
 .window .win-bar{
   display:flex; align-items:center; gap:10px; padding:9px 14px;
-  background:linear-gradient(#fbfdff,#f1f6fb); border-bottom:1px solid var(--line);
+  background:linear-gradient(rgba(251,253,255,.78),rgba(241,246,251,.66));
+  -webkit-backdrop-filter:blur(var(--glass-blur)) saturate(1.25);
+  backdrop-filter:blur(var(--glass-blur)) saturate(1.25);
+  border-bottom:1px solid var(--line);
 }
 .win-dots{ display:flex; gap:6px; flex:none; }
 .win-dots i{ width:11px; height:11px; border-radius:50%; display:block; }
@@ -432,7 +457,7 @@ table.stats th{background:#eef6fc; color:var(--un-deep);}
 .launch-tile .lt-ico{ font-size:30px; line-height:1; }
 .launch-tile .lt-name{ font-size:13.5px; font-weight:600; margin-top:9px; color:var(--un-deep); }
 .launch-tile .lt-hint{ font-size:11px; color:var(--muted); margin-top:2px; }
-.launch-tile:hover{ transform:translateY(-3px); box-shadow:0 12px 28px rgba(8,54,90,.16); border-color:#bcd8ec; }
+.launch-tile:hover{ transform:translateY(var(--hover-lift)); box-shadow:0 12px 28px rgba(8,54,90,.16); border-color:#bcd8ec; }
 .launch-tile{ transition:transform .18s cubic-bezier(.2,.8,.2,1), box-shadow .18s, border-color .18s; }
 .desk-section{ max-width:880px; margin:0 auto; padding:26px 20px 0; }
 .desk-section h2{ font-size:15px; color:var(--un-deep); letter-spacing:.6px; margin-bottom:12px; display:flex; align-items:center; gap:8px; }
@@ -608,6 +633,9 @@ body{
   border-color:rgba(216,227,238,.92);
   background:linear-gradient(180deg,#fff 0%,#fff 64%,#fdfefe 100%);
   box-shadow:var(--e3), var(--hair);
+  /* 缩放原点钉死顶部：scale 入场时长面板也只从顶部往下展开，
+     不再因默认 center 原点把高纪要面板整体压扁偏下（从下往上浮） */
+  transform-origin:top center;
 }
 .win-bar{
   background:linear-gradient(180deg,rgba(251,253,255,.97),rgba(241,246,251,.95));
@@ -624,14 +652,14 @@ body{
   transition:box-shadow .26s var(--spring-soft), border-color .26s var(--spring-soft), transform .26s var(--spring);
 }
 .card:hover,.motion-card:hover,.doc-card:hover,.mod-info:hover{
-  box-shadow:var(--e2); border-color:#c9dced; transform:translateY(-1px);
+  box-shadow:var(--e2); border-color:#c9dced; transform:translateY(var(--hover-lift));
 }
 #setupForm.card:hover{ transform:none; }
 .stat-chip{ transition:box-shadow .22s var(--spring-soft), transform .22s var(--spring); }
-.stat-chip:hover{ box-shadow:var(--e2); transform:translateY(-1px); }
+.stat-chip:hover{ box-shadow:var(--e2); transform:translateY(var(--hover-lift)); }
 .chair-rule{ background:linear-gradient(120deg,#f8fbfe,#f1f7fc); }
 .dv-cell{ transition:box-shadow .2s var(--spring-soft), border-color .2s, transform .2s var(--spring); }
-.dv-cell:hover{ box-shadow:var(--e2); border-color:#c9dced; transform:translateY(-1px); }
+.dv-cell:hover{ box-shadow:var(--e2); border-color:#c9dced; transform:translateY(var(--hover-lift)); }
 .dv-cell.locked:hover{ transform:none; box-shadow:var(--e1); }
 .dv-result.pass{ background:linear-gradient(120deg,#eefaf2,#e2f5e9); }
 .dv-result.fail{ background:linear-gradient(120deg,#fdf0f0,#fbe6e6); }
@@ -655,8 +683,9 @@ body{
 .btn-icon:hover{ box-shadow:var(--e1); }
 /* 6) Dock：图标弹性微放大 + 当前项指示条 */
 .dock button{ border-radius:10px; transition:background .2s var(--spring-soft), color .2s var(--spring-soft), transform .18s var(--spring); }
-.dock button .dk-ico{ transition:transform .24s var(--pop); }
-.dock button:hover .dk-ico{ transform:scale(1.16) translateY(-1px); }
+.dock button .dk-ico{ transition:transform .24s var(--ease-mac); }
+/* Dock 按钮 hover 时图标不再缩放/上移，只保留背景高亮，避免切页时控制台标识动一下 */
+.dock button:hover .dk-ico{ transform:none; }
 .dock button:active:not(.on){ transform:scale(.97); }
 .dock button.on{ box-shadow:inset 0 1px 0 rgba(255,255,255,.22); }
 .dock button.on::after{
@@ -671,7 +700,7 @@ body{
 }
 .sb-chip{ box-shadow:inset 0 1px 0 rgba(255,255,255,.14); transition:background .22s var(--spring-soft), transform .22s var(--spring); }
 .sb-exit{ transition:background .2s var(--spring-soft), border-color .2s, transform .16s var(--spring); }
-.sb-exit:hover{ transform:translateY(-1px); }
+.sb-exit:hover{ transform:translateY(var(--hover-lift)); }
 .sb-exit:active{ transform:scale(.95); }
 .sb-chip.live{ position:relative; box-shadow:inset 0 1px 0 rgba(255,255,255,.2); }
 /* 8) 面板转场：交叉淡入 + 轻微缩放，比单纯位移更「系统」 */
@@ -682,11 +711,7 @@ body{
 .pt-pool span{ box-shadow:var(--e1); }
 .timer-ctrl .btn,.pt-ctrl .btn,.preset-row .btn{ transition:transform .12s var(--spring), background .18s, color .18s, border-color .18s, box-shadow .18s; }
 /* 10) 当前发言卡片：舞台光晕 */
-.speaker-current{
-  background:linear-gradient(125deg,var(--un-dark) 0%,var(--un-blue) 46%,#3f95d3 100%);
-  box-shadow:0 10px 30px rgba(13,78,126,.26), inset 0 1px 0 rgba(255,255,255,.26);
-}
-.speaker-current .sc-name{ letter-spacing:.3px; text-shadow:0 1px 2px rgba(0,0,0,.14); }
+.speaker-current .sc-name{ letter-spacing:.3px; }
 /* 11) 表单控件：聚焦光环 */
 .field input,.field select,.field textarea,.del-row input{
   transition:border-color .18s var(--spring-soft), box-shadow .18s var(--spring-soft), background .18s;
@@ -695,11 +720,11 @@ body{
   border-color:var(--un-blue); background:#fff; box-shadow:0 0 0 3px rgba(26,117,187,.14);
 }
 .file-drop{ transition:border-color .2s var(--spring-soft), background .2s, box-shadow .2s, transform .2s var(--spring); }
-.file-drop:hover{ box-shadow:var(--e2); transform:translateY(-1px); }
+.file-drop:hover{ box-shadow:var(--e2); transform:translateY(var(--hover-lift)); }
 .file-drop.drag{ box-shadow:0 0 0 3px rgba(26,117,187,.16), var(--e2); }
 /* 12) 弹窗：背景虚化 + 弹性入场 */
-.modal-mask{ background:rgba(6,28,48,.42); backdrop-filter:blur(6px) saturate(1.1); -webkit-backdrop-filter:blur(6px) saturate(1.1); }
-.modal{ border-radius:16px; box-shadow:var(--e4), var(--hair); }
+.modal-mask{ background:rgba(6,28,48,.42); backdrop-filter:blur(var(--glass-blur)) saturate(1.25); -webkit-backdrop-filter:blur(var(--glass-blur)) saturate(1.25); }
+.modal{ background:rgba(255,255,255,.82); -webkit-backdrop-filter:blur(calc(var(--glass-blur) * .7)) saturate(1.25); backdrop-filter:blur(calc(var(--glass-blur) * .7)) saturate(1.25); border-radius:16px; box-shadow:var(--e4), var(--hair); }
 
 /* 13) Toast：弹性上浮 */
 #toast{
@@ -715,24 +740,25 @@ body{
 ::-webkit-scrollbar-thumb:hover{ background:rgba(90,124,155,.68); background-clip:content-box; }
 /* 15) 启动器磁贴：玻璃质感 + 图标浮起 */
 .launch-tile{ border-color:rgba(255,255,255,.68); box-shadow:var(--e2), var(--hair); }
-.launch-tile:hover{ border-color:#fff; box-shadow:var(--e3), var(--hair); transform:translateY(-3px); }
+.launch-tile:hover{ border-color:#fff; box-shadow:var(--e3), var(--hair); transform:translateY(var(--hover-lift)); }
 .launch-tile:active{ transform:translateY(-1px) scale(.985); box-shadow:var(--e1), inset 0 2px 5px rgba(8,54,90,.12); }
-.launch-tile .lt-ico{ display:inline-block; transition:transform .28s var(--pop); }
-.launch-tile:hover .lt-ico{ transform:scale(1.14) translateY(-2px); }
+.launch-tile .lt-ico{ display:inline-block; transition:transform .28s var(--ease-mac); }
+.launch-tile:hover .lt-ico{ transform:scale(1.1) translateY(-2px); }
 .launch-tile .lt-name{ letter-spacing:.2px; }
 /* 16) 存档卡：渐变色条 + 悬浮抬升 */
 .archive-card{ box-shadow:var(--e1); }
 .archive-card::before{ background:linear-gradient(180deg,var(--un-blue),#3f95d3); }
-.archive-card:hover{ box-shadow:var(--e3); transform:translateY(-2px); }
+.archive-card:hover{ box-shadow:var(--e3); transform:translateY(var(--hover-lift)); }
 /* 17) 名单胶囊与行悬停 */
 .gr-item{ transition:background .18s, border-color .18s, transform .18s var(--spring), box-shadow .18s; }
-.gr-item:hover{ transform:translateY(-1px); box-shadow:var(--e1); }
+.gr-item:hover{ transform:translateY(var(--hover-lift)); box-shadow:var(--e1); }
 .gr-item.now{ box-shadow:0 4px 14px rgba(13,78,126,.28); }
-.roll-row,.min-line,.award-row{ transition:background .16s var(--spring-soft), box-shadow .16s; }
+.roll-row,.min-line,.award-row{ transition:background .22s var(--spring-soft), box-shadow .22s var(--spring-soft), transform .22s var(--spring-soft); }
 /* 18) 统计表：斑马纹 + 悬停高亮 */
 table.stats th{ box-shadow:inset 0 -1px 0 rgba(8,54,90,.10); }
 table.stats tr:nth-child(even) td{ background:#fafcfe; }
 table.stats tr:hover td{ background:#f2f8fd; }
+table.stats td{ transition:background .18s var(--spring-soft); }
 table.stats td,table.stats th{ transition:background .16s var(--spring-soft); }
 /* 19) 投票按钮：选中态更实 */
 .vote-btn{ transition:transform .1s var(--spring), background .18s, color .18s, border-color .18s, box-shadow .18s; }
@@ -868,27 +894,27 @@ table.stats td,table.stats th{ transition:background .16s var(--spring-soft); }
 .dv-charts{ display:grid; grid-template-columns:repeat(auto-fit,minmax(258px,1fr)); gap:12px; margin-top:10px; }
 .dv-roster-wrap{ margin-top:12px; }
 .dv-roster{ display:grid; grid-template-columns:repeat(auto-fill,minmax(212px,1fr)); gap:6px; }
-.dv-hist,.dv-result,.dv-detail,.dv-charts .c-panel,.dv-roster{ animation:cssPaneIn var(--pane-dur) var(--pane-curve) backwards; }
+.dv-hist,.dv-result,.dv-detail,.dv-charts .c-panel,.dv-roster{ animation:none; }
 /* ② 评奖揭晓：逐行上浮 stagger（奖项行数少；封顶 8 行后统一延迟，避免长列表并发） */
-.award-row{ animation:cssPaneIn var(--pane-dur) var(--pane-curve) backwards; }
-.motion-card{ animation:cssPaneIn var(--pane-dur) var(--pane-curve) backwards; }
-.doc-card{ animation:cssPaneIn var(--pane-dur) var(--pane-curve) backwards; }
+.award-row{ animation:none; }
+.motion-card{ animation:none; }
+.doc-card{ animation:none; }
 
 /* ⑤ 法定达标时刻：达标后 chip 绿描边亮起；border/box-shadow 已在既有 transition 内，
    颜色平滑过渡，配合 bump 脉冲一次到位 */
 .stat-chip.quorum-ok{ border-color:var(--ok); box-shadow:inset 0 0 0 1px var(--ok); }
-/* ⑧ 否决权行使：结果卡内 veto 行一次性轻脉冲（.35s 延迟待 scIn 落定后；
+/* ⑧ 否决权行使：结果卡内 veto 行一次性轻脉冲（.35s 延迟待面板入场落定后；
    只命中 veto 行通常 ≤5 行，不会重踞 dv-rs 逐行动画的百席覆辙） */
 .dv-rs.veto{ animation:vetoPulse .8s var(--spring) .35s backwards; }
 @keyframes vetoPulse{ 0%,100%{ transform:none; } 35%{ transform:scale(1.03); } 65%{ transform:scale(.997); } }
 /* ⑪ 统计表行入场：前 6 行 stagger，第 13 行起禁用——百席表格不并发上百动画 */
 .dv-rs{ display:flex; align-items:center; gap:8px; padding:6px 9px; font-size:12.5px;
   border:1px solid var(--line); border-left-width:3px; border-radius:8px; background:var(--card);
-  transition:box-shadow .2s var(--spring-soft), border-color .2s var(--spring-soft); }
+  transition:box-shadow .2s var(--spring-soft), border-color .2s var(--spring-soft), transform .2s var(--spring-soft); }
 /* 明细行是只读信息：hover 只给阴影不做位移（用户 2026-10-24 反馈）。
    .c-panel 的全局 hover 上浮在结果区一并取消，特异性 (0,3,0) 高于全局 (0,2,0)，无需 !important；
    统计与评奖栏目的 .c-panel 上浮手感不受影响。 */
-.dv-rs:hover{ box-shadow:var(--e1); }
+.dv-rs:hover{ box-shadow:var(--e1); transform:translateY(var(--hover-lift)); }
 .dv-detail .c-panel:hover{ transform:none; }
 .dv-detail .c-panel{ will-change:auto; }
 /* 历次表决切换条：一次会议可通过多份决议草案，结果宣布后仍需回看每一份的表决情况。
@@ -964,14 +990,13 @@ body.projector .dv-roster{ grid-template-columns:repeat(auto-fill,minmax(300px,1
 /* v10b 根治：切页核心动画豁免系统"减弱动态效果"——用户明确要求每次切页动画完整一致。
    系统降级仅保留于装饰性动效（hover/涟漪/弹窗），切页主链路（视图/面板/卡片/dock滑块）恒常运行。 */
 @media (prefers-reduced-motion: reduce){
-  .view.active{ animation:paneInR .30s var(--velvet) both !important; }
-  .tabpane.on{ animation:cssPaneIn var(--pane-dur) var(--pane-curve) backwards !important; }
+  .tabpane.on{ animation:none; }
   .speaker-current,
   .motion-card,.doc-card,.archive-card,.award-row,
   .dv-hist,.dv-result,.dv-detail,.dv-charts,.dv-charts .c-panel,.dv-roster,
-  .c-bar-row{ animation:cssPaneIn var(--pane-dur) var(--pane-curve) backwards !important; }
-  .c-bar-tr i{ animation:barIn var(--pane-dur) var(--pane-curve) both !important; }
-  .dock-glide{ transition:transform .45s cubic-bezier(.22,1,.36,1), opacity .2s !important; }
+  .c-bar-row{ animation:none; }
+  .c-bar-tr i{ animation:none; }
+  .dock-glide{ transition:transform .45s cubic-bezier(.33,.8,.28,1), opacity .2s !important; }
 }
 /* 1) 外壳禁止选中文本 —— 真实系统中标题栏、Dock、按钮、徽标均不可选中，
       只有内容区（纪要 .min-line、预览正文、表格、输入框）可选中复制。
@@ -1254,7 +1279,9 @@ body.dark .modal-mask{ background:rgba(0,0,0,.62); }
 .c-lg b{ margin-left:auto; font-variant-numeric:tabular-nums; }
 .c-lg em{ font-style:normal; color:var(--muted); font-size:11.5px; min-width:32px; text-align:right; font-variant-numeric:tabular-nums; }
 .c-bars{ display:flex; flex-direction:column; gap:6px; }
-.c-bar-row{ display:flex; align-items:center; gap:8px; }
+.c-bar-row{ display:flex; align-items:center; gap:8px; border-radius:7px; padding:1px 6px; margin:0 -6px;
+  transition:transform .18s var(--spring-soft), background .18s var(--spring-soft); }
+.c-bar-row:hover{ transform:translateY(var(--hover-lift)); background:rgba(127,150,175,.08); }
 .c-bar-lb{ width:74px; flex:none; font-size:12px; color:var(--ink); overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
 .c-bar-tr{ flex:1; height:9px; border-radius:999px; background:rgba(127,150,175,.18); overflow:hidden; }
 .c-bar-tr i{ display:block; height:100%; border-radius:999px; transition:width .34s var(--spring), background .25s var(--spring-soft); }
@@ -1294,11 +1321,11 @@ body:not(.dark) .card > h3::before{ content:''; position:absolute; left:0; top:1
   border-radius:3px; background:linear-gradient(180deg,var(--un-blue),var(--un-dark)); }
 /* 启动磁贴：图标进圆角渐变容器，hover 缩放发光 */
 body:not(.dark) .launch-tile{ background:linear-gradient(180deg,#ffffff,#f4f9fd); box-shadow:var(--e2), var(--hair); }
-body:not(.dark) .launch-tile:hover{ transform:translateY(-4px); box-shadow:var(--e3), var(--hair); border-color:rgba(26,117,187,.4); }
+body:not(.dark) .launch-tile:hover{ transform:translateY(var(--hover-lift)); box-shadow:var(--e3), var(--hair); border-color:rgba(26,117,187,.4); }
 body:not(.dark) .lt-ico{ width:58px; height:58px; margin:0 auto 2px; display:flex; align-items:center; justify-content:center;
   border-radius:17px; font-size:28px; background:linear-gradient(145deg,var(--un-pale),#ffffff);
   box-shadow:inset 0 0 0 1px rgba(26,117,187,.14), var(--e1);
-  transition:transform .26s var(--pop), box-shadow .26s var(--spring-soft); }
+  transition:transform .26s var(--ease-mac), box-shadow .26s var(--spring-soft); }
 body:not(.dark) .launch-tile:hover .lt-ico{ transform:scale(1.09) translateY(-2px); box-shadow:inset 0 0 0 1px rgba(26,117,187,.28), var(--e2); }
 /* 首页大标题：渐变文字 */
 body:not(.dark) 
@@ -1319,11 +1346,8 @@ body:not(.dark) .stat-chip b{ background:linear-gradient(120deg,var(--un-deep),v
 body:not(.dark) table.stats th{ background:linear-gradient(180deg,#f2f8fd,#e9f1f9); }
 body:not(.dark) table.stats tr:nth-child(even) td{ background:#fafcfe; }
 /* 发言者当前块：更饱满渐变 */
-body:not(.dark) .speaker-current{ background:linear-gradient(125deg,var(--un-dark) 0%,var(--un-blue) 48%,#3f95d3 100%);
-  box-shadow:0 10px 30px rgba(13,78,126,.28), inset 0 1px 0 rgba(255,255,255,.28); }
-/* 存档卡：hover 更明显 */
-body:not(.dark) .archive-card{ box-shadow:var(--e1), var(--hair); transition:box-shadow .22s, transform .22s var(--spring), border-color .22s; }
-body:not(.dark) .archive-card:hover{ box-shadow:var(--e2), var(--hair); transform:translateY(-2px); border-color:rgba(26,117,187,.36); }
+body:not(.dark) .speaker-current{ background:linear-gradient(125deg,var(--un-dark) 0%,var(--un-blue) 48%,#3f95d3 100%); }
+body:not(.dark) .archive-card:hover{ box-shadow:var(--e2), var(--hair); transform:translateY(var(--hover-lift)); border-color:rgba(26,117,187,.36); }
 /* ---------- 深色补强：加大对比、提亮次级文字、修 .hero 白字糊 ---------- */
 body.dark{ --muted:#a8bacb; --un-dark:#4a9ede; --bg:#0c1520;
   background:radial-gradient(1100px 560px at 50% -8%, rgba(26,117,187,.10), transparent 62%), var(--bg); }
@@ -1349,7 +1373,7 @@ body.dark .stat-chip{ background:linear-gradient(180deg,#182634,#15212d); box-sh
 body.dark table.stats th{ background:linear-gradient(180deg,#1e3040,#1a2937); }
 body.dark .speaker-current{ background:linear-gradient(125deg,#164f7d 0%,#1f76b8 48%,#2684c9 100%); }
 body.dark .win-bar{ box-shadow:inset 0 -1px 0 rgba(255,255,255,.05); }
-body.dark .archive-card:hover{ transform:translateY(-2px); }
+body.dark .archive-card:hover{ transform:translateY(var(--hover-lift)); }
 /* 使用指引 / 长文本容器：原 #f8fbfd 近白底，深色下浅字压浅底=隐形(1.13) */
 body.dark .doc-content{ background:#131f2b; color:#cfdde9; border-color:#2b3f53; }
 /* 首页桌面容器：原 #eaf1f8 浅底，深色下整页发白 */
@@ -1392,16 +1416,15 @@ h1,h2,h3,h4{ letter-spacing:-.01em; }
 .card > h3{ font-weight:650; }
 /* 图表卡片：hover 微抬 + 更柔阴影 */
 .c-panel{ transition:box-shadow .24s var(--spring-soft), transform .24s var(--spring); }
-.c-panel:hover{ box-shadow:var(--e2); transform:translateY(-2px); }
+.c-panel:hover{ box-shadow:var(--e2); transform:translateY(var(--hover-lift)); }
 .c-donut circle[stroke]:not([stroke^="var(--line"]) { filter:drop-shadow(0 1px 3px rgba(8,54,90,.18)); }
 body.dark .c-donut circle[stroke]:not([stroke^="var(--line"]) { filter:drop-shadow(0 1px 4px rgba(0,0,0,.5)); }
 .c-center b{ font-weight:750; letter-spacing:-.02em; }
 /* 图例行：hover 高亮，增强可读与交互感 */
-.c-lg{ padding:3px 6px; margin:-1px -6px; border-radius:7px; transition:background .18s var(--spring-soft); }
-.c-lg:hover{ background:rgba(127,150,175,.12); }
-/* 条形：进入动画（transform 走 GPU，不触发 layout）+ 圆角端 */
-.c-bar-tr i{ transform-origin:left center; animation:barIn var(--pane-dur) var(--pane-curve) both; }
-@keyframes barIn{ from{ transform:scaleX(0); } to{ transform:scaleX(1); } }
+.c-lg{ padding:3px 6px; margin:-1px -6px; border-radius:7px; transition:background .18s var(--spring-soft), transform .18s var(--spring-soft); }
+.c-lg:hover{ background:rgba(127,150,175,.12); transform:translateY(var(--hover-lift)); }
+/* 条形直接满格，切页期不再生长（避免与窗口过场叠加） */
+.c-bar-tr i{ transform-origin:left center; }
 .c-bar-row:hover .c-bar-lb{ color:var(--un-blue); }
 body.dark .c-bar-row:hover .c-bar-lb{ color:#8ecbf2; }
 /* 首页 OS 感：hero 区柔光晕，磁贴节奏 */
@@ -1446,14 +1469,9 @@ body.projector .doc-card, body.projector .motion-card, body.projector .archive-c
 body.projector .dv-cell{
   content-visibility:visible;
 }
-/* 入场关键帧：位移 + 透明，spring 缓动，both 填充防首帧闪白 */
-@keyframes paneInR{ from{ transform:translateY(7px); } to{ transform:none; } }
+/* 入场位移已统一由窗口WAAPI带动（见queueWindowAnimation），面板/视图不再自带动画，
+   避免冷切进DOM播一次、热切DOM在不重播导致栏目间不一致。 */
 
-@keyframes rowInR{ from{ transform:translateY(6px); } to{ transform:none; } }
-
-/* 面板 / 视图 / 窗口：由纯淡入升级为 spring 位移（覆盖原 paneIn/winIn） */
-.view.active{ animation:paneInR .30s var(--velvet) both; }
-.archive-card{ animation:cssPaneIn var(--pane-dur) var(--pane-curve) backwards; }
 /* 按压反馈：transform 换 spring 缓动，按下跟手、释放回弹；transition 天然可打断，
    快速连点时从当前进度平滑接管，不会像 animation 那样从头重播 */
 .btn,.vote-btn,.btn-icon,.seg button,.dock button,.preset-row .btn,.timer-ctrl .btn,.pt-ctrl .btn{
@@ -1462,12 +1480,11 @@ body.projector .dv-cell{
 }
 /* 磁贴按下：spring 回弹，与 hover 上浮衔接顺滑 */
 .launch-tile{ transition:transform .16s var(--spring), box-shadow .18s var(--spring-soft), border-color .18s var(--spring-soft); }
-.launch-tile .lt-ico{ transition:transform .26s var(--pop); }
-.dock button .dk-ico{ transition:transform .22s var(--pop); }
+.launch-tile .lt-ico{ transition:transform .26s var(--ease-mac); }
+.dock button .dk-ico{ transition:transform .22s var(--ease-mac); }
 /* 状态栏按钮按压回弹 */
 .sb-exit{ transition:transform .14s var(--spring), background .18s var(--spring-soft), border-color .18s var(--spring-soft), color .18s; }
 /* 状态栏实时徽标呼吸：确保走 GPU 合成不抖动（计时器告警脉动已删，无对应优化需要） */
-.sb-chip.live{ will-change:opacity; }
 /* 计时器倒计时进度条：clip-path 由 --tp 每秒驱动，加 1s linear 让其连续扫过而非逐格跳。
    等特异度且更靠后，!important 覆盖前面的锁死规则。 */
 .timer-display::before{ transition:clip-path 1s linear !important; }
@@ -1477,11 +1494,8 @@ body.projector .dv-cell{
 /* 归零/暂停/重置时进度瞬间跳变（非每秒递进），此时不应有 1s 拖尾——
    .idle 为「满格未运行」态，暂停由 JS 停 tick 后 --tp 不再变，均无副作用。 */
 .timer-display.idle::before,.pt-display.idle::before{ transition:none !important; }
-@keyframes scIn{ from{ transform:translateY(6px); } to{ transform:none; } }
-@keyframes cssPaneIn{ from{ transform:translateY(6px); }
-  to{ transform:none; } }
-.tabpane.on{ animation:cssPaneIn var(--pane-dur) var(--pane-curve) backwards; }
-.speaker-current{ will-change:transform; animation:cssPaneIn var(--pane-dur) var(--pane-curve) backwards; }
+.tabpane.on{ animation:none !important; }  /* v35：面板不自带CSS入场，由窗口WAAPI整体带动，冷热切/九栏完全一致 */
+.speaker-current{ will-change:transform; animation:none; }
 
 /* 计票/统计数字变动时的轻微强调走已有 popNum（.bump 类由 JS 控制），此处仅确保走 GPU 不抖 */
 .stat-chip b.bump,.tally b{ will-change:transform; }
@@ -1520,23 +1534,15 @@ body.dark #syncCard{ background:rgba(255,255,255,.025); border-color:rgba(255,25
 /* 页脚小型大写 */
 .desk-foot{ letter-spacing:.22em; text-transform:uppercase; font-size:11px; }
 
-@keyframes cssWinIn{ from{ transform:translateY(14px) scale(.985); }
-  to{ transform:none; } } 
-@keyframes cssModalIn{ from{ filter:blur(4px); transform:scale(.94) translateY(12px); }
-  62%{ filter:blur(0); transform:scale(1.014) translateY(0); }
-  to{ filter:blur(0); transform:none; } }
-
+/* 切页窗口动画已由JS WAAPI统一驱动（8px+scale.985，400ms，spring曲线），
+   不再保留CSS版窗口动画，杜绝CSS/WAAPI双轨混杂。 */
+@keyframes modalInMac{ from{ transform:scale(.96) translateY(6px); opacity:.85; } to{ transform:none; opacity:1; } }
 #view-setup.active{ animation:none; }
-#view-setup.active .window{ animation:cssWinIn .62s cubic-bezier(.22,1,.36,1) backwards; }
-#view-home.active{ animation:cssWinIn .62s cubic-bezier(.22,1,.36,1) backwards; }
-.window.swap{ animation:cssWinIn .62s cubic-bezier(.22,1,.36,1) backwards; }
-.modal-mask.on .modal{ animation:cssModalIn .62s cubic-bezier(.22,1,.36,1) backwards; }
-@keyframes cssViewInP{ from{ transform:translateY(10px) scale(.995); }
-  to{ transform:none; } }
-@keyframes cssModalInP{ from{ transform:scale(.94) translateY(12px); }
-  62%{ transform:scale(1.014) translateY(0); }
-  to{ transform:none; } }
-body.projector .modal-mask.on .modal{ animation-name:cssModalInP; }
+#view-setup.active .window{ animation:none; }
+#view-home.active{ animation:none; }
+.window.swap{ animation:none; }
+.modal-mask.on .modal{ animation:modalInMac var(--dur-win) var(--ease-mac) backwards; }
+body.projector .modal-mask.on .modal{ animation-name:modalInMac; }
 /* 统一缓动令牌：其全站按钮 0.15s cubic-bezier(0.4,0,0.2,1)；外壳 0.9s cubic-bezier(0,0,0.2,1) */
 :root{ --ease-ui:cubic-bezier(0.4,0,0.2,1); --ease-shell:cubic-bezier(0,0,0.2,1); }
 /* ③ 按钮颜色/边框过渡对齐 0.15s 标准缓动（transform 保留 spring 回弹，手感更活） */
@@ -1574,7 +1580,7 @@ body:not(.dark):has(#view-home.active).geo-resizing{ background:var(--bg) !impor
     width:38px; height:38px; border-radius:11px; border:1px solid var(--line); background:var(--card);
     color:var(--ink); font-size:16px; align-items:center; justify-content:center; cursor:pointer;
     box-shadow:var(--e2); transition:transform .15s var(--ease-ui), box-shadow .15s var(--ease-ui); }
-  #dockExpand:hover{ transform:translateY(-1px); box-shadow:var(--e3); }
+  #dockExpand:hover{ transform:translateY(var(--hover-lift)); box-shadow:var(--e3); }
   body.dock-hidden #dockExpand{ display:flex; }
   /* dock 内的收起按钮 */
   #dockCollapse{ margin-top:6px; width:100%; min-height:30px; border-radius:8px; border:1px solid transparent;
@@ -1613,14 +1619,12 @@ body:not(.dark):has(#view-home.active).geo-resizing{ background:var(--bg) !impor
 .sb-chip.warn{ background:rgba(192,57,43,.92); color:#fff; animation:chipBreath 1.8s ease-in-out infinite; }
 body.dark .sb-chip.warn{ background:rgba(239,122,108,.85); color:#1a0505; }
 @keyframes chipBreath{ 0%,100%{ opacity:1; } 50%{ opacity:.76; } }
-::view-transition-old(root){ animation-duration:.26s; animation-timing-function:cubic-bezier(.22,1,.36,1); }
-::view-transition-new(root){ animation-duration:.26s; animation-timing-function:cubic-bezier(.22,1,.36,1); }
+::view-transition-old(root){ animation-duration:.30s; animation-timing-function:cubic-bezier(.33,.8,.28,1); }
+::view-transition-new(root){ animation-duration:.30s; animation-timing-function:cubic-bezier(.33,.8,.28,1); }
 html.vt-lock, html.vt-lock *, html.vt-lock *::before, html.vt-lock *::after{ transition:none !important; }
-#tab-docvote .dv-cell:hover, #tab-docvote .card:hover,
-#tab-minutes .card:hover,
-#tab-stats .card:hover, #tab-stats .c-panel:hover{
-  transform:none;
-}
+/* 所有栏目卡片统一 hover 上浮（--hover-lift），不再按栏目禁掉 transform。
+   此前这里曾把 stats/minutes/docvote 卡片 hover 强制 transform:none，
+   导致这些栏目卡片没有任何浮起反馈，现移除。 */
 .sb-chip.live.ph-speak{ background:rgba(26,117,187,.92); color:#fff; }
 .sb-chip.live.ph-roll{ background:rgba(30,142,90,.92); color:#fff; }
 .sb-chip.live.ph-pause{ background:rgba(255,255,255,.20); color:#fff; }
@@ -1991,7 +1995,7 @@ body.dark .sb-chip.live.ph-roll{ background:rgba(67,201,138,.88); color:#06170f;
       </div>
     </section>
     <section id="tab-stats" class="tabpane">
-      <div class="card"><h3 data-i18n="代表参与统计">代表参与统计</h3><div style="overflow-x:auto;"><table class="stats" id="statsTable"></table></div></div>
+      <div class="card"><h3 data-i18n="代表参与统计">代表参与统计</h3><div style="overflow-x:auto;max-height:400px;overflow-y:auto;" id="statsTableWrap"><table class="stats" id="statsTable"></table></div></div>
       <div class="card"><h3 data-i18n="奖项评定">奖项评定</h3>
         <div class="row">
           <!-- option 显式指定 value：奖项名以中文原值为存储键，切换语言只改显示文字，
@@ -3006,6 +3010,7 @@ Object.assign(I18N, {
   '等待开始发言':'waiting to start','开始发言':'Start Speech',
   '主发言名单已全部发言完毕。':'All GSL speakers have finished.',
   '待开启队列':'Waiting queue','名单为空':'The list is empty','请先添加代表团':'Add a delegation first',
+  '请先通过「有主持核心磋商」或「个人演讲」动议，再加入国家':'Pass a Moderated Caucus or Individual Speech motion first before adding delegations',
   '加入主发言名单':'joined the GSL','主发言名单已关闭':'GSL closed','主发言名单尚未开启':'The GSL is not open yet',
   '主发言名单已全部发言完毕':'All GSL speakers have finished','发言结束':'finished speaking',
   '（计时归零）':' (timer reached zero)','累计发言':'total speeches','次':'','国':'delegations',
@@ -3482,6 +3487,17 @@ Object.assign(I18N, {
 var PROJECTOR_KEY = LS_KEY + '.projector';
 function applyProjector(on){
   document.body.classList.toggle('projector', !!on);
+  /* 投屏/模式切换：整体280ms阻尼淡入，掩盖字号与布局跳变（不硬切） */
+  if (!sprReduce()) {
+    var stage = document.querySelector('.stage') || document.getElementById('view-meeting');
+    if (stage && stage.animate) {
+      try {
+        stage.animate(
+          [{ opacity: .35, transform: 'scale(.995)' }, { opacity: 1, transform: 'scale(1)' }],
+          { duration: 340, easing: 'cubic-bezier(.33,.8,.28,1)' });
+      } catch (e) {}
+    }
+  }
 }
 function toggleProjector(){
   var on = !document.body.classList.contains('projector');
@@ -3757,6 +3773,26 @@ function show(view){
     syncPaneH();
     invalidateDockGeometry();
     refreshDockGeometry();
+  } else if (!sprReduce()) {
+    /* 首页 / 新建会议设置页：对可见窗口或主内容容器，复用与会议窗口切页
+       完全相同的动画（scale(.97)+translateY(6px)+opacity(.96)，460ms 同一曲线），
+       保证所有视图切换手感统一，不再用另一套参数。 */
+    (function(v){
+      requestAnimationFrame(function(){
+        var root = document.getElementById('view-' + v);
+        if (!root || !root.animate) return;
+        void root.offsetHeight;
+        var target = root.querySelector('.window') || root.querySelector('.wrap') || root;
+        try {
+          target.animate(
+            [
+              { transform: 'translateY(6px) scale(.97)', opacity: .96 },
+              { transform: 'translateY(0) scale(1)', opacity: 1 }
+            ],
+            { duration: 460, easing: 'cubic-bezier(.33,.8,.28,1)', fill: 'backwards' });
+        } catch (e) {}
+      });
+    })(view);
   }
 }
 var TAB_NAMES = { roll:'点名', gsl:'主发言名单', speakers:'发言名单', motions:'动议与表决', docvote:'实质性表决文件', timer:'计时器', docs:'文件', minutes:'会议纪要', stats:'统计与评奖' };
@@ -3888,15 +3924,15 @@ function syncLiveChips(){
   var qvTxt = presentCount(m) + '/' + m.delegates.length;
   if (qv.textContent !== qvTxt) {
     qv.textContent = qvTxt;
-    if (!sprReduce() && qv.animate) qv.animate([{ transform: 'scale(1)' }, { transform: 'scale(1.2)' }, { transform: 'scale(1)' }], { duration: 200, easing: 'cubic-bezier(.34,1.56,.64,1)' });
+    if (!sprReduce() && qv.animate) qv.animate([{ transform: 'scale(1)' }, { transform: 'scale(1.2)' }, { transform: 'scale(1)' }], { duration: 200, easing: 'cubic-bezier(.33,.8,.28,1)' });
   }
   quorum.childNodes[0].nodeValue = t('法定') + ' ';
 }
 function updateDockBadges(){
   var m = cur();
-  function setB(id, n){ var el = document.getElementById(id); if (!el) return; var vs = n > 99 ? '99+' : String(n); if (el.textContent !== vs) { el.textContent = vs; if (!sprReduce() && el.animate) el.animate([{ transform: 'scale(1)' }, { transform: 'scale(1.22)' }, { transform: 'scale(1)' }], { duration: 200, easing: 'cubic-bezier(.34,1.56,.64,1)' }); }
+  function setB(id, n){ var el = document.getElementById(id); if (!el) return; var vs = n > 99 ? '99+' : String(n); if (el.textContent !== vs) { el.textContent = vs; if (!sprReduce() && el.animate) el.animate([{ transform: 'scale(1)' }, { transform: 'scale(1.15)' }, { transform: 'scale(1)' }], { duration: 200, easing: 'cubic-bezier(.33,.8,.28,1)' }); }
   var wasOn = el.classList.contains('on'); el.classList.toggle('on', n > 0);
-  if (n > 0 && !wasOn && !sprReduce() && el.animate) el.animate([{ transform: 'scale(.4)' }, { transform: 'scale(1)' }], { duration: 200, easing: 'cubic-bezier(.34,1.56,.64,1)' }); }
+  if (n > 0 && !wasOn && !sprReduce() && el.animate) el.animate([{ transform: 'scale(.4)' }, { transform: 'scale(1)' }], { duration: 200, easing: 'cubic-bezier(.33,.8,.28,1)' }); }
   if (!m) { setB('badge-roll', 0); setB('badge-gsl', 0); setB('badge-speakers', 0); setB('badge-motions', 0); setB('badge-docvote', 0); setB('badge-docs', 0); return; }
   var pendingRoll = 0;
   for (var i = 0; i < m.delegates.length; i++) if (!m.delegates[i].roll) pendingRoll++;
@@ -3967,7 +4003,7 @@ function closeModal(){
   };
   if (mask.classList.contains('on') && !sprReduce() && box && box.animate) {
     var mySeq = ++modalCloseSeq;
-    var closeAnim = box.animate([{ opacity: 1, transform: 'none' }, { opacity: 0, transform: 'scale(.96) translateY(6px)' }], { duration: 140, easing: 'ease-in' });
+    var closeAnim = box.animate([{ opacity: 1, transform: 'none' }, { opacity: 0, transform: 'scale(.97) translateY(4px)' }], { duration: 240, easing: 'cubic-bezier(.33,.8,.28,1)' });
     closeAnim.onfinish = function(){ if (mySeq === modalCloseSeq) finishClose(); };
     closeAnim.oncancel = function(){ if (mySeq === modalCloseSeq) finishClose(); };
   } else finishClose();
@@ -4467,7 +4503,7 @@ document.getElementById('btnAddDel').onclick = function(){
   var nr = document.querySelector('#delRows .del-row:last-child');
   if (nr && !sprReduce() && nr.animate) nr.animate(
     [{ transform: 'translateY(6px)' }, { transform: 'none' }],
-    { duration: 220, easing: 'cubic-bezier(.22,1,.36,1)' });
+    { duration: 220, easing: 'cubic-bezier(.33,.8,.28,1)' });
   syncP5Marks();
 };
 document.getElementById('btnSampleDel').onclick = function(){
@@ -4483,7 +4519,7 @@ document.getElementById('btnSampleDel').onclick = function(){
     for (var dri = 0; dri < dRows.length; dri++) {
       if (dRows[dri].animate) dRows[dri].animate(
         [{ transform: 'translateY(6px)' }, { transform: 'none' }],
-        { duration: 220, delay: dri * 35, easing: 'cubic-bezier(.22,1,.36,1)', fill: 'backwards' });
+        { duration: 220, delay: dri * 35, easing: 'cubic-bezier(.33,.8,.28,1)', fill: 'backwards' });
     }
   }
   syncP5Marks();
@@ -5092,22 +5128,29 @@ function preheatLayers(){
        说明建层与光栅化的收益在还原之前就已落袋。故此处让九个面板走同一条路径。
        注意：这里刻意不置 _paneSeen85 —— 它的语义是「已被真正切入过」，保持不变；
        hover 即时预热（warmSpeechPane85）也保留，那条路径紧接着就会点击进入，由 activate() 清理。 */
+    /* 极致栅格化：v12 的 opacity:0.01 叠放会让浏览器对近透明元素偷懒、跳过昂贵图层
+       （大数字文字阴影/渐变发光/clip-path）的完整像素光栅化，首次切到 gsl/speakers 仍冷编译。
+       改为真实离屏（left:-9999px）+ opacity:1 完全不透明，强制浏览器像正常页面一样完整光栅化，
+       两帧后无条件还原。这样「第一次切到某面板」与「第 N 次切到」GPU 缓存同样热。 */
+    p.style.position = 'absolute';
+    p.style.left = '-9999px';
     p.style.visibility = 'visible';
-    p.style.opacity = '0.01';
+    p.style.opacity = '1';
     p.style.pointerEvents = 'none';
     p.style.background = 'var(--card)';
+    p.style.zIndex = '-1';
     p.setAttribute('inert', '');
     p.setAttribute('aria-hidden', 'true');
-    /* 无条件恢复：清除绝不能被新序列守卫跳过，否则 inline visibility:visible 永久驻留，
-       叠加不透明面板底色后在 paneHost 高度区外绘制出旧栏目内容（残影）。
-       两帧已足够触发合成层建层与光栅化预热，之后必须还原为 hidden。
-       inert / aria-hidden 一并清除：这两个属性只服务于预热期的可访问性隔离，
-       留在未激活面板上会让首次切入时多一次属性变更与重算。 */
+    /* 两帧（layout + paint）后无条件还原为 hidden；离屏绝不可残留，否则 panel 驻留屏外。 */
+    void p.offsetHeight;
     requestAnimationFrame(function(){ requestAnimationFrame(function(){
+      p.style.position = '';
+      p.style.left = '';
       p.style.visibility = '';
       p.style.opacity = '';
       p.style.pointerEvents = '';
       p.style.background = '';
+      p.style.zIndex = '';
       p.removeAttribute('inert');
       p.removeAttribute('aria-hidden');
       if (seq === preheatSeq70i) queueIdleTask(step);
@@ -5245,7 +5288,7 @@ function completeTabSwitch(seq){
   clearTabSwitchWatchdog();
   if (_tabStartRaf) { cancelAnimationFrame(_tabStartRaf); _tabStartRaf = 0; }
   var win = document.getElementById('meetingWindow');
-  if (win) win.style.transform = '';
+  if (win) { win.style.transform = ''; win.style.opacity = ''; win.style.willChange = ''; }
   _lastWinAnim = null;
   _lastPaneAnim = null;
   _tabSwitching = false;
@@ -5267,6 +5310,23 @@ function settleTabSwitch(){
 }
 function queueWindowAnimation(seq, t, win, fromY, duration){
   _tabSwitching = true;
+  /* 读 :root 统一令牌（--ease-mac / --dur-win / --from-scale），弹窗CSS同用这些变量。
+     以后调窗口/弹窗手感只改 :root 这一处，JS与弹窗同时生效。 */
+  if (!queueWindowAnimation._tok) {
+    var te = 'cubic-bezier(.33,.8,.28,1)', td = 460, ts = 0.97;
+    try {
+      var cs = getComputedStyle(document.documentElement);
+      var e = cs.getPropertyValue('--ease-mac').trim();
+      var d = cs.getPropertyValue('--dur-win').trim();
+      var sc = cs.getPropertyValue('--from-scale').trim();
+      if (e) te = e;
+      if (d) td = parseFloat(d) * 1000;
+      if (sc) ts = parseFloat(sc);
+    } catch (e2) {}
+    queueWindowAnimation._tok = { ease: te, dur: td, scale: ts };
+  }
+  var TOK = queueWindowAnimation._tok;
+  if (!duration) duration = TOK.dur;
   /* 墙钟兜底必须在 rAF 之前武装：checkReady 本身依赖渲染帧，
      渲染帧不推进时它永远不会执行，只有与渲染帧无关的定时器才能兜住 */
   armTabSwitchWatchdog(seq, duration);
@@ -5280,8 +5340,18 @@ function queueWindowAnimation(seq, t, win, fromY, duration){
     if (duration <= 0) { completeTabSwitch(seq); return; }
     var an;
     try {
-      an = win.animate([{ transform: 'translateY(' + fromY.toFixed(3) + 'px)' }, { transform: 'none' }],
-        { duration: duration, easing: 'cubic-bezier(.22,1,.36,1)', fill: 'backwards' });
+      /* macOS聚焦+鸿蒙连贯：窗口从 translateY(6px) scale(.97) opacity(.96) 阻尼落定到清晰满尺寸，
+         同步阴影由浅转深=z轴抬升的层级感。9个栏目（含会议纪要长列表）走完全相同的这一条 WAAPI，
+         不再按面板高矮做差异化判断——这正是旧存档「从下往上浮出」的根因。
+         opacity只作用在窗口合成层，不重绘文字。 */
+      an = win.animate(
+        [
+          { transform: 'translateY(' + fromY.toFixed(3) + 'px) scale(' + TOK.scale + ')', opacity: .96,
+            boxShadow: '0 1px 4px rgba(8,54,90,.04), 0 4px 14px rgba(8,54,90,.05)' },
+          { transform: 'translateY(0px) scale(1)', opacity: 1,
+            boxShadow: '0 2px 6px rgba(8,54,90,.07), 0 14px 42px rgba(8,54,90,.13)' }
+        ],
+        { duration: duration, easing: TOK.ease, fill: 'backwards' });
     } catch (e) { completeTabSwitch(seq); return; }
     if (!an) { completeTabSwitch(seq); return; }
     _lastWinAnim = an;
@@ -5294,7 +5364,11 @@ function queueWindowAnimation(seq, t, win, fromY, duration){
     an.onfinish = done;
     an.oncancel = done;
   }
-  _tabStartRaf = requestAnimationFrame(checkReady);
+  /* 单一路径：唯一调用点 activate() 已在 requestAnimationFrame 内执行，
+     此处直接同步启动窗口动画，不再嵌套第二帧 rAF。
+     这样面板与窗口 WAAPI 动画在同一绘制帧起跑，
+     彻底消除「从 A 栏目冷切来」与「从 B 栏目热切来」面板/窗口相位不同的问题。 */
+  checkReady();
 }
 
 var TAB_KEYS = ['roll','gsl','speakers','motions','docvote','timer','docs','minutes','stats'];
@@ -5385,6 +5459,28 @@ function setTab(t){
         }
         onPane.style.animation = '';
         onPane.style.transform = '';
+        /* v37 一级卡片错峰：由编排器在activate统一驱动，translateY(4px)→0，
+           间隔30ms，总量≤120ms，冷热切/任意来源完全一致。内部文字表格不单独动。
+           所有栏目（含会议纪要长列表）走同一套：窗口已用 top center 锚定顶部，
+           卡片错峰不再造成「整体上浮」，因此不再对 minutes 单独排除。 */
+        if (!sprReduce()) {
+          var cards86 = onPane.querySelectorAll(':scope > .card, :scope > .summary-strip, :scope > .m-banner');
+          for (var ci86 = 0; ci86 < cards86.length && ci86 < 6; ci86++) {
+            var card86 = cards86[ci86];
+            try {
+              card86.style.willChange = 'transform';
+              var ca86 = card86.animate(
+                [{ transform: 'translateY(var(--stagger-y))', opacity: .96 },
+                 { transform: 'translateY(0)', opacity: 1 }],
+                { duration: 380, delay: ci86 * 30, easing: 'cubic-bezier(.33,.8,.28,1)', fill: 'backwards' });
+              (function(c){ return function(){ c.style.willChange=''; }; })(card86)(ca86.finished);
+            } catch (e) {}
+          }
+        }
+        /* v35 iOS式切页：面板不再做 opacity 淡入。
+           对大段文字/表格做 opacity 淡入会让文字在透明度变化时被反复重光栅化，
+           真机上发虚重影（录屏实证），结束时突然清晰=一闪一闪。
+           面板文字从第一帧就保持清晰，过场完全交给外层窗口的位移带动。 */
         var qLayers81 = onPane.querySelectorAll('.gr-items');
         for (var qi81 = 0; qi81 < qLayers81.length; qi81++) {
           var qLayer81 = qLayers81[qi81];
@@ -5395,13 +5491,7 @@ function setTab(t){
           qLayer81.style.transform = '';
         }
       }
-      if (!sprReduce() && onPane) {
-        var tgtBtn = document.querySelector('#tabs button[data-tab="' + t + '"]');
-        var ico = tgtBtn && tgtBtn.querySelector('.dk-ico');
-        if (ico && ico.animate) ico.animate(
-          [{ transform: 'scale(1)' }, { transform: 'scale(1.14)' }, { transform: 'scale(1)' }],
-          { duration: 190, delay: 280, easing: 'cubic-bezier(.34,1.56,.64,1)' }); 
-      }
+      /* 切页时不再给 Dock 图标加 scale 弹跳，控制台标识保持静止，避免一抖一抖 */
       scheduleDockGlide(t);
     }
     if (win) {
@@ -5411,13 +5501,15 @@ function setTab(t){
         win.classList.remove('swap');
         void win.offsetWidth;
         win.classList.add('swap');
-        setTimeout(function(){ completeTabSwitch(seq); }, 620);
+        setTimeout(function(){ completeTabSwitch(seq); }, 380);
       } else {
-        win.style.willChange = 'transform';
-        /* v10 根治：窗口动画单一路径——任何节奏下都从标准 14px 完整重播 620ms，
-           删除打断短行程/近尾直接落定两条岔路，保证九栏每次切页最终效果完全一致 */
-        win.style.transform = 'translateY(14px)';
-        queueWindowAnimation(seq, t, win, 14, 620);
+        win.style.willChange = 'transform, opacity';
+        /* 9个栏目统一从 translateY(6px) scale(.97) opacity(.96) 柔落定，
+           不再按面板高矮判断是否 scale（旧补丁的判断在切页瞬间读到的高度不可靠，
+           才是旧存档「从下往上浮出」的根因）。统一 scale 后 minutes 与其他栏目手感完全一致。 */
+        win.style.transform = 'translateY(6px) scale(.97)';
+        win.style.opacity = '.96';
+        queueWindowAnimation(seq, t, win, 6, 0);
       }
     } else {
       if (win) win.style.transform = '';
@@ -5426,9 +5518,14 @@ function setTab(t){
     window.scrollTo(0, t === 'minutes' ? (_tabScrollMem[t] || 0) : 0);
     syncStatusBar();
   }
-  /* 冷渲染时动画启动延后一帧：渲染/布局与动画首帧分离，动画帧零渲染负载；
-     已预热面板（常态）动画同步启动零延迟 */
-  if (__cold) requestAnimationFrame(activate); else activate();
+  /* 单一路径（极致统一）：冷渲与热切一律在此后的同一 rAF 帧执行 activate。
+     冷路径已在点击帧同步 renderTab + flush 布局，动画帧零渲染负载；
+     热切路径多等这一帧不增加任何渲染成本，换来「无论冷/热、无论从哪个栏目切来，
+     面板与窗口 WAAPI 永远同一帧起跑、同一最终态」。序号守卫防连切旧事务。 */
+  requestAnimationFrame(function(){
+    if (seq !== _winAnimSeq || state.tab !== t) return;
+    activate();
+  });
 }
 var pendingRenderTab = null, paneVer = {}, dataVer62 = 0;
 /* 进会预渲染标记：openMeeting 预渲 initTab 后，紧随的 setTab 跳过该面板的过期重渲 */
@@ -5981,7 +6078,7 @@ document.getElementById('rollList').addEventListener('click', function(e){
   b.className = parts[1] === 'P' ? 'on-p' : (parts[1] === 'PV' ? 'on-pv' : 'on-a');
   if (!sprReduce() && b.animate) b.animate(
     [{ transform: 'scale(.96)' }, { transform: 'scale(1.05)' }, { transform: 'scale(1)' }],
-    { duration: 210, easing: 'cubic-bezier(.34,1.56,.64,1)' });
+    { duration: 210, easing: 'cubic-bezier(.33,.8,.28,1)' });
   updateRollSummary(m);
   updateDockBadges(); syncLiveChips();
   m.updatedAt = nowStr(); saveMeetings(); syncUndoBtn();
@@ -6102,7 +6199,7 @@ function crossPlayAll(box, olds){
   var live = crossLiveKids(box);
   for (var k = 0; k < live.length; k++) { if (live[k].style) live[k].style.visibility = 'hidden'; }
   var ga = wrap.animate([{ opacity: 1, transform: 'none' }, { opacity: 0, transform: 'translateY(-2px)' }],
-    { duration: 240, easing: 'cubic-bezier(.16,1,.3,1)', fill: 'forwards' });
+    { duration: 300, easing: 'cubic-bezier(.33,.8,.28,1)', fill: 'forwards' });
   var cleanupDone = false;
   var cleanup = function(){
     if (cleanupDone) return; cleanupDone = true;
@@ -6115,7 +6212,7 @@ function crossPlayAll(box, olds){
   var revealTimer = setTimeout(function(){
     for (var k = 0; k < live.length; k++) { if (live[k].style) live[k].style.visibility = ''; }
     box.animate([{ transform: 'translateY(5px)' }, { transform: 'none' }],
-      { duration: 360, easing: 'cubic-bezier(.16,1,.3,1)', fill: 'backwards' });
+      { duration: 420, easing: 'cubic-bezier(.33,.8,.28,1)', fill: 'backwards' });
   }, 120);
   box._crossReveal = function(){
     cleanupDone = true;
@@ -6139,7 +6236,7 @@ function crossSwapCard(box, kids, idx, fresh){
   box.style.position = 'relative';
   crossGhostify(cur);
   var gf = cur.animate([{ opacity: 1, transform: 'none' }, { opacity: 0, transform: 'translateY(-3px)' }],
-    { duration: 240, easing: 'cubic-bezier(.16,1,.3,1)', fill: 'forwards' });
+    { duration: 300, easing: 'cubic-bezier(.33,.8,.28,1)', fill: 'forwards' });
   var done = false;
   var doSwap = function(){
     if (done) return; done = true;
@@ -6149,11 +6246,11 @@ function crossSwapCard(box, kids, idx, fresh){
     if (fresh.animate) {
       var fsubs = fresh.children;
       if (!fsubs.length) fresh.animate([{ transform: 'translateY(5px)' }, { transform: 'none' }],
-        { duration: 360, easing: 'cubic-bezier(.16,1,.3,1)', fill: 'backwards' });
+        { duration: 420, easing: 'cubic-bezier(.33,.8,.28,1)', fill: 'backwards' });
       for (var fi2 = 0; fi2 < fsubs.length; fi2++) {
         if (!fsubs[fi2].animate) continue;
         fsubs[fi2].animate([{ transform: 'translateY(5px)' }, { transform: 'none' }],
-          { duration: 360, easing: 'cubic-bezier(.16,1,.3,1)', fill: 'backwards' });
+          { duration: 420, easing: 'cubic-bezier(.33,.8,.28,1)', fill: 'backwards' });
       }
     }
     for (i = 0; i < afters.length; i++) {
@@ -6161,7 +6258,7 @@ function crossSwapCard(box, kids, idx, fresh){
       dy = afters[i].top - el.getBoundingClientRect().top;
       if (Math.abs(dy) > 0.5 && el.animate) el.animate(
         [{ transform: 'translateY(' + dy + 'px)' }, { transform: 'none' }],
-        { duration: 360, easing: 'cubic-bezier(.16,1,.3,1)' });
+        { duration: 420, easing: 'cubic-bezier(.33,.8,.28,1)' });
     }
     if (restorePos) box.style.position = '';
   };
@@ -6197,7 +6294,7 @@ function swapFlash(box, idTag, ghost){
     [{ transform: 'translateY(0px)', opacity: 1 },
      { transform: 'translateY(-7px)', opacity: 1, offset: 0.55 },
      { transform: 'translateY(-12px)', opacity: 0 }],
-    { duration: 360, easing: 'cubic-bezier(.16,1,.3,1)', fill: 'forwards' });
+    { duration: 420, easing: 'cubic-bezier(.33,.8,.28,1)', fill: 'forwards' });
   /* 新内容：同速从下方 12px 滑入归位（12→5→0，与旧字保持恒定 12px 间距），零透明度 */
   var kids = [];
   var n = box.firstElementChild;
@@ -6211,11 +6308,11 @@ function swapFlash(box, idTag, ghost){
     var subs = nc.children;
     if (!subs.length) {
       nc.animate([{ transform: 'translateY(12px)' }, { transform: 'translateY(5px)', offset: 0.55 }, { transform: 'none' }],
-        { duration: 360, easing: 'cubic-bezier(.16,1,.3,1)', fill: 'backwards' });
+        { duration: 420, easing: 'cubic-bezier(.33,.8,.28,1)', fill: 'backwards' });
     } else {
       for (var si = 0; si < subs.length; si++) {
         if (subs[si].animate) subs[si].animate([{ transform: 'translateY(12px)' }, { transform: 'translateY(5px)', offset: 0.55 }, { transform: 'none' }],
-          { duration: 360, easing: 'cubic-bezier(.16,1,.3,1)', fill: 'backwards' });
+          { duration: 420, easing: 'cubic-bezier(.33,.8,.28,1)', fill: 'backwards' });
       }
     }
   }
@@ -6513,7 +6610,7 @@ function paintQueue(container, items, emptyText){
         for (i = common; i < items.length; i++) {
           var qNew = buildQueueItem(items[i], i);
           wrap.appendChild(qNew);
-          if (!sprReduce() && qNew.animate) qNew.animate([{ transform: 'translateY(6px) scale(.97)' }, { transform: 'none' }], { duration: 220, easing: 'cubic-bezier(.22,1,.36,1)' });
+          if (!sprReduce() && qNew.animate) qNew.animate([{ transform: 'translateY(6px) scale(.97)' }, { transform: 'none' }], { duration: 220, easing: 'cubic-bezier(.33,.8,.28,1)' });
         }
         while (wrap.children.length > items.length) {
           var qDel = wrap.children[wrap.children.length - 1];
@@ -6575,7 +6672,7 @@ function paintQueue(container, items, emptyText){
             var dx = posQ[fp].l - r2.left, dy = posQ[fp].t - r2.top;
             if (Math.abs(dx) > 0.5 || Math.abs(dy) > 0.5) old[diff + fp].animate(
               [{ transform: 'translate(' + dx + 'px,' + dy + 'px)' }, { transform: 'none' }],
-              { duration: 240, easing: 'cubic-bezier(.22,1,.36,1)' });
+              { duration: 240, easing: 'cubic-bezier(.33,.8,.28,1)' });
           }
         }
         return;
@@ -6596,7 +6693,7 @@ function paintQueue(container, items, emptyText){
   if (frag.style) frag.style.willChange = 'transform';
   if (!sprReduce() && frag.animate && !tabSwitching) {
     frag.animate([{ transform: 'translateY(6px)' }, { transform: 'none' }],
-      { duration: 450, easing: 'cubic-bezier(.39,.575,.565,1)', fill: 'backwards' });
+      { duration: 450, easing: 'cubic-bezier(.33,.8,.28,1)', fill: 'backwards' });
   }
 }
 function paintCaucusRemaining(m){
@@ -6798,6 +6895,15 @@ function renderSpeakers(m){
 document.getElementById('btnSpkAdd').onclick = function(){
   var m = cur(); if (!m) return;
   if (guardSuspended(m)) return;
+  var cc = m.modCaucus;
+  var caucusOn = !!(cc && cc.active);
+  var soloSpeech = !!(m.spkList && m.spkList.some(function(s){ return s.solo && !s.done; }));
+  /* 发言名单只服务于「有主持核心磋商」与「个人演讲」。两者均未激活时，
+     手动加入国家没有计时上下文，直接拦截并提示先走对应动议流程。 */
+  if (!caucusOn && !soloSpeech) {
+    toast(t('请先通过「有主持核心磋商」或「个人演讲」动议，再加入国家'));
+    return;
+  }
   var delId = document.getElementById('spkSelect').value;
   if (!delId) { shakeEl(document.getElementById('spkSelect')); toast(t('请先添加代表团')); return; }
   var cc = m.modCaucus;
@@ -7301,7 +7407,30 @@ function renderDocVote(m){
     html += docVoteResultCard(m, rec, hist);
   }
   box.innerHTML = html;
-  if (!sprReduce() && box.querySelector('.c-bar-v')) {
+  /* 结果「渲染过程」：旧系统做法是数字从0滚动 + 门槛条形从左向右生长（barIn），
+     而不是整块一次性砸出。只在刚宣布/回看历史时播放；切页进入本栏目直接显示终值，不重播。 */
+  var revealNow = !!window._dvRevealPending;
+  window._dvRevealPending = false;
+  if (revealNow && !sprReduce()) {
+    /* 票型环形图：旧系统是静态的，这里让它和条形同步从中心画出（图形，opacity不发虚） */
+    var donut = box.querySelector('.c-donut');
+    if (donut && donut.animate) {
+      donut.style.transformOrigin = 'center center';
+      var da = donut.animate(
+        [{ transform: 'scale(.8)', opacity: 0 }, { transform: 'scale(1)', opacity: 1 }],
+        { duration: 420, easing: 'cubic-bezier(.33,.8,.28,1)', fill: 'backwards' });
+      da.onfinish = function(){ donut.style.transform=''; donut.style.opacity=''; };
+    }
+    var bars = box.querySelectorAll('.c-bar-tr i');
+    for (var bi = 0; bi < bars.length; bi++) {
+      bars[bi].style.transformOrigin = 'left center';
+      var ba = bars[bi].animate(
+        [{ transform: 'scaleX(0)' }, { transform: 'scaleX(1)' }],
+        { duration: 520, delay: bi * 60, easing: 'cubic-bezier(.33,.8,.28,1)', fill: 'backwards' });
+      (function(el){ ba.onfinish = function(){ el.style.transform=''; }; })(bars[bi]);
+    }
+  }
+  if (revealNow && !sprReduce() && box.querySelector('.c-bar-v')) {
     var counters = box.querySelectorAll('.c-bar-v');
     var t0c = performance.now(), durC = 700;
     (function stepCount(now){
@@ -7340,6 +7469,7 @@ function renderDocVote(m){
   box.querySelectorAll('[data-dvh]').forEach(function(btn){
     btn.onclick = function(){
       docVoteViewId = this.getAttribute('data-dvh') || null;
+      window._dvRevealPending = true;   /* 回看历史结果同样走渐进揭示，不直接跳换全部数据 */
       var mm = cur(); if (mm) renderDocVote(mm);
     };
   });
@@ -7439,6 +7569,8 @@ function finishDocVote(m){
     log(m, t('实质性表决文件结果') + '：' + doc.type + '《' + doc.title + '》 ' + t('赞成') + ' ' + c.y + '、' + t('反对') + ' ' + c.n + '、' + t('弃权') + ' ' + c.ab
       + '（' + docVoteRuleText(m, dv.final) + '）—— ' + reason);
   }
+  /* 宣布结果时触发渐进揭示：结果横幅与票数先出现，详情区稍后淡入，不一次性砸出全部数据 */
+  window._dvRevealPending = true;
   m.updatedAt = nowStr(); saveMeetings(); renderDocVote(m); renderDocs(m); renderMinutes(m); renderStats(m);
   toast(passed ? t('文件通过') : (vetoedBy.length ? t('否决权已行使，文件被否决') : (abBlocked ? t('弃权已达简单多数，文件未通过') : t('文件未通过'))));
 }
@@ -7894,12 +8026,12 @@ function renderMotions(m){
       var dy2 = beforeTops[fi] - kids[fi].getBoundingClientRect().top;
       if (Math.abs(dy2) > 0.5) kids[fi].animate(
         [{ transform: 'translateY(' + dy2 + 'px)' }, { transform: 'none' }],
-        { duration: 240, easing: 'cubic-bezier(.22,1,.36,1)' });
+        { duration: 240, easing: 'cubic-bezier(.33,.8,.28,1)' });
     }
     try { syncLiveChips(); updateDockBadges(); } catch (e) {  }
     return;
   }
-  /* 其余情况（删除/重排）：交叉淡化整体重建——旧列表定格为覆盖层淡出，新列表 rowInR 其下入场 */
+  /* 其余情况（删除/重排）：交叉淡化整体重建——旧列表定格为覆盖层淡出，新列表其下入场 */
   var olds = kids;
   for (var ri = 0; ri < olds.length; ri++) box.removeChild(olds[ri]);
   var html = '';
@@ -8610,11 +8742,11 @@ function renderDocs(m){
       var dy2 = beforeTops[fi] - kids[fi].getBoundingClientRect().top;
       if (Math.abs(dy2) > 0.5) kids[fi].animate(
         [{ transform: 'translateY(' + dy2 + 'px)' }, { transform: 'none' }],
-        { duration: 240, easing: 'cubic-bezier(.22,1,.36,1)' });
+        { duration: 240, easing: 'cubic-bezier(.33,.8,.28,1)' });
     }
     return;
   }
-  /* 整体重建兜底（删除/重排）：交叉淡化——旧列表定格为覆盖层淡出，新列表 rowInR 其下入场 */
+  /* 整体重建兜底（删除/重排）：交叉淡化——旧列表定格为覆盖层淡出，新列表其下入场 */
   var olds = kids;
   for (var ri = 0; ri < olds.length; ri++) box.removeChild(olds[ri]);
   var htmlAll = '';
@@ -9457,9 +9589,11 @@ function renderStats(m){
     ak = m.awards[kh];
     (awMap[ak.delId] || (awMap[ak.delId] = [])).push(ak.title);
   }
-  var rows = '<tr><th>' + t('代表团') + '</th><th>' + t('点名状态') + '</th><th>' + t('发言次数') + '</th><th>'
-    + t('参与表决') + '</th><th>' + t('赞助文件') + '</th><th>' + t('获奖') + '</th></tr>';
-  for (var i = 0; i < m.delegates.length; i++) {
+  function statsHeader(){
+    return '<tr><th>' + t('代表团') + '</th><th>' + t('点名状态') + '</th><th>' + t('发言次数') + '</th><th>'
+      + t('参与表决') + '</th><th>' + t('赞助文件') + '</th><th>' + t('获奖') + '</th></tr>';
+  }
+  function statsRow(i){
     var d = m.delegates[i], st = m.stats[d.id] || { speeches: 0, votes: 0 };
     var docs = 0, cn = d.country || '';
     for (var j = 0; j < docHay.length; j++) {
@@ -9468,15 +9602,19 @@ function renderStats(m){
     var aw = awMap[d.id] || [];
     var rollTxt = d.roll === 'P' ? t('出席')
       : (d.roll === 'PV' ? t('出席并投票') : (d.roll === 'A' ? t('缺席') : t('未点名')));
-    rows += '<tr><td>' + esc(cnShort(d.country)) + '</td><td>' + rollTxt + '</td><td>' + st.speeches + '</td><td>' + st.votes + '</td><td>' + docs + '</td><td>'
+    return '<tr><td>' + esc(cnShort(d.country)) + '</td><td>' + rollTxt + '</td><td>' + st.speeches + '</td><td>' + st.votes + '</td><td>' + docs + '</td><td>'
       + (aw.length ? esc(aw.map(function(x){ return t(x); }).join(LANG === 'en' ? ', ' : '、')) : '-') + '</td></tr>';
   }
   var stBox = document.getElementById('statsTable');
   if (stBox) {
-    var stSig = sig113;   
-    if (!renderGuardSame('statsTable', m, stSig)) {
+    /* 全量渲染：35 行纯文本表 DOM 成本低，切页期间 innerHTML 只在签名变化时写一次。
+       旧版虚拟滚动的占位行重建会冲掉 scrollTop、scroll 监听反复重绘，导致切页淡入期
+       表格在开头段/中段两套内容间循环、表头忽隐忽现（真机实拍可见闪烁），故撤销。 */
+    if (!renderGuardSame('statsTable', m, sig113)) {
+      var rows = statsHeader();
+      for (var i = 0; i < m.delegates.length; i++) rows += statsRow(i);
       stBox.innerHTML = rows;
-      renderGuardPut('statsTable', m, stSig);
+      renderGuardPut('statsTable', m, sig113);
     }
   }
   var html = '';   
@@ -9553,7 +9691,11 @@ function tickClock(){
     : d.getFullYear() + ' 年 ' + (d.getMonth() + 1) + ' 月 ' + d.getDate() + ' 日';
   el.textContent = datePart + ' ' + wd + ' ' + p(d.getHours()) + ':' + p(d.getMinutes());
 }
-tickClock(); setInterval(tickClock, 15000);
+tickClock();
+/* 每秒轻量检查一次，分钟数变了才写DOM；回前台/投屏切回立即刷新，避免与系统时间脱节 */
+setInterval(tickClock, 1000);
+document.addEventListener('visibilitychange', function(){ if (!document.hidden) tickClock(); });
+window.addEventListener('focus', tickClock);
 /* 桌面磁贴：使用指引 / 关于社团 */
 document.getElementById('btnGuide').onclick = function(){
   askInfo(t('使用指引'), '<b>' + t('会议流程') + '</b><ul>'
@@ -9706,6 +9848,55 @@ function sprBump(el){
   }
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', boot);
   else boot();
+})();
+/* ===== v33 真机自检面板（Ctrl+Shift+F 呼出）：让你在 Edge/QQ 当场读帧数 ===== */
+(function(){
+  var box = document.createElement('div');
+  box.id = 'v33PerfPanel';
+  box.style.cssText = 'position:fixed;right:10px;bottom:10px;z-index:99999;background:rgba(10,12,18,.88);color:#7CFC9A;font:12px/1.5 ui-monospace,Menlo,Consolas,monospace;padding:8px 11px;border-radius:8px;min-width:230px;display:none;pointer-events:auto;box-shadow:0 4px 18px rgba(0,0,0,.4);white-space:pre;';
+  document.body.appendChild(box);
+  var durs = []; var last = 0; var slow20 = 0, slow28 = 0, maxGap = 0, frames = 0;
+  var degraded = false;
+  function loop(ts){
+    if (last){ var g = ts - last; if (g > 0){ durs.push(g); if (g > 20) slow20++; if (g > 28){ slow28++; if (g > maxGap) maxGap = g; } frames++; } }
+    last = ts;
+    if (durs.length > 180) durs.splice(0, durs.length - 180);
+    /* 自适应降级：近 180 帧（约3秒）里 >28ms 慢帧占比 ≥50%，判定为持续掉帧，
+       自动加 body.motion-reduced 把运动过程瞬时化。阈值取高（半屏帧都慢才触发），
+       正常流畅机与偶发高负载绝不误降级，只有真弱机才介入。 */
+    if (!degraded && durs.length >= 120){
+      var over = 0; for (var di = 0; di < durs.length; di++) if (durs[di] > 28) over++;
+      if (over >= durs.length * 0.5) { degraded = true; document.body.classList.add('motion-reduced'); }
+    }
+    requestAnimationFrame(loop);
+  }
+  requestAnimationFrame(loop);
+  var shown = false;
+  window.addEventListener('keydown', function(e){
+    if (e.ctrlKey && e.shiftKey && (e.key === 'F' || e.key === 'f')){
+      e.preventDefault(); shown = !shown;
+      box.style.display = shown ? 'block' : 'none';
+      slow20 = 0; slow28 = 0; maxGap = 0; frames = 0; durs.length = 0;
+    }
+  });
+  setInterval(function(){
+    if (!shown) return;
+    var n = durs.length;
+    var avg = n ? (durs.reduce(function(a,b){return a+b;},0)/n) : 0;
+    var fps = avg > 0 ? Math.round(1000/avg) : 0;
+    var win = document.getElementById('meetingWindow');
+    var tab = (typeof state !== 'undefined' && state.tab) ? state.tab : '-';
+    var frozen = win ? win.classList.contains('frozen') : false;
+    var switching = (typeof _tabSwitching !== 'undefined') ? _tabSwitching : false;
+    box.textContent =
+      'FPS        ' + fps + (fps >= 55 ? '  ✅' : fps >= 30 ? '  🟡' : '  🔴') + '\n' +
+      '最大间隔   ' + (maxGap ? maxGap.toFixed(0)+'ms' : '-') + '\n' +
+      '慢帧>20ms  ' + slow20 + '   >28ms  ' + slow28 + '\n' +
+      '档位       ' + (degraded ? 'C 掉帧已降级(瞬时)' : 'A 满血') + '\n' +
+      '当前栏目   ' + tab + '   切页中:' + (switching?'是':'否') + '\n' +
+      'frozen     ' + (frozen?'是(动画中)':'否') + '\n' +
+      '—— Ctrl+Shift+F 隐藏';
+  }, 400);
 })();
 </script>
 <div id="printReport"></div>
