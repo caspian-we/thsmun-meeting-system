@@ -385,7 +385,7 @@ table.stats th{background:#eef6fc; color:var(--un-deep);}
 .dock-glide{ position:absolute; left:10px; right:10px; top:0; height:46px; border-radius:9px;
   background:transparent; box-shadow:none;
   pointer-events:none; z-index:0; opacity:0;
-  transition:transform .45s cubic-bezier(.33,.8,.28,1), opacity .2s; } 
+  transition:transform .45s var(--ease-mac), opacity .2s; } 
 .dock-glide.no-anim{ transition:none; }
 .dock button .dk-ico{ font-size:15px; width:20px; text-align:center; flex:none; filter:saturate(.9); }
 /* 计时器 Dock 标签每秒追加剩余秒数，等宽数字避免标签宽度每秒跳动 */
@@ -996,7 +996,7 @@ body.projector .dv-roster{ grid-template-columns:repeat(auto-fill,minmax(300px,1
   .dv-hist,.dv-result,.dv-detail,.dv-charts,.dv-charts .c-panel,.dv-roster,
   .c-bar-row{ animation:none; }
   .c-bar-tr i{ animation:none; }
-  .dock-glide{ transition:transform .45s cubic-bezier(.33,.8,.28,1), opacity .2s !important; }
+  .dock-glide{ transition:transform .45s var(--ease-mac), opacity .2s !important; }
 }
 /* 1) 外壳禁止选中文本 —— 真实系统中标题栏、Dock、按钮、徽标均不可选中，
       只有内容区（纪要 .min-line、预览正文、表格、输入框）可选中复制。
@@ -1619,8 +1619,8 @@ body:not(.dark):has(#view-home.active).geo-resizing{ background:var(--bg) !impor
 .sb-chip.warn{ background:rgba(192,57,43,.92); color:#fff; animation:chipBreath 1.8s ease-in-out infinite; }
 body.dark .sb-chip.warn{ background:rgba(239,122,108,.85); color:#1a0505; }
 @keyframes chipBreath{ 0%,100%{ opacity:1; } 50%{ opacity:.76; } }
-::view-transition-old(root){ animation-duration:.30s; animation-timing-function:cubic-bezier(.33,.8,.28,1); }
-::view-transition-new(root){ animation-duration:.30s; animation-timing-function:cubic-bezier(.33,.8,.28,1); }
+::view-transition-old(root){ animation-duration:.30s; animation-timing-function:var(--ease-mac); }
+::view-transition-new(root){ animation-duration:.30s; animation-timing-function:var(--ease-mac); }
 html.vt-lock, html.vt-lock *, html.vt-lock *::before, html.vt-lock *::after{ transition:none !important; }
 /* 所有栏目卡片统一 hover 上浮（--hover-lift），不再按栏目禁掉 transform。
    此前这里曾把 stats/minutes/docvote 卡片 hover 强制 transform:none，
@@ -2032,6 +2032,9 @@ body.dark .sb-chip.live.ph-roll{ background:rgba(67,201,138,.88); color:#06170f;
 <button type="button" id="dockExpand" data-i18n-title="展开侧边栏" title="展开侧边栏">»</button>
 <script>
 'use strict';
+/* 全站统一 macOS 缓动曲线（与 :root 的 --ease-mac 同步），WAAPI 里统一引用此常量，
+   不再硬编码字符串，以后调手感只改 :root 和这里两处。 */
+var EASE_MAC = 'cubic-bezier(.33,.8,.28,1)';
 var LS_KEY = 'thsmun_meetings_v1';
 var DATA_VER = 2;
 function normalizeMeetingData(m){
@@ -3494,7 +3497,7 @@ function applyProjector(on){
       try {
         stage.animate(
           [{ opacity: .35, transform: 'scale(.995)' }, { opacity: 1, transform: 'scale(1)' }],
-          { duration: 340, easing: 'cubic-bezier(.33,.8,.28,1)' });
+          { duration: 340, easing: EASE_MAC });
       } catch (e) {}
     }
   }
@@ -3789,7 +3792,7 @@ function show(view){
               { transform: 'translateY(6px) scale(.97)', opacity: .96 },
               { transform: 'translateY(0) scale(1)', opacity: 1 }
             ],
-            { duration: 460, easing: 'cubic-bezier(.33,.8,.28,1)', fill: 'backwards' });
+            { duration: 460, easing: EASE_MAC, fill: 'backwards' });
         } catch (e) {}
       });
     })(view);
@@ -3924,15 +3927,13 @@ function syncLiveChips(){
   var qvTxt = presentCount(m) + '/' + m.delegates.length;
   if (qv.textContent !== qvTxt) {
     qv.textContent = qvTxt;
-    if (!sprReduce() && qv.animate) qv.animate([{ transform: 'scale(1)' }, { transform: 'scale(1.2)' }, { transform: 'scale(1)' }], { duration: 200, easing: 'cubic-bezier(.33,.8,.28,1)' });
   }
   quorum.childNodes[0].nodeValue = t('法定') + ' ';
 }
 function updateDockBadges(){
   var m = cur();
-  function setB(id, n){ var el = document.getElementById(id); if (!el) return; var vs = n > 99 ? '99+' : String(n); if (el.textContent !== vs) { el.textContent = vs; if (!sprReduce() && el.animate) el.animate([{ transform: 'scale(1)' }, { transform: 'scale(1.15)' }, { transform: 'scale(1)' }], { duration: 200, easing: 'cubic-bezier(.33,.8,.28,1)' }); }
-  var wasOn = el.classList.contains('on'); el.classList.toggle('on', n > 0);
-  if (n > 0 && !wasOn && !sprReduce() && el.animate) el.animate([{ transform: 'scale(.4)' }, { transform: 'scale(1)' }], { duration: 200, easing: 'cubic-bezier(.33,.8,.28,1)' }); }
+  function setB(id, n){ var el = document.getElementById(id); if (!el) return; var vs = n > 99 ? '99+' : String(n); if (el.textContent !== vs) { el.textContent = vs; }
+  var wasOn = el.classList.contains('on'); el.classList.toggle('on', n > 0); }
   if (!m) { setB('badge-roll', 0); setB('badge-gsl', 0); setB('badge-speakers', 0); setB('badge-motions', 0); setB('badge-docvote', 0); setB('badge-docs', 0); return; }
   var pendingRoll = 0;
   for (var i = 0; i < m.delegates.length; i++) if (!m.delegates[i].roll) pendingRoll++;
@@ -4003,7 +4004,7 @@ function closeModal(){
   };
   if (mask.classList.contains('on') && !sprReduce() && box && box.animate) {
     var mySeq = ++modalCloseSeq;
-    var closeAnim = box.animate([{ opacity: 1, transform: 'none' }, { opacity: 0, transform: 'scale(.97) translateY(4px)' }], { duration: 240, easing: 'cubic-bezier(.33,.8,.28,1)' });
+    var closeAnim = box.animate([{ opacity: 1, transform: 'none' }, { opacity: 0, transform: 'scale(.97) translateY(4px)' }], { duration: 240, easing: EASE_MAC });
     closeAnim.onfinish = function(){ if (mySeq === modalCloseSeq) finishClose(); };
     closeAnim.oncancel = function(){ if (mySeq === modalCloseSeq) finishClose(); };
   } else finishClose();
@@ -4503,7 +4504,7 @@ document.getElementById('btnAddDel').onclick = function(){
   var nr = document.querySelector('#delRows .del-row:last-child');
   if (nr && !sprReduce() && nr.animate) nr.animate(
     [{ transform: 'translateY(6px)' }, { transform: 'none' }],
-    { duration: 220, easing: 'cubic-bezier(.33,.8,.28,1)' });
+    { duration: 220, easing: EASE_MAC });
   syncP5Marks();
 };
 document.getElementById('btnSampleDel').onclick = function(){
@@ -4519,7 +4520,7 @@ document.getElementById('btnSampleDel').onclick = function(){
     for (var dri = 0; dri < dRows.length; dri++) {
       if (dRows[dri].animate) dRows[dri].animate(
         [{ transform: 'translateY(6px)' }, { transform: 'none' }],
-        { duration: 220, delay: dri * 35, easing: 'cubic-bezier(.33,.8,.28,1)', fill: 'backwards' });
+        { duration: 220, delay: dri * 35, easing: EASE_MAC, fill: 'backwards' });
     }
   }
   syncP5Marks();
@@ -5313,7 +5314,7 @@ function queueWindowAnimation(seq, t, win, fromY, duration){
   /* 读 :root 统一令牌（--ease-mac / --dur-win / --from-scale），弹窗CSS同用这些变量。
      以后调窗口/弹窗手感只改 :root 这一处，JS与弹窗同时生效。 */
   if (!queueWindowAnimation._tok) {
-    var te = 'cubic-bezier(.33,.8,.28,1)', td = 460, ts = 0.97;
+    var te = EASE_MAC, td = 460, ts = 0.97;
     try {
       var cs = getComputedStyle(document.documentElement);
       var e = cs.getPropertyValue('--ease-mac').trim();
@@ -5472,7 +5473,7 @@ function setTab(t){
               var ca86 = card86.animate(
                 [{ transform: 'translateY(var(--stagger-y))', opacity: .96 },
                  { transform: 'translateY(0)', opacity: 1 }],
-                { duration: 380, delay: ci86 * 30, easing: 'cubic-bezier(.33,.8,.28,1)', fill: 'backwards' });
+                { duration: 380, delay: ci86 * 30, easing: EASE_MAC, fill: 'backwards' });
               (function(c){ return function(){ c.style.willChange=''; }; })(card86)(ca86.finished);
             } catch (e) {}
           }
@@ -6078,7 +6079,7 @@ document.getElementById('rollList').addEventListener('click', function(e){
   b.className = parts[1] === 'P' ? 'on-p' : (parts[1] === 'PV' ? 'on-pv' : 'on-a');
   if (!sprReduce() && b.animate) b.animate(
     [{ transform: 'scale(.96)' }, { transform: 'scale(1.05)' }, { transform: 'scale(1)' }],
-    { duration: 210, easing: 'cubic-bezier(.33,.8,.28,1)' });
+    { duration: 210, easing: EASE_MAC });
   updateRollSummary(m);
   updateDockBadges(); syncLiveChips();
   m.updatedAt = nowStr(); saveMeetings(); syncUndoBtn();
@@ -6199,7 +6200,7 @@ function crossPlayAll(box, olds){
   var live = crossLiveKids(box);
   for (var k = 0; k < live.length; k++) { if (live[k].style) live[k].style.visibility = 'hidden'; }
   var ga = wrap.animate([{ opacity: 1, transform: 'none' }, { opacity: 0, transform: 'translateY(-2px)' }],
-    { duration: 300, easing: 'cubic-bezier(.33,.8,.28,1)', fill: 'forwards' });
+    { duration: 300, easing: EASE_MAC, fill: 'forwards' });
   var cleanupDone = false;
   var cleanup = function(){
     if (cleanupDone) return; cleanupDone = true;
@@ -6212,7 +6213,7 @@ function crossPlayAll(box, olds){
   var revealTimer = setTimeout(function(){
     for (var k = 0; k < live.length; k++) { if (live[k].style) live[k].style.visibility = ''; }
     box.animate([{ transform: 'translateY(5px)' }, { transform: 'none' }],
-      { duration: 420, easing: 'cubic-bezier(.33,.8,.28,1)', fill: 'backwards' });
+      { duration: 420, easing: EASE_MAC, fill: 'backwards' });
   }, 120);
   box._crossReveal = function(){
     cleanupDone = true;
@@ -6236,7 +6237,7 @@ function crossSwapCard(box, kids, idx, fresh){
   box.style.position = 'relative';
   crossGhostify(cur);
   var gf = cur.animate([{ opacity: 1, transform: 'none' }, { opacity: 0, transform: 'translateY(-3px)' }],
-    { duration: 300, easing: 'cubic-bezier(.33,.8,.28,1)', fill: 'forwards' });
+    { duration: 300, easing: EASE_MAC, fill: 'forwards' });
   var done = false;
   var doSwap = function(){
     if (done) return; done = true;
@@ -6246,11 +6247,11 @@ function crossSwapCard(box, kids, idx, fresh){
     if (fresh.animate) {
       var fsubs = fresh.children;
       if (!fsubs.length) fresh.animate([{ transform: 'translateY(5px)' }, { transform: 'none' }],
-        { duration: 420, easing: 'cubic-bezier(.33,.8,.28,1)', fill: 'backwards' });
+        { duration: 420, easing: EASE_MAC, fill: 'backwards' });
       for (var fi2 = 0; fi2 < fsubs.length; fi2++) {
         if (!fsubs[fi2].animate) continue;
         fsubs[fi2].animate([{ transform: 'translateY(5px)' }, { transform: 'none' }],
-          { duration: 420, easing: 'cubic-bezier(.33,.8,.28,1)', fill: 'backwards' });
+          { duration: 420, easing: EASE_MAC, fill: 'backwards' });
       }
     }
     for (i = 0; i < afters.length; i++) {
@@ -6258,7 +6259,7 @@ function crossSwapCard(box, kids, idx, fresh){
       dy = afters[i].top - el.getBoundingClientRect().top;
       if (Math.abs(dy) > 0.5 && el.animate) el.animate(
         [{ transform: 'translateY(' + dy + 'px)' }, { transform: 'none' }],
-        { duration: 420, easing: 'cubic-bezier(.33,.8,.28,1)' });
+        { duration: 420, easing: EASE_MAC });
     }
     if (restorePos) box.style.position = '';
   };
@@ -6294,7 +6295,7 @@ function swapFlash(box, idTag, ghost){
     [{ transform: 'translateY(0px)', opacity: 1 },
      { transform: 'translateY(-7px)', opacity: 1, offset: 0.55 },
      { transform: 'translateY(-12px)', opacity: 0 }],
-    { duration: 420, easing: 'cubic-bezier(.33,.8,.28,1)', fill: 'forwards' });
+    { duration: 420, easing: EASE_MAC, fill: 'forwards' });
   /* 新内容：同速从下方 12px 滑入归位（12→5→0，与旧字保持恒定 12px 间距），零透明度 */
   var kids = [];
   var n = box.firstElementChild;
@@ -6308,11 +6309,11 @@ function swapFlash(box, idTag, ghost){
     var subs = nc.children;
     if (!subs.length) {
       nc.animate([{ transform: 'translateY(12px)' }, { transform: 'translateY(5px)', offset: 0.55 }, { transform: 'none' }],
-        { duration: 420, easing: 'cubic-bezier(.33,.8,.28,1)', fill: 'backwards' });
+        { duration: 420, easing: EASE_MAC, fill: 'backwards' });
     } else {
       for (var si = 0; si < subs.length; si++) {
         if (subs[si].animate) subs[si].animate([{ transform: 'translateY(12px)' }, { transform: 'translateY(5px)', offset: 0.55 }, { transform: 'none' }],
-          { duration: 420, easing: 'cubic-bezier(.33,.8,.28,1)', fill: 'backwards' });
+          { duration: 420, easing: EASE_MAC, fill: 'backwards' });
       }
     }
   }
@@ -6610,7 +6611,7 @@ function paintQueue(container, items, emptyText){
         for (i = common; i < items.length; i++) {
           var qNew = buildQueueItem(items[i], i);
           wrap.appendChild(qNew);
-          if (!sprReduce() && qNew.animate) qNew.animate([{ transform: 'translateY(6px) scale(.97)' }, { transform: 'none' }], { duration: 220, easing: 'cubic-bezier(.33,.8,.28,1)' });
+          if (!sprReduce() && qNew.animate) qNew.animate([{ transform: 'translateY(6px) scale(.97)' }, { transform: 'none' }], { duration: 220, easing: EASE_MAC });
         }
         while (wrap.children.length > items.length) {
           var qDel = wrap.children[wrap.children.length - 1];
@@ -6672,7 +6673,7 @@ function paintQueue(container, items, emptyText){
             var dx = posQ[fp].l - r2.left, dy = posQ[fp].t - r2.top;
             if (Math.abs(dx) > 0.5 || Math.abs(dy) > 0.5) old[diff + fp].animate(
               [{ transform: 'translate(' + dx + 'px,' + dy + 'px)' }, { transform: 'none' }],
-              { duration: 240, easing: 'cubic-bezier(.33,.8,.28,1)' });
+              { duration: 240, easing: EASE_MAC });
           }
         }
         return;
@@ -6692,8 +6693,12 @@ function paintQueue(container, items, emptyText){
   var tabSwitching = (typeof _tabSwitching !== 'undefined' && _tabSwitching);
   if (frag.style) frag.style.willChange = 'transform';
   if (!sprReduce() && frag.animate && !tabSwitching) {
-    frag.animate([{ transform: 'translateY(6px)' }, { transform: 'none' }],
-      { duration: 450, easing: 'cubic-bezier(.33,.8,.28,1)', fill: 'backwards' });
+    var fragAnim = frag.animate([{ transform: 'translateY(6px)' }, { transform: 'none' }],
+      { duration: 450, easing: EASE_MAC, fill: 'backwards' });
+    /* 动画结束后收回 will-change，避免常驻合成层 */
+    fragAnim.finished.then(function(){ frag.style.willChange = ''; }).catch(function(){});
+  } else if (frag.style) {
+    frag.style.willChange = '';
   }
 }
 function paintCaucusRemaining(m){
@@ -7418,7 +7423,7 @@ function renderDocVote(m){
       donut.style.transformOrigin = 'center center';
       var da = donut.animate(
         [{ transform: 'scale(.8)', opacity: 0 }, { transform: 'scale(1)', opacity: 1 }],
-        { duration: 420, easing: 'cubic-bezier(.33,.8,.28,1)', fill: 'backwards' });
+        { duration: 420, easing: EASE_MAC, fill: 'backwards' });
       da.onfinish = function(){ donut.style.transform=''; donut.style.opacity=''; };
     }
     var bars = box.querySelectorAll('.c-bar-tr i');
@@ -7426,7 +7431,7 @@ function renderDocVote(m){
       bars[bi].style.transformOrigin = 'left center';
       var ba = bars[bi].animate(
         [{ transform: 'scaleX(0)' }, { transform: 'scaleX(1)' }],
-        { duration: 520, delay: bi * 60, easing: 'cubic-bezier(.33,.8,.28,1)', fill: 'backwards' });
+        { duration: 520, delay: bi * 60, easing: EASE_MAC, fill: 'backwards' });
       (function(el){ ba.onfinish = function(){ el.style.transform=''; }; })(bars[bi]);
     }
   }
@@ -8026,7 +8031,7 @@ function renderMotions(m){
       var dy2 = beforeTops[fi] - kids[fi].getBoundingClientRect().top;
       if (Math.abs(dy2) > 0.5) kids[fi].animate(
         [{ transform: 'translateY(' + dy2 + 'px)' }, { transform: 'none' }],
-        { duration: 240, easing: 'cubic-bezier(.33,.8,.28,1)' });
+        { duration: 240, easing: EASE_MAC });
     }
     try { syncLiveChips(); updateDockBadges(); } catch (e) {  }
     return;
@@ -8742,7 +8747,7 @@ function renderDocs(m){
       var dy2 = beforeTops[fi] - kids[fi].getBoundingClientRect().top;
       if (Math.abs(dy2) > 0.5) kids[fi].animate(
         [{ transform: 'translateY(' + dy2 + 'px)' }, { transform: 'none' }],
-        { duration: 240, easing: 'cubic-bezier(.33,.8,.28,1)' });
+        { duration: 240, easing: EASE_MAC });
     }
     return;
   }
@@ -9877,10 +9882,13 @@ function sprBump(el){
       e.preventDefault(); shown = !shown;
       box.style.display = shown ? 'block' : 'none';
       slow20 = 0; slow28 = 0; maxGap = 0; frames = 0; durs.length = 0;
+      /* 面板隐藏时停掉文本刷新定时器，显示时再启动，避免隐藏时空转 */
+      if (fpsTimer) { clearInterval(fpsTimer); fpsTimer = null; }
+      if (shown) fpsTimer = setInterval(refreshFpsPanel, 400);
     }
   });
-  setInterval(function(){
-    if (!shown) return;
+  var fpsTimer = null;
+  function refreshFpsPanel(){
     var n = durs.length;
     var avg = n ? (durs.reduce(function(a,b){return a+b;},0)/n) : 0;
     var fps = avg > 0 ? Math.round(1000/avg) : 0;
@@ -9896,7 +9904,7 @@ function sprBump(el){
       '当前栏目   ' + tab + '   切页中:' + (switching?'是':'否') + '\n' +
       'frozen     ' + (frozen?'是(动画中)':'否') + '\n' +
       '—— Ctrl+Shift+F 隐藏';
-  }, 400);
+  }
 })();
 </script>
 <div id="printReport"></div>
