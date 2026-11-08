@@ -27,28 +27,16 @@
   /* 微交互：spring 用于位移反馈，soft 用于颜色/背景过渡（鸿蒙/Material 标准 .4,0,.2,1） */
   --spring:cubic-bezier(.22,.61,.36,1);
   --spring-soft:cubic-bezier(.4,0,.2,1);
-  /* Tab面板切页统一动画参数：面板外壳与全部内部入场子元素共用；
-     仅在此处调整入场时长与手感，一处修改全局生效（防复发机制） */
-  --pane-dur:.46s;
   /* v38 macOS+鸿蒙PC最终动效令牌：主曲线柔起(.33,.8)，前100ms缓浮不窜；
-     窗口聚焦=位移+缩放+透明度+阴影抬升；9个栏目统一用同一组起点，不再按面板高矮差异化；
+     窗口聚焦=缩放+透明度+阴影抬升；9个栏目统一用同一组起点，不再按面板高矮差异化；
      窗口缩放原点固定 top center（顶部钉死，长面板也只从顶部展开，不整体上浮）。
      调手感只改这一处，窗口/弹窗/卡片同步生效。 */
   --ease-mac:cubic-bezier(.33,.8,.28,1);
-  --ease-focus:cubic-bezier(.33,.8,.28,1);
   --dur-win:.46s;
-  --dur-focus:.46s;
   --from-scale:.97;
-  --from-y:6px;
-  --from-op:.96;
-  --back-scale:.985;
   --glass-blur:20px;
-  --depth-blur:16px;
-  --stagger-y:4px;
-  --stagger-gap:.03s;
   /* hover 统一反馈：v34 移除轻抬位移（--hover-lift 归零），仅保留颜色/阴影反馈，全系统共用 */
   --hover-lift:0px;
-  --hover-tr:.26s;
 }
 *{box-sizing:border-box; margin:0; padding:0;}
 html{-webkit-text-size-adjust:100%; scrollbar-gutter:stable; }
@@ -1026,7 +1014,6 @@ body.projector .dv-roster{ grid-template-columns:repeat(auto-fill,minmax(300px,1
 /* 6) 减少动效偏好：本轮新增动效一并降级 */
 @media (prefers-reduced-motion: reduce){
   .modal-mask{ transition:none !important; }
-  .modal-mask.on .modal{ animation:none !important; }
 }
 html.force-fill{ scrollbar-gutter:auto; scrollbar-width:none; -ms-overflow-style:none; }
 html.force-fill::-webkit-scrollbar{ width:0; height:0; display:none; }
@@ -1536,13 +1523,11 @@ body.dark #syncCard{ background:rgba(255,255,255,.025); border-color:rgba(255,25
 
 /* 切页窗口动画已由JS WAAPI统一驱动（8px+scale.985，400ms，spring曲线），
    不再保留CSS版窗口动画，杜绝CSS/WAAPI双轨混杂。 */
-@keyframes modalInMac{ from{ transform:scale(.96) translateY(6px); opacity:.85; } to{ transform:none; opacity:1; } }
 #view-setup.active{ animation:none; }
 #view-setup.active .window{ animation:none; }
 #view-home.active{ animation:none; }
 .window.swap{ animation:none; }
-.modal-mask.on .modal{ animation:modalInMac var(--dur-win) var(--ease-mac) backwards; }
-body.projector .modal-mask.on .modal{ animation-name:modalInMac; }
+/* 弹窗入场已迁入 WAAPI（playModalIn），与关闭动画 closeAnim 对称，不再保留 modalInMac CSS 关键帧 */
 /* 统一缓动令牌：其全站按钮 0.15s cubic-bezier(0.4,0,0.2,1)；外壳 0.9s cubic-bezier(0,0,0.2,1) */
 :root{ --ease-ui:cubic-bezier(0.4,0,0.2,1); --ease-shell:cubic-bezier(0,0,0.2,1); }
 /* ③ 按钮颜色/边框过渡对齐 0.15s 标准缓动（transform 保留 spring 回弹，手感更活） */
@@ -3933,7 +3918,7 @@ function syncLiveChips(){
 function updateDockBadges(){
   var m = cur();
   function setB(id, n){ var el = document.getElementById(id); if (!el) return; var vs = n > 99 ? '99+' : String(n); if (el.textContent !== vs) { el.textContent = vs; }
-  var wasOn = el.classList.contains('on'); el.classList.toggle('on', n > 0); }
+  el.classList.toggle('on', n > 0); }
   if (!m) { setB('badge-roll', 0); setB('badge-gsl', 0); setB('badge-speakers', 0); setB('badge-motions', 0); setB('badge-docvote', 0); setB('badge-docs', 0); return; }
   var pendingRoll = 0;
   for (var i = 0; i < m.delegates.length; i++) if (!m.delegates[i].roll) pendingRoll++;
@@ -3951,8 +3936,27 @@ function updateDockBadges(){
 }
 /* 社团徽章使用内嵌 data URI，不依赖网络资源。 */
 function bindLogos(){ var imgs = document.querySelectorAll('img.js-logo'); for (var i = 0; i < imgs.length; i++) if (!imgs[i].src) imgs[i].src = BADGE_DATA_URI; }
+/* 弹窗入场 WAAPI 化：与关闭动画(closeAnim)对称，参数照抄原 modalInMac 关键帧 */
+var modalOpenAnim = null;
+function playModalIn(box){
+  if (!box || !box.animate || sprReduce()) return;
+  if (modalOpenAnim) { try { modalOpenAnim.cancel(); } catch(e){} }
+  modalOpenAnim = box.animate(
+    [
+      { transform: 'scale(.96) translateY(6px)', opacity: .85 },
+      { transform: 'none', opacity: 1 }
+    ],
+    { duration: 460, easing: EASE_MAC, fill: 'backwards' });
+  modalOpenAnim.onfinish = function(){ modalOpenAnim = null; };
+  modalOpenAnim.oncancel = function(){ modalOpenAnim = null; };
+}
+function openModal(){
+  var mask = document.getElementById('modalMask');
+  mask.classList.add('on');
+  playModalIn(mask.querySelector('.modal'));
+}
 function askConfirm(title, msg, cb, okText){
-  modalCloseSeq++;   
+  modalCloseSeq++;
   modalCb = cb;
   document.getElementById('modalTitle').textContent = normalizePunct(title);
   document.getElementById('modalMsg').textContent = normalizePunct(msg);
@@ -3961,10 +3965,10 @@ function askConfirm(title, msg, cb, okText){
   var mc = document.getElementById('modalCancel');
   mc.textContent = t('取消');
   mc.style.display = '';
-  document.getElementById('modalMask').classList.add('on');
+  openModal();
 }
 function askInfo(title, bodyHtml){
-  modalCloseSeq++;   
+  modalCloseSeq++;
   modalCb = null;
   document.getElementById('modalTitle').textContent = normalizePunct(title);
   document.getElementById('modalMsg').innerHTML = bodyHtml;
@@ -3973,7 +3977,7 @@ function askInfo(title, bodyHtml){
   var mc = document.getElementById('modalCancel');
   mc.textContent = t('取消');
   mc.style.display = 'none';
-  document.getElementById('modalMask').classList.add('on');
+  openModal();
 }
 /* 文件预览弹窗：正文为用户文档原文，故不经 normalizeDomPunct 归一化，避免篡改原文标点 */
 function showPreviewModal(title, bodyHtml){
@@ -3984,7 +3988,7 @@ function showPreviewModal(title, bodyHtml){
   var mc = document.getElementById('modalCancel');
   mc.textContent = t('取消');
   mc.style.display = 'none';
-  document.getElementById('modalMask').classList.add('on');
+  openModal();
 }
 /* 预览会话令牌：关闭弹窗即自增，使进行中的异步解析结果失效 */
 var previewSeq = 0;
@@ -4003,6 +4007,7 @@ function closeModal(){
     document.getElementById('modalCancel').textContent = t('取消');
   };
   if (mask.classList.contains('on') && !sprReduce() && box && box.animate) {
+    if (modalOpenAnim) { try { modalOpenAnim.cancel(); } catch(e){} modalOpenAnim = null; }
     var mySeq = ++modalCloseSeq;
     var closeAnim = box.animate([{ opacity: 1, transform: 'none' }, { opacity: 0, transform: 'scale(.97) translateY(4px)' }], { duration: 240, easing: EASE_MAC });
     closeAnim.onfinish = function(){ if (mySeq === modalCloseSeq) finishClose(); };
@@ -5235,19 +5240,6 @@ function refreshDockGeometry(){
 
 /* 每次切页都有独立序号；只有当前事务可以启动、落定或唤醒后台任务。 */
 var _tabStartRaf = 0;
-function windowTranslateY(win){
-  if (!win) return 0;
-  var tr = '';
-  try { tr = window.getComputedStyle(win).transform; } catch (e) { return 0; }
-  if (!tr || tr === 'none') return 0;
-  try { if (window.DOMMatrixReadOnly) return new DOMMatrixReadOnly(tr).m42 || 0; } catch (e) {}
-  var m = tr.match(/^matrix3d\((.+)\)$/), n = tr.match(/^matrix\((.+)\)$/);
-  try {
-    if (m) return parseFloat(m[1].split(',')[13]) || 0;
-    if (n) return parseFloat(n[1].split(',')[5]) || 0;
-  } catch (e) {}
-  return 0;
-}
 function cancelLastWindowAnimation(){
   var an = _lastWinAnim;
   if (!an) return;
@@ -5309,7 +5301,7 @@ function settleTabSwitch(){
   if (_lastPaneAnim) { try { _lastPaneAnim.onfinish = null; _lastPaneAnim.oncancel = null; _lastPaneAnim.cancel(); } catch (e) {} _lastPaneAnim = null; }
   completeTabSwitch(seq);
 }
-function queueWindowAnimation(seq, t, win, fromY, duration){
+function queueWindowAnimation(seq, t, win, duration){
   _tabSwitching = true;
   /* 读 :root 统一令牌（--ease-mac / --dur-win / --from-scale），弹窗CSS同用这些变量。
      以后调窗口/弹窗手感只改 :root 这一处，JS与弹窗同时生效。 */
@@ -5346,14 +5338,14 @@ function queueWindowAnimation(seq, t, win, fromY, duration){
          不再按面板高矮做差异化判断——这正是旧存档「从下往上浮出」的根因。
          opacity只作用在窗口合成层，不重绘文字。 */
       /* v34：移除窗口的 translateY 位移（继续会议/切页不再上浮），
-         保留 scale 阻尼落定、opacity 淡入与阴影由浅转深的层级反馈，其余动画不变。
+         保留 scale 阻尼落定与 opacity 淡入，其余动画不变。
+         v37：移除 boxShadow 由浅转深动画（切页时阴影闪烁不舒服），
+         窗口静态阴影仍由 CSS .window{box-shadow:var(--e3),var(--hair)} 提供，不删阴影本身。
          缩放原点为 top center，故 scale 不会带来上下位移。 */
       an = win.animate(
         [
-          { transform: 'scale(' + TOK.scale + ')', opacity: .96,
-            boxShadow: '0 1px 4px rgba(8,54,90,.04), 0 4px 14px rgba(8,54,90,.05)' },
-          { transform: 'scale(1)', opacity: 1,
-            boxShadow: '0 2px 6px rgba(8,54,90,.07), 0 14px 42px rgba(8,54,90,.13)' }
+          { transform: 'scale(' + TOK.scale + ')', opacity: .96 },
+          { transform: 'scale(1)', opacity: 1 }
         ],
         { duration: duration, easing: TOK.ease, fill: 'backwards' });
     } catch (e) { completeTabSwitch(seq); return; }
@@ -5510,7 +5502,7 @@ function setTab(t){
            保留 scale(.97) 与 opacity .96 的柔落定，切页流程不变。 */
         win.style.transform = 'scale(.97)';
         win.style.opacity = '.96';
-        queueWindowAnimation(seq, t, win, 0, 0);
+        queueWindowAnimation(seq, t, win, 0);
       }
     } else {
       if (win) win.style.transform = '';
