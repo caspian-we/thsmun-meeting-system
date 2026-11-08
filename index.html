@@ -46,8 +46,8 @@
   --depth-blur:16px;
   --stagger-y:4px;
   --stagger-gap:.03s;
-  /* hover 统一反馈：卡片轻抬 -2px，列表行/按钮不位移只变色，全系统共用 */
-  --hover-lift:-2px;
+  /* hover 统一反馈：v34 移除轻抬位移（--hover-lift 归零），仅保留颜色/阴影反馈，全系统共用 */
+  --hover-lift:0px;
   --hover-tr:.26s;
 }
 *{box-sizing:border-box; margin:0; padding:0;}
@@ -5345,11 +5345,14 @@ function queueWindowAnimation(seq, t, win, fromY, duration){
          同步阴影由浅转深=z轴抬升的层级感。9个栏目（含会议纪要长列表）走完全相同的这一条 WAAPI，
          不再按面板高矮做差异化判断——这正是旧存档「从下往上浮出」的根因。
          opacity只作用在窗口合成层，不重绘文字。 */
+      /* v34：移除窗口的 translateY 位移（继续会议/切页不再上浮），
+         保留 scale 阻尼落定、opacity 淡入与阴影由浅转深的层级反馈，其余动画不变。
+         缩放原点为 top center，故 scale 不会带来上下位移。 */
       an = win.animate(
         [
-          { transform: 'translateY(' + fromY.toFixed(3) + 'px) scale(' + TOK.scale + ')', opacity: .96,
+          { transform: 'scale(' + TOK.scale + ')', opacity: .96,
             boxShadow: '0 1px 4px rgba(8,54,90,.04), 0 4px 14px rgba(8,54,90,.05)' },
-          { transform: 'translateY(0px) scale(1)', opacity: 1,
+          { transform: 'scale(1)', opacity: 1,
             boxShadow: '0 2px 6px rgba(8,54,90,.07), 0 14px 42px rgba(8,54,90,.13)' }
         ],
         { duration: duration, easing: TOK.ease, fill: 'backwards' });
@@ -5460,19 +5463,17 @@ function setTab(t){
         }
         onPane.style.animation = '';
         onPane.style.transform = '';
-        /* v37 一级卡片错峰：由编排器在activate统一驱动，translateY(4px)→0，
-           间隔30ms，总量≤120ms，冷热切/任意来源完全一致。内部文字表格不单独动。
-           所有栏目（含会议纪要长列表）走同一套：窗口已用 top center 锚定顶部，
-           卡片错峰不再造成「整体上浮」，因此不再对 minutes 单独排除。 */
+        /* v34 一级卡片错峰：移除 translateY 位移（小卡片不再浮动），
+           保留 opacity 错峰淡入与 30ms 间隔，内部文字表格不单独动。 */
         if (!sprReduce()) {
           var cards86 = onPane.querySelectorAll(':scope > .card, :scope > .summary-strip, :scope > .m-banner');
           for (var ci86 = 0; ci86 < cards86.length && ci86 < 6; ci86++) {
             var card86 = cards86[ci86];
             try {
-              card86.style.willChange = 'transform';
+              card86.style.willChange = 'opacity';
               var ca86 = card86.animate(
-                [{ transform: 'translateY(var(--stagger-y))', opacity: .96 },
-                 { transform: 'translateY(0)', opacity: 1 }],
+                [{ opacity: .96 },
+                 { opacity: 1 }],
                 { duration: 380, delay: ci86 * 30, easing: EASE_MAC, fill: 'backwards' });
               (function(c){ return function(){ c.style.willChange=''; }; })(card86)(ca86.finished);
             } catch (e) {}
@@ -5505,12 +5506,11 @@ function setTab(t){
         setTimeout(function(){ completeTabSwitch(seq); }, 380);
       } else {
         win.style.willChange = 'transform, opacity';
-        /* 9个栏目统一从 translateY(6px) scale(.97) opacity(.96) 柔落定，
-           不再按面板高矮判断是否 scale（旧补丁的判断在切页瞬间读到的高度不可靠，
-           才是旧存档「从下往上浮出」的根因）。统一 scale 后 minutes 与其他栏目手感完全一致。 */
-        win.style.transform = 'translateY(6px) scale(.97)';
+        /* v34：起始态去掉 translateY(6px)（窗口不再上下位移），
+           保留 scale(.97) 与 opacity .96 的柔落定，切页流程不变。 */
+        win.style.transform = 'scale(.97)';
         win.style.opacity = '.96';
-        queueWindowAnimation(seq, t, win, 6, 0);
+        queueWindowAnimation(seq, t, win, 0, 0);
       }
     } else {
       if (win) win.style.transform = '';
