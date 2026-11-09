@@ -5406,6 +5406,11 @@ function setTab(t){
   if (_dockRaf) { cancelAnimationFrame(_dockRaf); _dockRaf = 0; }
   cancelLastWindowAnimation();
   var seq = ++_winAnimSeq;
+  /* 切页标志必须在冷渲染之前置位：renderTab(5428) 同步调用 paintQueue 时，
+     paintQueue 的整体重建位移动画依赖 _tabSwitching 守卫；若在动画启动函数里才置位，
+     冷渲染期间标志仍为 false，会短暂创建 translateY(6px) 动画（紧接着被 finishPaneEntryAnims
+     取消）——虽不可见，但属于切页路径上多余的动画创建/取消。在此提前置位，幂等安全。 */
+  _tabSwitching = true;
   /* 只保留会议纪要的滚动位置，其余栏目重新进入时回到顶部。 */
   if (state.tab && state.tab !== t) {
     if (state.tab === 'minutes') _tabScrollMem[state.tab] = (window.pageYOffset || document.documentElement.scrollTop || 0);
@@ -6682,16 +6687,8 @@ function paintQueue(container, items, emptyText){
   for (var j = 0; j < items.length; j++) frag.appendChild(buildQueueItem(items[j], j));
   container.innerHTML = '';
   container.appendChild(frag);
-  var tabSwitching = (typeof _tabSwitching !== 'undefined' && _tabSwitching);
-  if (frag.style) frag.style.willChange = 'transform';
-  if (!sprReduce() && frag.animate && !tabSwitching) {
-    var fragAnim = frag.animate([{ transform: 'translateY(6px)' }, { transform: 'none' }],
-      { duration: 450, easing: EASE_MAC, fill: 'backwards' });
-    /* 动画结束后收回 will-change，避免常驻合成层 */
-    fragAnim.finished.then(function(){ frag.style.willChange = ''; }).catch(function(){});
-  } else if (frag.style) {
-    frag.style.willChange = '';
-  }
+  /* 整体重建不再做 translateY(6px) 入场：列表增删走定点/尾部动画，
+     整体重建只发生在结构被迫刷新时，直接显示，避免任何上浮感。 */
 }
 function paintCaucusRemaining(m){
   if (!m) return;
